@@ -38,7 +38,7 @@ One process monitors many PowerScale clusters; every metric carries a `cluster` 
 | Auth/session | **One shared authenticated session** | Mitigates the hybrid's "two stacks" risk: the raw stats wrapper reuses `gopowerscale`'s authenticated client + cookie jar. |
 | Export paths | **Both (Prometheus + OTLP)** | Full parity with pflex. |
 | Stats strategy | **Curated key list + summary endpoints** | Direct analog of pflex's `querySelectedStatistics.json`; predictable, extensible by editing JSON. |
-| Metric prefix | **`pscale_`** | Consistency with repo/binary. CSM uses `powerscale_`; mapping documented for dashboard reuse. |
+| Metric prefix | **`powerscale_`** | Matches CSM (`dell/csm-metrics-powerscale`) so its Grafana dashboards work directly. |
 
 ## Architecture
 
@@ -112,11 +112,16 @@ type Client interface {
 
 ### Metrics model
 
-Unified `Sample{Name, []Label, Value}` → `pscale_<obj>_<metric>{cluster, node, ...}`.
+Unified `Sample{Name, []Label, Value}` → `powerscale_<obj>_<metric>{cluster, node, ...}`.
 
-Object prefixes: `pscale_cluster_`, `pscale_node_`, `pscale_quota_`, `pscale_nfs_`,
-`pscale_smb_`, `pscale_s3_`, `pscale_snapshot_`, `pscale_storagepool_`, `pscale_drive_`,
-`pscale_protocol_`.
+Object prefixes: `powerscale_cluster_`, `powerscale_node_`, `powerscale_quota_`,
+`powerscale_nfs_`, `powerscale_smb_`, `powerscale_s3_`, `powerscale_snapshot_`,
+`powerscale_storagepool_`, `powerscale_drive_`, `powerscale_protocol_`.
+
+Where CSM (`dell/csm-metrics-powerscale`) defines an equivalent metric (e.g.
+`powerscale_cluster_used_capacity_percentage`, `powerscale_volume_quota_subscribed_gigabytes`),
+reuse its exact name and units so CSM Grafana dashboards work without modification; broader
+OneFS metrics beyond CSM's set follow the same naming conventions.
 
 Per-type label builders + a relations graph (cluster→node, cluster→quota→path,
 cluster→export). Every series carries a `cluster` label.
@@ -129,9 +134,6 @@ cluster→export). Every series carries a `cluster` label.
 - A metric name must carry one label-key set across all series. Any object type produced by
   more than one builder emits a **union label set in a fixed canonical order**; a test
   guards mixed-source label consistency.
-
-**CSM mapping:** CSM uses `powerscale_*`; this exporter uses `pscale_*`. A mapping table in
-the docs lets CSM Grafana dashboards be adapted.
 
 ## Data Flow
 
