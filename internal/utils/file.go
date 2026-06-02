@@ -1,4 +1,4 @@
-// Package utils provides file and environment helpers for the PowerFlex exporter.
+// Package utils provides file and environment helpers for the PowerScale exporter.
 package utils
 
 import (

@@ -1,5 +1,5 @@
 // Package telemetry manages the optional OpenTelemetry tracer provider used to
-// diagnose slow collection cycles. Metric export lives in the powerflex package.
+// diagnose slow collection cycles. Metric export lives in the powerscale package.
 package telemetry
 
 import (

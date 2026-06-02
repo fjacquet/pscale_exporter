@@ -19,7 +19,7 @@ dashboard compatibility.
 
 - **Dual export**: Prometheus pull (`/metrics`) and an optional OTLP metric push, fed
   from one shared snapshot.
-- **Broad OneFS coverage**: cluster, nodes, protocols (NFS/SMB/S3 export & share
+- **Broad OneFS coverage**: cluster, nodes, protocols (NFS/SMB export & share
   counts), quotas, snapshots, and capacity — combining typed OneFS resources with the
   raw statistics API (curated stat keys plus the protocol summary).
 - **Multi-cluster**: one process monitors many OneFS clusters; every metric carries a
@@ -79,5 +79,4 @@ make ci            # the gate CI runs (adds go test -race + govulncheck)
 ## License
 
 Apache License 2.0 — see [LICENSE](LICENSE).
-</content>
-</invoke>
+
