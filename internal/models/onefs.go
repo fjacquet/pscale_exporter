@@ -57,6 +57,14 @@ type SyncPolicy struct {
 	LastJobState string // e.g. "finished", "failed", "needs_attention", "running"
 }
 
+// DedupeSummary is cluster-wide deduplication/efficiency (dedupe/dedupe-summary).
+// PROVISIONAL: field names follow the documented dedupe-summary schema; validate against
+// a live OneFS as the response is best-effort.
+type DedupeSummary struct {
+	LogicalSavedBytes float64 // logical_saving
+	DeduplicatedBytes float64 // logical_deduplicated
+}
+
 // Inventory is the typed OneFS state for one cluster at one collection cycle. The trailing
 // fields are best-effort: a fetch/parse failure leaves them zero-valued without failing
 // the snapshot.
@@ -68,6 +76,28 @@ type Inventory struct {
 	Snapshot     SnapshotSummary
 	SyncPolicies []SyncPolicy
 	Events       map[string]int // unresolved event-group count by severity
+	Dedupe       DedupeSummary
+}
+
+// DriveStat is one per-drive performance row (statistics/summary/drive). PROVISIONAL
+// schema — best-effort; validate against a live OneFS.
+type DriveStat struct {
+	Node        int
+	Bay         string
+	Type        string  // e.g. "SSD", "HDD"
+	OpsPerSec   float64 // op_rate
+	BusyPercent float64 // busy (0-100)
+}
+
+// ClientStat is one per-client-class row (statistics/summary/client). Aggregated by
+// node/protocol/class to bound cardinality. PROVISIONAL schema — best-effort.
+type ClientStat struct {
+	Node      int
+	Protocol  string
+	Class     string
+	OpsPerSec float64 // ops
+	InBps     float64 // in
+	OutBps    float64 // out
 }
 
 // StatPoint is one resolved statistics value. DevID 0 means the cluster aggregate;
@@ -91,6 +121,8 @@ type ProtoStat struct {
 type Statistics struct {
 	Current []StatPoint
 	Proto   []ProtoStat
+	Drives  []DriveStat
+	Clients []ClientStat
 }
 
 // ParseClusterConfig parses platform/N/cluster/config.
@@ -313,6 +345,78 @@ func ParseProtocolSummary(b []byte) ([]ProtoStat, error) {
 		out = append(out, ProtoStat{
 			Node: p.Node, Protocol: p.Protocol, Operation: p.Operation,
 			OperationRate: p.OperationRate, LatencyAvg: p.TimeAvg,
+		})
+	}
+	return out, nil
+}
+
+// ParseDedupeSummary parses platform/N/dedupe/dedupe-summary. PROVISIONAL schema.
+func ParseDedupeSummary(b []byte) (DedupeSummary, error) {
+	var raw struct {
+		Summary struct {
+			LogicalSaving       *float64 `json:"logical_saving"`
+			LogicalDeduplicated *float64 `json:"logical_deduplicated"`
+		} `json:"summary"`
+	}
+	if err := json.Unmarshal(b, &raw); err != nil {
+		return DedupeSummary{}, err
+	}
+	deref := func(p *float64) float64 {
+		if p != nil {
+			return *p
+		}
+		return 0
+	}
+	return DedupeSummary{
+		LogicalSavedBytes: deref(raw.Summary.LogicalSaving),
+		DeduplicatedBytes: deref(raw.Summary.LogicalDeduplicated),
+	}, nil
+}
+
+// ParseDriveSummary parses platform/N/statistics/summary/drive. PROVISIONAL schema.
+func ParseDriveSummary(b []byte) ([]DriveStat, error) {
+	var raw struct {
+		Drives []struct {
+			LNN    int     `json:"lnn"`
+			Bay    string  `json:"bay"`
+			Type   string  `json:"type"`
+			OpRate float64 `json:"op_rate"`
+			Busy   float64 `json:"busy"`
+		} `json:"drives"`
+	}
+	if err := json.Unmarshal(b, &raw); err != nil {
+		return nil, err
+	}
+	out := make([]DriveStat, 0, len(raw.Drives))
+	for _, d := range raw.Drives {
+		out = append(out, DriveStat{
+			Node: d.LNN, Bay: d.Bay, Type: d.Type,
+			OpsPerSec: d.OpRate, BusyPercent: d.Busy,
+		})
+	}
+	return out, nil
+}
+
+// ParseClientSummary parses platform/N/statistics/summary/client. PROVISIONAL schema.
+func ParseClientSummary(b []byte) ([]ClientStat, error) {
+	var raw struct {
+		Client []struct {
+			Node     int     `json:"node"`
+			Protocol string  `json:"protocol"`
+			Class    string  `json:"class"`
+			Ops      float64 `json:"ops"`
+			In       float64 `json:"in"`
+			Out      float64 `json:"out"`
+		} `json:"client"`
+	}
+	if err := json.Unmarshal(b, &raw); err != nil {
+		return nil, err
+	}
+	out := make([]ClientStat, 0, len(raw.Client))
+	for _, c := range raw.Client {
+		out = append(out, ClientStat{
+			Node: c.Node, Protocol: c.Protocol, Class: c.Class,
+			OpsPerSec: c.Ops, InBps: c.In, OutBps: c.Out,
 		})
 	}
 	return out, nil

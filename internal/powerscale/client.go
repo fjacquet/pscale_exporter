@@ -102,7 +102,23 @@ func (c *ClusterClient) GetInventory(ctx context.Context) (*models.Inventory, er
 		Snapshot:     c.snapshotSummary(ctx),
 		SyncPolicies: c.syncPolicies(ctx),
 		Events:       c.activeEvents(ctx),
+		Dedupe:       c.dedupeSummary(ctx),
 	}, nil
+}
+
+// dedupeSummary fetches cluster-wide deduplication efficiency best-effort.
+func (c *ClusterClient) dedupeSummary(ctx context.Context) models.DedupeSummary {
+	var b []byte
+	if err := c.getRaw(ctx, "platform/1/dedupe/dedupe-summary", &b); err != nil {
+		log.Debugf("cluster %q: dedupe summary failed: %v", c.name, err)
+		return models.DedupeSummary{}
+	}
+	s, err := models.ParseDedupeSummary(b)
+	if err != nil {
+		log.Debugf("cluster %q: parse dedupe summary failed: %v", c.name, err)
+		return models.DedupeSummary{}
+	}
+	return s
 }
 
 // snapshotSummary fetches aggregate snapshot usage best-effort: a failure logs at debug
@@ -196,14 +212,45 @@ func (c *ClusterClient) GetStatistics(ctx context.Context) (*models.Statistics, 
 	var protoBytes []byte
 	if err := c.getRaw(ctx, "platform/2/statistics/summary/protocol", &protoBytes); err != nil {
 		log.Debugf("cluster %q: protocol summary failed: %v", c.name, err)
-		return st, nil
-	}
-	if proto, perr := models.ParseProtocolSummary(protoBytes); perr == nil {
+	} else if proto, perr := models.ParseProtocolSummary(protoBytes); perr == nil {
 		st.Proto = proto
 	} else {
 		log.Debugf("cluster %q: parse protocol summary failed: %v", c.name, perr)
 	}
+
+	st.Drives = c.driveSummary(ctx)
+	st.Clients = c.clientSummary(ctx)
 	return st, nil
+}
+
+// driveSummary fetches per-drive performance best-effort (PROVISIONAL schema).
+func (c *ClusterClient) driveSummary(ctx context.Context) []models.DriveStat {
+	var b []byte
+	if err := c.getRaw(ctx, "platform/3/statistics/summary/drive", &b); err != nil {
+		log.Debugf("cluster %q: drive summary failed: %v", c.name, err)
+		return nil
+	}
+	d, err := models.ParseDriveSummary(b)
+	if err != nil {
+		log.Debugf("cluster %q: parse drive summary failed: %v", c.name, err)
+		return nil
+	}
+	return d
+}
+
+// clientSummary fetches per-client-class performance best-effort (PROVISIONAL schema).
+func (c *ClusterClient) clientSummary(ctx context.Context) []models.ClientStat {
+	var b []byte
+	if err := c.getRaw(ctx, "platform/3/statistics/summary/client", &b); err != nil {
+		log.Debugf("cluster %q: client summary failed: %v", c.name, err)
+		return nil
+	}
+	cl, err := models.ParseClientSummary(b)
+	if err != nil {
+		log.Debugf("cluster %q: parse client summary failed: %v", c.name, err)
+		return nil
+	}
+	return cl
 }
 
 // Close releases resources. gopowerscale holds no long-lived resources beyond the

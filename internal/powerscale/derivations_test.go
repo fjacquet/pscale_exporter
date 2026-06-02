@@ -42,6 +42,7 @@ func TestBuildSamplesClusterAndNode(t *testing.T) {
 		Snapshot:     models.SnapshotSummary{UsedBytes: 10240},
 		SyncPolicies: []models.SyncPolicy{{Name: "dr", Enabled: true, LastJobState: "failed"}},
 		Events:       map[string]int{"critical": 2},
+		Dedupe:       models.DedupeSummary{LogicalSavedBytes: 1000, DeduplicatedBytes: 5000},
 	}
 	st := &models.Statistics{
 		Current: []models.StatPoint{
@@ -51,6 +52,12 @@ func TestBuildSamplesClusterAndNode(t *testing.T) {
 		},
 		Proto: []models.ProtoStat{
 			{Node: 1, Protocol: "nfs3", Operation: "read", OperationRate: 12, LatencyAvg: 800},
+		},
+		Drives: []models.DriveStat{
+			{Node: 1, Bay: "1", Type: "SSD", OpsPerSec: 120, BusyPercent: 15.5},
+		},
+		Clients: []models.ClientStat{
+			{Node: 1, Protocol: "nfs3", Class: "read", OpsPerSec: 50, InBps: 1024, OutBps: 2048},
 		},
 	}
 
@@ -116,5 +123,20 @@ func TestBuildSamplesClusterAndNode(t *testing.T) {
 	}
 	if s, ok := get("powerscale_active_events"); !ok || s.Value != 2 {
 		t.Fatalf("active events sample wrong: %+v ok=%v", s, ok)
+	}
+	if s, ok := get("powerscale_dedupe_logical_saved_bytes"); !ok || s.Value != 1000 {
+		t.Fatalf("dedupe saved sample wrong: %+v ok=%v", s, ok)
+	}
+	if s, ok := get("powerscale_drive_operations_per_second"); !ok || s.Value != 120 {
+		t.Fatalf("drive ops sample wrong: %+v ok=%v", s, ok)
+	}
+	if s, ok := get("powerscale_drive_busy_percent"); !ok || s.Value != 15.5 {
+		t.Fatalf("drive busy sample wrong: %+v ok=%v", s, ok)
+	}
+	if s, ok := get("powerscale_client_operations_per_second"); !ok || s.Value != 50 {
+		t.Fatalf("client ops sample wrong: %+v ok=%v", s, ok)
+	}
+	if s, ok := get("powerscale_client_in_bytes_per_second"); !ok || s.Value != 1024 {
+		t.Fatalf("client in sample wrong: %+v ok=%v", s, ok)
 	}
 }

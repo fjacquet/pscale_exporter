@@ -51,6 +51,9 @@ the Overview board:
   different key strings (see [Metrics Reference](metrics.md#cache-provisional)).
 - **Node CPU Detail** — per-node sys / user / idle.
 - **Quota Detail** — usage vs advisory / soft / hard thresholds.
+- **Storage Efficiency** — deduplication logical saved / deduplicated bytes *(provisional)*.
+- **Per-Drive** — top drive IOPS and busy % *(provisional)*.
+- **Per-Client** — operations by protocol/class and throughput in/out *(provisional)*.
 
 ## Auto-provisioned (compose stack)
 

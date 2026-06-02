@@ -55,6 +55,11 @@ live in `deploy/prometheus/pscale.rules.yml`:
 | `PowerScaleExporterDown` | `up{job="powerscale"} == 0` for 5m. |
 | `PowerScaleClusterCapacityHigh` | used/total capacity > 85% for 15m. |
 | `PowerScaleQuotaNearHardLimit` | quota usage/hard > 90% for 15m. |
+| `PowerScaleNodeSmartfail` | a node is smartfailing for 5m. |
+| `PowerScaleNodeReadOnly` | a node is read-only for 10m. |
+| `PowerScaleDriveUnhealthy` | any drive in SMARTFAIL/DEAD/STALLED/ERASE/GONE for 5m. |
+| `PowerScaleSyncIQFailed` | a SyncIQ policy's last run failed for 15m (critical). |
+| `PowerScaleActiveCriticalEvents` | unresolved critical OneFS events for 5m (critical). |
 
 A minimal standalone scrape config:
 

@@ -1,0 +1,4 @@
+{"drives": [
+  {"lnn": 1, "bay": "1", "type": "SSD", "op_rate": 120, "busy": 15.5},
+  {"lnn": 2, "bay": "3", "type": "HDD", "op_rate": 80, "busy": 42.0}
+]}

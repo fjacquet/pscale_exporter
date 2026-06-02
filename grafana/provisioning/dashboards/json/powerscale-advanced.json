@@ -241,6 +241,71 @@
         { "id": "merge", "options": {} },
         { "id": "organize", "options": { "excludeByName": { "Time": true, "__name__": true, "job": true, "instance": true, "cluster_id": true, "quota_id": true }, "renameByName": { "Value #A": "usage", "Value #B": "advisory", "Value #C": "soft", "Value #D": "hard", "quota_path": "path", "quota_type": "type", "cluster": "cluster" } } }
       ]
+    },
+    {
+      "type": "row", "id": 18, "title": "Storage Efficiency (provisional — dedupe-summary schema)",
+      "collapsed": false, "gridPos": { "h": 1, "w": 24, "x": 0, "y": 50 }
+    },
+    {
+      "type": "stat", "id": 19, "title": "Dedupe Logical Saved",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 51 },
+      "fieldConfig": { "defaults": { "mappings": [], "unit": "bytes", "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] } }, "overrides": [] },
+      "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "horizontal", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value_and_name" },
+      "targets": [ { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_dedupe_logical_saved_bytes{cluster=~\"$cluster\"}", "legendFormat": "{{cluster}}", "refId": "A" } ]
+    },
+    {
+      "type": "stat", "id": 20, "title": "Deduplicated Data",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 51 },
+      "fieldConfig": { "defaults": { "mappings": [], "unit": "bytes", "thresholds": { "mode": "absolute", "steps": [ { "color": "blue", "value": null } ] } }, "overrides": [] },
+      "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "horizontal", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value_and_name" },
+      "targets": [ { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_dedupe_deduplicated_bytes{cluster=~\"$cluster\"}", "legendFormat": "{{cluster}}", "refId": "A" } ]
+    },
+    {
+      "type": "row", "id": 21, "title": "Per-Drive (provisional — summary/drive schema)",
+      "collapsed": false, "gridPos": { "h": 1, "w": 24, "x": 0, "y": 57 }
+    },
+    {
+      "type": "timeseries", "id": 22, "title": "Top Drive IOPS",
+      "description": "Per-second gauge — aggregate with sum/avg, never rate().",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 58 },
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 1, "showPoints": "never" }, "unit": "ops" }, "overrides": [] },
+      "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "targets": [ { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "topk(15, powerscale_drive_operations_per_second{cluster=~\"$cluster\", node=~\"$node\"})", "legendFormat": "{{cluster}} n{{node}} bay{{bay}} ({{type}})", "refId": "A" } ]
+    },
+    {
+      "type": "timeseries", "id": 23, "title": "Drive Busy %",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 58 },
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 1, "showPoints": "never" }, "min": 0, "max": 100, "unit": "percent" }, "overrides": [] },
+      "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "targets": [ { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "topk(15, powerscale_drive_busy_percent{cluster=~\"$cluster\", node=~\"$node\"})", "legendFormat": "{{cluster}} n{{node}} bay{{bay}}", "refId": "A" } ]
+    },
+    {
+      "type": "row", "id": 24, "title": "Per-Client (provisional — summary/client schema)",
+      "collapsed": false, "gridPos": { "h": 1, "w": 24, "x": 0, "y": 66 }
+    },
+    {
+      "type": "timeseries", "id": 25, "title": "Client Operations by Protocol/Class",
+      "description": "Per-second gauge — aggregate with sum/avg, never rate().",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 67 },
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 1, "showPoints": "never" }, "unit": "ops" }, "overrides": [] },
+      "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "targets": [ { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "sum by (protocol, class) (powerscale_client_operations_per_second{cluster=~\"$cluster\"})", "legendFormat": "{{protocol}} {{class}}", "refId": "A" } ]
+    },
+    {
+      "type": "timeseries", "id": 26, "title": "Client Throughput (in / out)",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 67 },
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 1, "showPoints": "never" }, "unit": "Bps" }, "overrides": [] },
+      "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "sum by (protocol) (powerscale_client_in_bytes_per_second{cluster=~\"$cluster\"})", "legendFormat": "{{protocol}} in", "refId": "A" },
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "sum by (protocol) (powerscale_client_out_bytes_per_second{cluster=~\"$cluster\"})", "legendFormat": "{{protocol}} out", "refId": "B" }
+      ]
     }
   ]
 }

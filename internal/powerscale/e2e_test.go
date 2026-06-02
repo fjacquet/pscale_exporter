@@ -50,6 +50,9 @@ func TestEndToEndCollectionThroughPrometheus(t *testing.T) {
 		"powerscale_snapshot_used_bytes":            false,
 		"powerscale_synciq_policy_enabled":          false,
 		"powerscale_active_events":                  false,
+		"powerscale_dedupe_logical_saved_bytes":     false,
+		"powerscale_drive_operations_per_second":    false,
+		"powerscale_client_operations_per_second":   false,
 	}
 	for _, mf := range mfs {
 		if _, ok := want[mf.GetName()]; ok {

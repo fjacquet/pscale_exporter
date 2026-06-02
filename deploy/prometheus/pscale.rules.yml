@@ -44,3 +44,56 @@ groups:
         annotations:
           summary: "Quota {{ $labels.quota_path }} on {{ $labels.cluster }} near hard limit"
           description: "Usage is {{ $value | humanizePercentage }} of the hard quota."
+
+      # A node is smartfailing (drained ahead of removal/replacement).
+      - alert: PowerScaleNodeSmartfail
+        expr: powerscale_node_smartfail == 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Node {{ $labels.node }} on {{ $labels.cluster }} is smartfailing"
+          description: "powerscale_node_smartfail has been 1 for 5m (node being drained/removed)."
+
+      # A node is mounted read-only (no writes served).
+      - alert: PowerScaleNodeReadOnly
+        expr: powerscale_node_readonly == 1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Node {{ $labels.node }} on {{ $labels.cluster }} is read-only"
+          description: "powerscale_node_readonly has been 1 for 10m."
+
+      # One or more drives are in a non-healthy state (smartfail/dead/stalled).
+      - alert: PowerScaleDriveUnhealthy
+        expr: |
+          sum by (cluster, node) (
+            powerscale_node_drives_total{state=~"SMARTFAIL|DEAD|STALLED|ERASE|GONE"}
+          ) > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Unhealthy drive(s) on {{ $labels.cluster }} node {{ $labels.node }}"
+          description: "{{ $value }} drive(s) in a non-healthy state."
+
+      # A SyncIQ replication policy's last run failed or needs attention (DR risk).
+      - alert: PowerScaleSyncIQFailed
+        expr: powerscale_synciq_last_run_failed == 1
+        for: 15m
+        labels:
+          severity: critical
+        annotations:
+          summary: "SyncIQ policy {{ $labels.policy }} on {{ $labels.cluster }} last run failed"
+          description: "Replication policy is failing / needs attention; DR copy may be stale."
+
+      # OneFS has unresolved critical event-group occurrences.
+      - alert: PowerScaleActiveCriticalEvents
+        expr: powerscale_active_events{severity="critical"} > 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $value }} unresolved critical event(s) on {{ $labels.cluster }}"
+          description: "OneFS reports unresolved critical event-group occurrences."
