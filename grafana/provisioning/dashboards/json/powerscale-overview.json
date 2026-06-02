@@ -407,6 +407,13 @@
           "expr": "powerscale_cluster_total_capacity_bytes{cluster=~\"$cluster\"}",
           "legendFormat": "{{cluster}} total",
           "refId": "C"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "editorMode": "code",
+          "expr": "powerscale_cluster_free_capacity_bytes{cluster=~\"$cluster\"}",
+          "legendFormat": "{{cluster}} free",
+          "refId": "D"
         }
       ]
     },
