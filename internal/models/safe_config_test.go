@@ -18,18 +18,18 @@ func writeConfigFile(t *testing.T, body string) string {
 const oneCluster = `
 server: {host: "0.0.0.0", port: "2112", uri: "/metrics"}
 clusters:
-  - {name: a, gateway: gw-a, username: u, password: p}
+  - {name: a, endpoint: onefs-a, port: 8080, username: u, password: p}
 `
 
 const twoClusters = `
 server: {host: "0.0.0.0", port: "2112", uri: "/metrics"}
 clusters:
-  - {name: a, gateway: gw-a, username: u, password: p}
-  - {name: b, gateway: gw-b, username: u, password: p}
+  - {name: a, endpoint: onefs-a, port: 8080, username: u, password: p}
+  - {name: b, endpoint: onefs-b, port: 8080, username: u, password: p}
 `
 
 func TestReloadDetectsClusterChange(t *testing.T) {
-	sc := NewSafeConfig(&Config{Clusters: []ClusterConfig{{Name: "a", Gateway: "gw-a", Username: "u", Password: "p"}}}, nil)
+	sc := NewSafeConfig(&Config{Clusters: []ClusterConfig{{Name: "a", Endpoint: "onefs-a", Port: 8080, Username: "u", Password: "p"}}}, nil)
 
 	path := writeConfigFile(t, oneCluster)
 	changed, err := sc.ReloadConfig(path)
@@ -54,7 +54,7 @@ func TestReloadDetectsClusterChange(t *testing.T) {
 }
 
 func TestReloadRejectsInvalidConfigWithoutMutating(t *testing.T) {
-	sc := NewSafeConfig(&Config{Clusters: []ClusterConfig{{Name: "a", Gateway: "gw-a", Username: "u", Password: "p"}}}, nil)
+	sc := NewSafeConfig(&Config{Clusters: []ClusterConfig{{Name: "a", Endpoint: "onefs-a", Port: 8080, Username: "u", Password: "p"}}}, nil)
 
 	badPath := writeConfigFile(t, "server: {port: \"2112\"}\nclusters: []\n")
 	if _, err := sc.ReloadConfig(badPath); err == nil {
@@ -74,7 +74,7 @@ func TestReloadAppliesResolver(t *testing.T) {
 		}
 		return nil
 	}
-	sc := NewSafeConfig(&Config{Clusters: []ClusterConfig{{Name: "a", Gateway: "gw-a", Username: "u", Password: "p"}}}, resolver)
+	sc := NewSafeConfig(&Config{Clusters: []ClusterConfig{{Name: "a", Endpoint: "onefs-a", Port: 8080, Username: "u", Password: "p"}}}, resolver)
 
 	path := writeConfigFile(t, oneCluster)
 	if _, err := sc.ReloadConfig(path); err != nil {

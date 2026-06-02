@@ -34,8 +34,8 @@ func TestResolveSecretsInterpolatesAndLoadsFile(t *testing.T) {
 	}
 
 	cfg := &models.Config{Clusters: []models.ClusterConfig{
-		{Name: "a", Gateway: "gw-a", Username: "u", Password: "${PFLEX_PW1}"},
-		{Name: "b", Gateway: "gw-b", Username: "u", PasswordFile: pwFile},
+		{Name: "a", Endpoint: "onefs-a", Port: 8080, Username: "u", Password: "${PFLEX_PW1}"},
+		{Name: "b", Endpoint: "onefs-b", Port: 8080, Username: "u", PasswordFile: pwFile},
 	}}
 
 	if err := ResolveSecrets(cfg); err != nil {
