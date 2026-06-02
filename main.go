@@ -143,7 +143,7 @@ func (s *Server) initTracing(cfg *models.Config) {
 // startCollection builds the client pool and collector, runs an initial synchronous
 // cycle, and starts the background loop. Caller must hold no locks.
 func (s *Server) startCollection(ctx context.Context, cfg *models.Config) error {
-	clients := buildClients(cfg, s.tracerProvider)
+	clients := buildClients(ctx, cfg)
 	collector := powerscale.NewCollector(clients, s.store, cfg.GetCollectionInterval(), cfg.GetCollectionTimeout(), s.tracerProvider)
 
 	// Initial synchronous cycle so the first scrape isn't empty.
@@ -191,10 +191,15 @@ func (s *Server) initOTLP(cfg *models.Config) error {
 	return nil
 }
 
-func buildClients(cfg *models.Config, _ trace.TracerProvider) []powerscale.Client {
+func buildClients(ctx context.Context, cfg *models.Config) []powerscale.Client {
 	clients := make([]powerscale.Client, 0, len(cfg.Clusters))
 	for _, cl := range cfg.Clusters {
-		clients = append(clients, powerscale.NewStubClient(cl.Name))
+		client, err := powerscale.NewClusterClient(ctx, cl)
+		if err != nil {
+			log.Warnf("cluster %q: client init failed, will be marked down: %v", cl.Name, err)
+			continue
+		}
+		clients = append(clients, client)
 	}
 	return clients
 }
