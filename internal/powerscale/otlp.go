@@ -49,11 +49,19 @@ func NewOTLPExporter(ctx context.Context, oc models.OTelExportConfig, store *Sna
 // newOTLPExporter builds the meter provider from a reader. Separated so tests can
 // inject a ManualReader.
 func newOTLPExporter(reader sdkmetric.Reader, store *SnapshotStore, serviceVersion string) *OTLPExporter {
-	res, _ := resource.Merge(resource.Default(), resource.NewWithAttributes(
+	res, err := resource.Merge(resource.Default(), resource.NewWithAttributes(
 		semconv.SchemaURL,
 		semconv.ServiceName("pscale-exporter"),
 		semconv.ServiceVersion(serviceVersion),
 	))
+	if err != nil {
+		// Schema-URL mismatch between resource.Default() and our semconv version:
+		// fall back to a schemaless resource so service.name/version are retained.
+		res = resource.NewSchemaless(
+			semconv.ServiceName("pscale-exporter"),
+			semconv.ServiceVersion(serviceVersion),
+		)
+	}
 	provider := sdkmetric.NewMeterProvider(
 		sdkmetric.WithReader(reader),
 		sdkmetric.WithResource(res),

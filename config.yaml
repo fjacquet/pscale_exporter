@@ -30,4 +30,5 @@ clusters:
     port: 8080
     username: pscale-monitor
     password: "${PSCALE1_PASSWORD}"
-    insecureSkipVerify: true
+    # Enable ONLY for clusters with self-signed certs (common in test/lab); keep false in production.
+    insecureSkipVerify: false

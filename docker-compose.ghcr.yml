@@ -13,7 +13,7 @@ services:
     image: ghcr.io/fjacquet/pscale_exporter:${PSCALE_TAG:-latest}
     container_name: pscale_exporter
     ports:
-      - "2112:2112"
+      - "127.0.0.1:2112:2112"
     volumes:
       - ./config.yaml:/etc/pscale_exporter/config.yaml:ro
       - pscale_logs:/var/log/pscale_exporter
@@ -22,10 +22,10 @@ services:
     restart: unless-stopped
 
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v2.53.0
     container_name: pscale_prometheus
     ports:
-      - "9090:9090"
+      - "127.0.0.1:9090:9090"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./deploy/prometheus/pscale.rules.yml:/etc/prometheus/pscale.rules.yml:ro
@@ -34,10 +34,10 @@ services:
     restart: unless-stopped
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:11.1.0
     container_name: pscale_grafana
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     environment:
       - GF_SECURITY_ADMIN_USER=${GF_ADMIN_USER:-admin}
       - GF_SECURITY_ADMIN_PASSWORD=${GF_ADMIN_PASSWORD:-admin}
@@ -49,14 +49,14 @@ services:
     restart: unless-stopped
 
   otel-collector:
-    image: otel/opentelemetry-collector-contrib:latest
+    image: otel/opentelemetry-collector-contrib:0.111.0
     container_name: pscale_otel_collector
     command: ["--config=/etc/otel-collector-config.yaml"]
     volumes:
       - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
     ports:
-      - "4317:4317"
-      - "8889:8889"
+      - "127.0.0.1:4317:4317"
+      - "127.0.0.1:8889:8889"
     restart: unless-stopped
 
 volumes:

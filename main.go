@@ -58,6 +58,8 @@ type Server struct {
 	telemetry      *telemetry.Manager
 	tracerProvider trace.TracerProvider
 
+	reloadMu sync.Mutex // serializes the whole ReloadConfig body
+
 	mu            sync.Mutex // guards clients/collector/collectCancel across reloads
 	clients       []powerscale.Client
 	collector     *powerscale.Collector
@@ -210,6 +212,9 @@ func (s *Server) ErrorChan() <-chan error { return s.serverErrChan }
 // ReloadConfig reloads configuration; when the cluster set changes it rebuilds the
 // client pool and collection loop.
 func (s *Server) ReloadConfig(configPath string) error {
+	s.reloadMu.Lock()
+	defer s.reloadMu.Unlock()
+
 	clustersChanged, err := s.cfg.ReloadConfig(configPath)
 	if err != nil {
 		return err
@@ -364,6 +369,9 @@ func main() {
 			cfg, err := validateConfig(configFile)
 			if err != nil {
 				return err
+			}
+			if err := utils.ResolveSecrets(cfg); err != nil {
+				return fmt.Errorf("failed to resolve secrets: %w", err)
 			}
 
 			safeCfg := models.NewSafeConfig(cfg, utils.ResolveSecrets)

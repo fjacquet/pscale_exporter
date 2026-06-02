@@ -24,7 +24,7 @@ services:
     pull_policy: build
     container_name: pscale_exporter
     ports:
-      - "2112:2112"
+      - "127.0.0.1:2112:2112"
     volumes:
       - ./config.yaml:/etc/pscale_exporter/config.yaml:ro
       # Persist the log file (config.yaml -> logName). Owned by uid 10001 via the image.
@@ -35,10 +35,10 @@ services:
     restart: unless-stopped
 
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v2.53.0
     container_name: pscale_prometheus
     ports:
-      - "9090:9090"
+      - "127.0.0.1:9090:9090"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./deploy/prometheus/pscale.rules.yml:/etc/prometheus/pscale.rules.yml:ro
@@ -47,10 +47,10 @@ services:
     restart: unless-stopped
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:11.1.0
     container_name: pscale_grafana
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     environment:
       # Local test-stack credentials. Override GF_ADMIN_PASSWORD for anything non-local.
       - GF_SECURITY_ADMIN_USER=${GF_ADMIN_USER:-admin}
@@ -68,14 +68,14 @@ services:
   # Receives the OTLP metric push when opentelemetry.metrics is enabled, and re-exposes
   # it on :8889 for Prometheus (powerscale-otlp job).
   otel-collector:
-    image: otel/opentelemetry-collector-contrib:latest
+    image: otel/opentelemetry-collector-contrib:0.111.0
     container_name: pscale_otel_collector
     command: ["--config=/etc/otel-collector-config.yaml"]
     volumes:
       - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
     ports:
-      - "4317:4317" # OTLP gRPC
-      - "8889:8889" # collector-exposed Prometheus metrics
+      - "127.0.0.1:4317:4317" # OTLP gRPC
+      - "127.0.0.1:8889:8889" # collector-exposed Prometheus metrics
     restart: unless-stopped
 
 volumes:

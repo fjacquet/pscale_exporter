@@ -12,7 +12,7 @@ import (
 // FileExists reports whether the given path exists and is accessible.
 func FileExists(filename string) bool {
 	_, err := os.Stat(filename)
-	return !os.IsNotExist(err)
+	return err == nil
 }
 
 // ReadFile parses a YAML config file into cfg, then resolves secrets

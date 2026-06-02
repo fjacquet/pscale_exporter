@@ -39,7 +39,8 @@ func NewManager(cfg Config) *Manager {
 }
 
 // Initialize creates the OTLP trace exporter and registers the tracer provider.
-// On failure it logs and leaves tracing disabled rather than failing startup.
+// It returns an error on exporter or resource construction failure (the caller
+// decides whether that is fatal).
 func (m *Manager) Initialize(ctx context.Context) error {
 	exp, err := otlptracegrpc.New(ctx, m.exporterOptions()...)
 	if err != nil {

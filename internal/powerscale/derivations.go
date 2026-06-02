@@ -76,7 +76,7 @@ func countSamples(clusterName, clusterID string, c models.Counts) []Sample {
 	return []Sample{
 		{Name: "powerscale_nfs_exports_total", Labels: base, Value: float64(c.NFSExports)},
 		{Name: "powerscale_smb_shares_total", Labels: base, Value: float64(c.SMBShares)},
-		{Name: "powerscale_snapshot_total", Labels: base, Value: float64(c.Snapshots)},
+		{Name: "powerscale_snapshots_total", Labels: base, Value: float64(c.Snapshots)},
 	}
 }
 

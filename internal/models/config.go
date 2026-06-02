@@ -26,12 +26,12 @@ func (c ClusterConfig) BaseURL() string {
 	return fmt.Sprintf("https://%s:%d", c.Endpoint, c.Port)
 }
 
-// MaskPassword returns a masked password suitable for logging.
+// MaskPassword returns a fixed mask for logging; it never reveals any characters.
 func (c ClusterConfig) MaskPassword() string {
-	if len(c.Password) <= 8 {
-		return "****"
+	if c.Password == "" {
+		return ""
 	}
-	return c.Password[:2] + "****" + c.Password[len(c.Password)-2:]
+	return "****"
 }
 
 // OTelExportConfig holds the settings shared by the metrics-push and tracing exporters.
