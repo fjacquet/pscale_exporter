@@ -1,4 +1,5 @@
 /bin/
+/site/
 /log/
 /vendor/
 coverage.out

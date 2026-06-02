@@ -27,7 +27,7 @@ func TestPrepareLogsWritesFile(t *testing.T) {
 	resetLogger(t)
 
 	// Nested path exercises the MkdirAll branch on a writable parent.
-	logPath := filepath.Join(t.TempDir(), "sub", "pflex-exporter.log")
+	logPath := filepath.Join(t.TempDir(), "sub", "pscale-exporter.log")
 	if err := PrepareLogs(logPath); err != nil {
 		t.Fatalf("PrepareLogs(%q) returned error: %v", logPath, err)
 	}
@@ -53,7 +53,7 @@ func TestPrepareLogsFallsBackWhenDirUnwritable(t *testing.T) {
 	if err := os.WriteFile(parent, []byte("x"), 0o644); err != nil {
 		t.Fatalf("setup: %v", err)
 	}
-	logPath := filepath.Join(parent, "logs", "pflex-exporter.log")
+	logPath := filepath.Join(parent, "logs", "pscale-exporter.log")
 
 	if err := PrepareLogs(logPath); err != nil {
 		t.Fatalf("PrepareLogs should fall back to stdout, got error: %v", err)

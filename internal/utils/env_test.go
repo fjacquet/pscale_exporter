@@ -9,8 +9,8 @@ import (
 )
 
 func TestExpandEnvSuccess(t *testing.T) {
-	t.Setenv("PFLEX_TEST_SECRET", "hunter2")
-	got, err := ExpandEnv("pre-${PFLEX_TEST_SECRET}-post")
+	t.Setenv("PSCALE_TEST_SECRET", "hunter2")
+	got, err := ExpandEnv("pre-${PSCALE_TEST_SECRET}-post")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -20,13 +20,13 @@ func TestExpandEnvSuccess(t *testing.T) {
 }
 
 func TestExpandEnvMissing(t *testing.T) {
-	if _, err := ExpandEnv("${PFLEX_DEFINITELY_UNSET_VAR}"); err == nil {
+	if _, err := ExpandEnv("${PSCALE_DEFINITELY_UNSET_VAR}"); err == nil {
 		t.Error("expected error for unset variable")
 	}
 }
 
 func TestResolveSecretsInterpolatesAndLoadsFile(t *testing.T) {
-	t.Setenv("PFLEX_PW1", "envpass")
+	t.Setenv("PSCALE_PW1", "envpass")
 
 	pwFile := filepath.Join(t.TempDir(), "pw.txt")
 	if err := os.WriteFile(pwFile, []byte("  filepass\n"), 0o600); err != nil {
@@ -34,7 +34,7 @@ func TestResolveSecretsInterpolatesAndLoadsFile(t *testing.T) {
 	}
 
 	cfg := &models.Config{Clusters: []models.ClusterConfig{
-		{Name: "a", Endpoint: "onefs-a", Port: 8080, Username: "u", Password: "${PFLEX_PW1}"},
+		{Name: "a", Endpoint: "onefs-a", Port: 8080, Username: "u", Password: "${PSCALE_PW1}"},
 		{Name: "b", Endpoint: "onefs-b", Port: 8080, Username: "u", PasswordFile: pwFile},
 	}}
 
