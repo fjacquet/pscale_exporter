@@ -113,11 +113,9 @@ func nodeHealthSamples(clusterName, clusterID string, nodes []models.Node) []Sam
 	return out
 }
 
-// snapshotSamples emits aggregate snapshot space usage.
+// snapshotSamples emits aggregate snapshot space usage. The gauge is always emitted —
+// including a real 0 — so it is distinguishable from missing data, matching countSamples.
 func snapshotSamples(clusterName, clusterID string, s models.SnapshotSummary) []Sample {
-	if s.UsedBytes == 0 {
-		return nil
-	}
 	return []Sample{{
 		Name:   "powerscale_snapshot_used_bytes",
 		Labels: baseLabels(clusterName, clusterID),

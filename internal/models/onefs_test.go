@@ -30,8 +30,8 @@ func TestParseNodes(t *testing.T) {
 	if nodes[0].Readonly || !nodes[1].Readonly {
 		t.Fatalf("node readonly: n0=%v n1=%v", nodes[0].Readonly, nodes[1].Readonly)
 	}
-	if nodes[0].Smartfail || nodes[1].Smartfail {
-		t.Fatalf("node smartfail should be false: %+v", nodes)
+	if nodes[0].Smartfail || !nodes[1].Smartfail {
+		t.Fatalf("node smartfail: n0=%v n1=%v (want false, true)", nodes[0].Smartfail, nodes[1].Smartfail)
 	}
 	if nodes[0].DrivesByState["HEALTHY"] != 2 || nodes[1].DrivesByState["SMARTFAIL"] != 1 {
 		t.Fatalf("drive states: n0=%v n1=%v", nodes[0].DrivesByState, nodes[1].DrivesByState)

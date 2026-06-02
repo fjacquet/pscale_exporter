@@ -202,16 +202,21 @@ func ParseQuotas(b []byte) ([]Quota, error) {
 func ParseSnapshotSummary(b []byte) (SnapshotSummary, error) {
 	var raw struct {
 		Summary struct {
-			ActiveSize float64 `json:"active_size"`
-			Size       float64 `json:"size"`
+			ActiveSize *float64 `json:"active_size"`
+			Size       *float64 `json:"size"`
 		} `json:"summary"`
 	}
 	if err := json.Unmarshal(b, &raw); err != nil {
 		return SnapshotSummary{}, err
 	}
-	used := raw.Summary.ActiveSize
-	if used == 0 {
-		used = raw.Summary.Size
+	// Prefer active_size; fall back to size only when active_size is absent (not when
+	// it is a legitimate zero).
+	var used float64
+	switch {
+	case raw.Summary.ActiveSize != nil:
+		used = *raw.Summary.ActiveSize
+	case raw.Summary.Size != nil:
+		used = *raw.Summary.Size
 	}
 	return SnapshotSummary{UsedBytes: used}, nil
 }

@@ -187,7 +187,9 @@
         { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "sum by (cluster) (powerscale_node_cache_l1_read_hit_bytes_per_second{cluster=~\"$cluster\"})", "legendFormat": "{{cluster}} L1 hit", "refId": "A" },
         { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "sum by (cluster) (powerscale_node_cache_l2_read_hit_bytes_per_second{cluster=~\"$cluster\"})", "legendFormat": "{{cluster}} L2 hit", "refId": "B" },
         { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "sum by (cluster) (powerscale_node_cache_l3_read_hit_bytes_per_second{cluster=~\"$cluster\"})", "legendFormat": "{{cluster}} L3 hit", "refId": "C" },
-        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "sum by (cluster) (powerscale_node_cache_l2_read_miss_bytes_per_second{cluster=~\"$cluster\"})", "legendFormat": "{{cluster}} L2 miss", "refId": "D" }
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "sum by (cluster) (powerscale_node_cache_l1_read_miss_bytes_per_second{cluster=~\"$cluster\"})", "legendFormat": "{{cluster}} L1 miss", "refId": "D" },
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "sum by (cluster) (powerscale_node_cache_l2_read_miss_bytes_per_second{cluster=~\"$cluster\"})", "legendFormat": "{{cluster}} L2 miss", "refId": "E" },
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "sum by (cluster) (powerscale_node_cache_l3_read_miss_bytes_per_second{cluster=~\"$cluster\"})", "legendFormat": "{{cluster}} L3 miss", "refId": "F" }
       ]
     },
     {
