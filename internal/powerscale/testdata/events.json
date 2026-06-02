@@ -1,0 +1,5 @@
+{"eventgroups": [
+  {"id": 1, "severity": "critical", "resolved": false},
+  {"id": 2, "severity": "warning", "resolved": false},
+  {"id": 3, "severity": "warning", "resolved": true}
+], "total": 3}

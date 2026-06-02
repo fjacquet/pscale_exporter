@@ -1,14 +1,18 @@
 # Dashboards
 
-A ready-made Grafana dashboard ships in the repo:
-`grafana/provisioning/dashboards/json/powerscale-overview.json` (**PowerScale / OneFS
-Overview**, uid `powerscale-overview`).
+Two ready-made Grafana dashboards ship in the repo under
+`grafana/provisioning/dashboards/json/`:
+
+| Dashboard | uid | Focus |
+|---|---|---|
+| **PowerScale / OneFS Overview** | `powerscale-overview` | Capacity, performance, protocols — day-to-day health. |
+| **PowerScale / OneFS Advanced** | `powerscale-advanced` | Node/drive health, data protection, cache efficiency, quota & CPU detail. |
 
 Because the `powerscale_` prefix matches
 [`dell/csm-metrics-powerscale`](https://github.com/dell/csm-metrics-powerscale), existing
 CSM dashboards also work against this exporter without modification.
 
-## What it shows
+## Overview dashboard
 
 One comprehensive board with these rows:
 
@@ -32,6 +36,21 @@ One comprehensive board with these rows:
 !!! note "Per-second gauges"
     IOPS / throughput / protocol panels read per-second gauges directly with `sum`/`avg`
     — they intentionally do **not** use `rate()`. See the [Metrics Reference](metrics.md).
+
+## Advanced dashboard
+
+The Advanced board surfaces the health/state and efficiency metrics, with a link back to
+the Overview board:
+
+- **Cluster Health** — nodes read-only / smartfailing, drives by state, active events by
+  severity, SyncIQ policies failed.
+- **Data Protection** — SyncIQ policy table (enabled + last-run-failed) and snapshot space
+  used.
+- **Cache Efficiency** — L1/L2/L3 read hit-vs-miss and a computed hit-ratio. These use the
+  *provisional* `cache.*` keys; the panels stay empty if your OneFS release exposes
+  different key strings (see [Metrics Reference](metrics.md#cache-provisional)).
+- **Node CPU Detail** — per-node sys / user / idle.
+- **Quota Detail** — usage vs advisory / soft / hard thresholds.
 
 ## Auto-provisioned (compose stack)
 

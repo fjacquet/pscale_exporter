@@ -51,8 +51,14 @@ func newMockOneFS(t *testing.T) *httptest.Server {
 			writeBytes(w, fixture(t, "nfs_exports.json"))
 		case strings.HasSuffix(p, "/protocols/smb/shares"):
 			writeBytes(w, fixture(t, "smb_shares.json"))
+		case strings.HasSuffix(p, "/snapshot/snapshots-summary"):
+			writeBytes(w, fixture(t, "snapshots_summary.json"))
 		case strings.HasSuffix(p, "/snapshot/snapshots"):
 			writeBytes(w, fixture(t, "snapshots.json"))
+		case strings.HasSuffix(p, "/sync/policies"):
+			writeBytes(w, fixture(t, "sync_policies.json"))
+		case strings.HasSuffix(p, "/event/eventgroup-occurrences"):
+			writeBytes(w, fixture(t, "events.json"))
 		case strings.HasSuffix(p, "/statistics/current"):
 			writeBytes(w, fixture(t, "stat_current.json"))
 		case strings.HasSuffix(p, "/statistics/summary/protocol"):

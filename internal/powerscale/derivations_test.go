@@ -31,11 +31,17 @@ func TestQueryKeyList(t *testing.T) {
 func TestBuildSamplesClusterAndNode(t *testing.T) {
 	inv := &models.Inventory{
 		Cluster: models.ClusterInfo{Name: "ignored", GUID: "GUID-1"},
-		Nodes:   []models.Node{{ID: 1, LNN: 1}, {ID: 2, LNN: 2}},
-		Quotas: []models.Quota{
-			{ID: "q1", Path: "/ifs/data/a", Type: "directory", UsageBytes: 100, HardBytes: 1000},
+		Nodes: []models.Node{
+			{ID: 1, LNN: 1, DrivesByState: map[string]int{"HEALTHY": 2}},
+			{ID: 2, LNN: 2, Readonly: true, DrivesByState: map[string]int{"HEALTHY": 1, "SMARTFAIL": 1}},
 		},
-		Counts: models.Counts{NFSExports: 5, SMBShares: 3, Snapshots: 7},
+		Quotas: []models.Quota{
+			{ID: "q1", Path: "/ifs/data/a", Type: "directory", UsageBytes: 100, HardBytes: 1000, SoftBytes: 800, AdvisoryBytes: 600, PhysicalBytes: 120},
+		},
+		Counts:       models.Counts{NFSExports: 5, SMBShares: 3, Snapshots: 7},
+		Snapshot:     models.SnapshotSummary{UsedBytes: 10240},
+		SyncPolicies: []models.SyncPolicy{{Name: "dr", Enabled: true, LastJobState: "failed"}},
+		Events:       map[string]int{"critical": 2},
 	}
 	st := &models.Statistics{
 		Current: []models.StatPoint{
@@ -82,5 +88,33 @@ func TestBuildSamplesClusterAndNode(t *testing.T) {
 	}
 	if _, ok := get("powerscale_cluster_unmapped_key"); ok {
 		t.Fatal("unmapped key should not produce a sample")
+	}
+
+	if s, ok := get("powerscale_quota_soft_threshold_bytes"); !ok || s.Value != 800 {
+		t.Fatalf("quota soft sample wrong: %+v ok=%v", s, ok)
+	}
+	if s, ok := get("powerscale_quota_advisory_threshold_bytes"); !ok || s.Value != 600 {
+		t.Fatalf("quota advisory sample wrong: %+v ok=%v", s, ok)
+	}
+	if s, ok := get("powerscale_quota_physical_usage_bytes"); !ok || s.Value != 120 {
+		t.Fatalf("quota physical sample wrong: %+v ok=%v", s, ok)
+	}
+	if s, ok := get("powerscale_node_readonly"); !ok {
+		t.Fatalf("node readonly sample missing: %+v", s)
+	}
+	if s, ok := get("powerscale_node_drives_total"); !ok || s.Value == 0 {
+		t.Fatalf("node drives sample wrong: %+v ok=%v", s, ok)
+	}
+	if s, ok := get("powerscale_snapshot_used_bytes"); !ok || s.Value != 10240 {
+		t.Fatalf("snapshot used sample wrong: %+v ok=%v", s, ok)
+	}
+	if s, ok := get("powerscale_synciq_last_run_failed"); !ok || s.Value != 1 {
+		t.Fatalf("synciq failed sample wrong: %+v ok=%v", s, ok)
+	}
+	if s, ok := get("powerscale_synciq_policy_enabled"); !ok || s.Value != 1 {
+		t.Fatalf("synciq enabled sample wrong: %+v ok=%v", s, ok)
+	}
+	if s, ok := get("powerscale_active_events"); !ok || s.Value != 2 {
+		t.Fatalf("active events sample wrong: %+v ok=%v", s, ok)
 	}
 }

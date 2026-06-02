@@ -46,16 +46,42 @@ Per-node series; the `node` label is the logical node number (LNN).
 | Metric | Unit | Description |
 |---|---|---|
 | `powerscale_node_cpu_idle_percent` | percent | Per-node idle CPU. |
+| `powerscale_node_cpu_sys_percent` | percent | Per-node system CPU. |
+| `powerscale_node_cpu_user_percent` | percent | Per-node user CPU. |
 | `powerscale_node_memory_used_bytes` | bytes | Per-node memory used. |
 | `powerscale_node_disk_operations_per_second` | ops/s | Per-node disk transfer rate. |
 | `powerscale_node_used_capacity_bytes` | bytes | Per-node used `/ifs` capacity. |
+
+### Cache (provisional)
+
+Per-node read-cache byte rates. The exact OneFS `cache.*` stat-key strings vary by release
+and are **runtime-discoverable** (`GET /platform/1/statistics/keys`); these rows are
+best-known names and emit nothing if your cluster uses different keys. Compute hit ratio in
+PromQL as `hit / (hit + miss)`.
+
+| Metric | Unit |
+|---|---|
+| `powerscale_node_cache_l1_read_hit_bytes_per_second` / `..._miss_...` | bytes/s |
+| `powerscale_node_cache_l2_read_hit_bytes_per_second` / `..._miss_...` | bytes/s |
+| `powerscale_node_cache_l3_read_hit_bytes_per_second` / `..._miss_...` | bytes/s |
+
+### Node health
+
+| Metric | Unit | Description |
+|---|---|---|
+| `powerscale_node_readonly` | bool | `1` if the node is mounted read-only. |
+| `powerscale_node_smartfail` | bool | `1` if the node is smartfailing / smartfailed. |
+| `powerscale_node_drives_total` | count | Drive count per node, labelled by `state` (e.g. `HEALTHY`, `SMARTFAIL`, `DEAD`). |
 
 ## Quota metrics
 
 | Metric | Unit | Description |
 |---|---|---|
-| `powerscale_quota_usage_bytes` | bytes | Current usage for the quota. |
-| `powerscale_quota_hard_threshold_bytes` | bytes | Hard limit. Emitted only when a hard threshold is set (> 0). |
+| `powerscale_quota_usage_bytes` | bytes | Logical usage for the quota. |
+| `powerscale_quota_physical_usage_bytes` | bytes | Physical usage (post data-reduction). Emitted when > 0. |
+| `powerscale_quota_hard_threshold_bytes` | bytes | Hard limit. Emitted only when set (> 0). |
+| `powerscale_quota_soft_threshold_bytes` | bytes | Soft limit. Emitted only when set (> 0). |
+| `powerscale_quota_advisory_threshold_bytes` | bytes | Advisory limit. Emitted only when set (> 0). |
 
 ## Protocol metrics
 
@@ -73,6 +99,18 @@ Per-node, per-protocol, per-operation, from the OneFS protocol summary.
 | `powerscale_nfs_exports_total` | count | Number of NFS exports. |
 | `powerscale_smb_shares_total` | count | Number of SMB shares. |
 | `powerscale_snapshots_total` | count | Number of snapshots. |
+
+## Data protection
+
+All best-effort: a cluster without SyncIQ (or where the account lacks privilege) simply
+emits no series.
+
+| Metric | Unit | Description | Labels |
+|---|---|---|---|
+| `powerscale_snapshot_used_bytes` | bytes | Aggregate space held by snapshots. | `cluster`, `cluster_id` |
+| `powerscale_synciq_policy_enabled` | bool | `1` if the SyncIQ replication policy is enabled. | + `policy` |
+| `powerscale_synciq_last_run_failed` | bool | `1` if the policy's last run failed / needs attention. | + `policy` |
+| `powerscale_active_events` | count | Unresolved OneFS event-group occurrences. | + `severity` |
 
 ## Health & metadata
 
