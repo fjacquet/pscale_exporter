@@ -4,9 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strconv"
-	"strings"
-	"sync"
 
 	"github.com/dell/gopowerscale/api"
 	"github.com/fjacquet/pscale_exporter/internal/models"
@@ -26,11 +23,7 @@ var _ Client = (*ClusterClient)(nil)
 // gopowerscale session used for both typed resources and the raw statistics API.
 type ClusterClient struct {
 	name string
-	cfg  models.ClusterConfig
 	cli  api.Client
-
-	mu      sync.Mutex
-	version int
 }
 
 // NewClusterClient establishes one authenticated gopowerscale session for the cluster.
@@ -49,7 +42,7 @@ func NewClusterClient(ctx context.Context, cfg models.ClusterConfig) (*ClusterCl
 	if err != nil {
 		return nil, fmt.Errorf("cluster %q: auth failed: %w", cfg.Name, err)
 	}
-	return &ClusterClient{name: cfg.Name, cfg: cfg, cli: cli}, nil
+	return &ClusterClient{name: cfg.Name, cli: cli}, nil
 }
 
 // Name returns the configured cluster name.
@@ -72,29 +65,9 @@ func (c *ClusterClient) getRawParams(ctx context.Context, path string, params ap
 	return nil
 }
 
-// APIVersion resolves platform/latest once and caches the result.
-func (c *ClusterClient) APIVersion(ctx context.Context) (int, error) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	if c.version != 0 {
-		return c.version, nil
-	}
-	var b []byte
-	if err := c.getRaw(ctx, "platform/latest", &b); err != nil {
-		return 0, err
-	}
-	var raw struct {
-		Latest string `json:"latest"`
-	}
-	if err := json.Unmarshal(b, &raw); err != nil {
-		return 0, err
-	}
-	v, err := strconv.Atoi(strings.TrimSpace(raw.Latest))
-	if err != nil {
-		return 0, fmt.Errorf("cluster %q: unparseable api version %q", c.name, raw.Latest)
-	}
-	c.version = v
-	return v, nil
+// APIVersion returns the platform API version negotiated by the SDK at construction.
+func (c *ClusterClient) APIVersion(_ context.Context) (int, error) {
+	return int(c.cli.APIVersion()), nil
 }
 
 // GetInventory fetches cluster config, nodes, quotas, and best-effort resource counts.
@@ -105,21 +78,21 @@ func (c *ClusterClient) GetInventory(ctx context.Context) (*models.Inventory, er
 	}
 	info, err := models.ParseClusterConfig(cfgBytes)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cluster %q: parse cluster config: %w", c.name, err)
 	}
 	if err := c.getRaw(ctx, "platform/3/cluster/nodes", &nodesBytes); err != nil {
 		return nil, err
 	}
 	nodes, err := models.ParseNodes(nodesBytes)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cluster %q: parse nodes: %w", c.name, err)
 	}
 	if err := c.getRaw(ctx, "platform/1/quota/quotas", &quotaBytes); err != nil {
 		return nil, err
 	}
 	quotas, err := models.ParseQuotas(quotaBytes)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cluster %q: parse quotas: %w", c.name, err)
 	}
 	return &models.Inventory{Cluster: info, Nodes: nodes, Quotas: quotas, Counts: c.inventoryCounts(ctx)}, nil
 }
@@ -162,7 +135,7 @@ func (c *ClusterClient) GetStatistics(ctx context.Context) (*models.Statistics, 
 	}
 	current, err := models.ParseStatCurrent(curBytes)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("cluster %q: parse statistics: %w", c.name, err)
 	}
 	st := &models.Statistics{Current: current}
 
