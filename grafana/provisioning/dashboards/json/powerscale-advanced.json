@@ -235,11 +235,12 @@
         { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_quota_usage_bytes{cluster=~\"$cluster\"}", "format": "table", "instant": true, "refId": "A" },
         { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_quota_advisory_threshold_bytes{cluster=~\"$cluster\"}", "format": "table", "instant": true, "refId": "B" },
         { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_quota_soft_threshold_bytes{cluster=~\"$cluster\"}", "format": "table", "instant": true, "refId": "C" },
-        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_quota_hard_threshold_bytes{cluster=~\"$cluster\"}", "format": "table", "instant": true, "refId": "D" }
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_quota_hard_threshold_bytes{cluster=~\"$cluster\"}", "format": "table", "instant": true, "refId": "D" },
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_quota_physical_usage_bytes{cluster=~\"$cluster\"}", "format": "table", "instant": true, "refId": "E" }
       ],
       "transformations": [
         { "id": "merge", "options": {} },
-        { "id": "organize", "options": { "excludeByName": { "Time": true, "__name__": true, "job": true, "instance": true, "cluster_id": true, "quota_id": true }, "renameByName": { "Value #A": "usage", "Value #B": "advisory", "Value #C": "soft", "Value #D": "hard", "quota_path": "path", "quota_type": "type", "cluster": "cluster" } } }
+        { "id": "organize", "options": { "excludeByName": { "Time": true, "__name__": true, "job": true, "instance": true, "cluster_id": true, "quota_id": true }, "renameByName": { "Value #A": "usage", "Value #B": "advisory", "Value #C": "soft", "Value #D": "hard", "Value #E": "physical", "quota_path": "path", "quota_type": "type", "cluster": "cluster" } } }
       ]
     },
     {

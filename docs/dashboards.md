@@ -18,8 +18,8 @@ One comprehensive board with these rows:
 
 - **Health & Overview** — clusters up, per-cluster up/down status, detected OneFS API
   version, last-scrape age, and NFS export / SMB share / snapshot counts.
-- **Capacity & Quotas** — capacity used %, a used/available/total timeseries, and a table
-  of the top quotas (usage vs hard limit).
+- **Capacity & Quotas** — capacity used %, a used/available/free/total timeseries, and a
+  table of the top quotas (usage vs hard limit).
 - **CPU** — cluster system / user / idle percent.
 - **Network & Disk** — external in/out throughput and cluster disk IOPS.
 - **Protocol** — operations and average latency, broken down by `protocol` and `op`.
@@ -50,7 +50,7 @@ the Overview board:
   *provisional* `cache.*` keys; the panels stay empty if your OneFS release exposes
   different key strings (see [Metrics Reference](metrics.md#cache-provisional)).
 - **Node CPU Detail** — per-node sys / user / idle.
-- **Quota Detail** — usage vs advisory / soft / hard thresholds.
+- **Quota Detail** — logical + physical usage vs advisory / soft / hard thresholds.
 - **Storage Efficiency** — deduplication logical saved / deduplicated bytes *(provisional)*.
 - **Per-Drive** — top drive IOPS and busy % *(provisional)*.
 - **Per-Client** — operations by protocol/class and throughput in/out *(provisional)*.
