@@ -42,6 +42,29 @@ export PSCALE1_PASSWORD='your-monitor-password'
 
 Or with Docker: `docker pull ghcr.io/fjacquet/pscale_exporter:latest`.
 
+## Local test stack
+
+A `docker compose` stack brings up the exporter alongside Prometheus, an OpenTelemetry
+collector, and Grafana for a complete end-to-end test:
+
+```bash
+PSCALE1_PASSWORD='your-monitor-password' docker compose up -d --build
+```
+
+| Service | URL | Purpose |
+|---|---|---|
+| Exporter | <http://localhost:2112/metrics> (`/health`) | the `/metrics` pull endpoint |
+| Prometheus | <http://localhost:9090> | scrapes the exporter; alert rules in `deploy/prometheus/pscale.rules.yml` |
+| Grafana | <http://localhost:3000> (`admin`/`admin`) | Prometheus datasource auto-provisioned |
+| OTLP collector | <http://localhost:8889/metrics> | receives the OTLP push and re-exposes it |
+
+Point `config.yaml` at a real cluster and set `PSCALE1_PASSWORD` for a true end-to-end
+run; with the default example cluster the stack still validates wiring (`powerscale_up`
+goes to 0 and the `PowerScaleClusterDown` alert fires). To exercise the OTLP push path,
+set `opentelemetry.metrics.enabled: true` with `endpoint: "otel-collector:4317"` in
+`config.yaml`. A pull-based variant (published GHCR image, no local build) is in
+`docker-compose.ghcr.yml`.
+
 ## Documentation
 
 Full docs at **<https://fjacquet.github.io/pscale_exporter/>**:

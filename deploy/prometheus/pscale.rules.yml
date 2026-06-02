@@ -1,0 +1,46 @@
+groups:
+  - name: powerscale
+    rules:
+      # Cluster unreachable: the exporter scraped but the OneFS session/collection failed.
+      - alert: PowerScaleClusterDown
+        expr: powerscale_up == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PowerScale cluster {{ $labels.cluster }} is unreachable"
+          description: "powerscale_up has been 0 for 5m (auth or collection failure)."
+
+      # The exporter itself stopped being scrapeable by Prometheus.
+      - alert: PowerScaleExporterDown
+        expr: up{job="powerscale"} == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "pscale_exporter target is down"
+          description: "Prometheus cannot scrape the pscale_exporter /metrics endpoint."
+
+      # Capacity headroom warning (used / total). Both series come from ifs.bytes.* keys.
+      - alert: PowerScaleClusterCapacityHigh
+        expr: |
+          (powerscale_cluster_used_capacity_bytes
+            / powerscale_cluster_total_capacity_bytes) > 0.85
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "PowerScale cluster {{ $labels.cluster }} above 85% capacity"
+          description: "Used capacity is {{ $value | humanizePercentage }} of total."
+
+      # A directory quota is near its hard threshold.
+      - alert: PowerScaleQuotaNearHardLimit
+        expr: |
+          (powerscale_quota_usage_bytes
+            / powerscale_quota_hard_threshold_bytes) > 0.9
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Quota {{ $labels.quota_path }} on {{ $labels.cluster }} near hard limit"
+          description: "Usage is {{ $value | humanizePercentage }} of the hard quota."

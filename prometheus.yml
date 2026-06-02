@@ -5,7 +5,16 @@ rule_files:
   - /etc/prometheus/pscale.rules.yml
 
 scrape_configs:
+  # Pull path: scrape the exporter's /metrics endpoint directly.
   - job_name: powerscale
     metrics_path: /metrics
     static_configs:
       - targets: ["pscale_exporter:2112"]
+
+  # OTLP push path: scrape the OpenTelemetry collector, which re-exposes the metrics
+  # the exporter pushes to it (only produces series when opentelemetry.metrics is
+  # enabled in config.yaml). Lets the test stack observe both export paths.
+  - job_name: powerscale-otlp
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["otel-collector:8889"]
