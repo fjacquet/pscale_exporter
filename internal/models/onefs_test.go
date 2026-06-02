@@ -103,3 +103,30 @@ func TestParseCount(t *testing.T) {
 		t.Fatalf("count parse: %d err=%v", n, err)
 	}
 }
+
+func TestParseDedupeSummary(t *testing.T) {
+	d, err := ParseDedupeSummary(read(t, "dedupe_summary.json"))
+	if err != nil || d.LogicalSavedBytes != 1000 || d.DeduplicatedBytes != 5000 {
+		t.Fatalf("dedupe parse: %+v err=%v", d, err)
+	}
+}
+
+func TestParseDriveSummary(t *testing.T) {
+	ds, err := ParseDriveSummary(read(t, "stat_drive.json"))
+	if err != nil || len(ds) != 2 {
+		t.Fatalf("drive parse: %+v err=%v", ds, err)
+	}
+	if ds[0].Node != 1 || ds[0].Bay != "1" || ds[0].Type != "SSD" || ds[0].OpsPerSec != 120 || ds[0].BusyPercent != 15.5 {
+		t.Fatalf("drive[0] fields: %+v", ds[0])
+	}
+}
+
+func TestParseClientSummary(t *testing.T) {
+	cs, err := ParseClientSummary(read(t, "stat_client.json"))
+	if err != nil || len(cs) != 2 {
+		t.Fatalf("client parse: %+v err=%v", cs, err)
+	}
+	if cs[0].Protocol != "nfs3" || cs[0].Class != "read" || cs[0].OpsPerSec != 50 || cs[0].InBps != 1024 || cs[0].OutBps != 2048 {
+		t.Fatalf("client[0] fields: %+v", cs[0])
+	}
+}

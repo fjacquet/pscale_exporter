@@ -28,6 +28,9 @@ func BuildSamples(clusterName string, inv *models.Inventory, st *models.Statisti
 	samples = append(samples, snapshotSamples(clusterName, clusterID, inv.Snapshot)...)
 	samples = append(samples, syncSamples(clusterName, clusterID, inv.SyncPolicies)...)
 	samples = append(samples, eventSamples(clusterName, clusterID, inv.Events)...)
+	samples = append(samples, dedupeSamples(clusterName, clusterID, inv.Dedupe)...)
+	samples = append(samples, driveSamples(clusterName, clusterID, st)...)
+	samples = append(samples, clientSamples(clusterName, clusterID, st)...)
 	return samples
 }
 
@@ -148,6 +151,49 @@ func eventSamples(clusterName, clusterID string, events map[string]int) []Sample
 			Labels: severityLabels(clusterName, clusterID, severity),
 			Value:  float64(count),
 		})
+	}
+	return out
+}
+
+// dedupeSamples emits cluster-wide deduplication efficiency. Always emitted (best-effort
+// failure yields 0) so the gauges are distinguishable from missing data.
+func dedupeSamples(clusterName, clusterID string, d models.DedupeSummary) []Sample {
+	base := baseLabels(clusterName, clusterID)
+	return []Sample{
+		{Name: "powerscale_dedupe_logical_saved_bytes", Labels: base, Value: d.LogicalSavedBytes},
+		{Name: "powerscale_dedupe_deduplicated_bytes", Labels: base, Value: d.DeduplicatedBytes},
+	}
+}
+
+// driveSamples emits per-drive performance.
+func driveSamples(clusterName, clusterID string, st *models.Statistics) []Sample {
+	if st == nil {
+		return nil
+	}
+	var out []Sample
+	for _, d := range st.Drives {
+		labels := driveStatLabels(clusterName, clusterID, strconv.Itoa(d.Node), d.Bay, d.Type)
+		out = append(out,
+			Sample{Name: "powerscale_drive_operations_per_second", Labels: labels, Value: d.OpsPerSec},
+			Sample{Name: "powerscale_drive_busy_percent", Labels: labels, Value: d.BusyPercent},
+		)
+	}
+	return out
+}
+
+// clientSamples emits per-client-class operation rate and throughput.
+func clientSamples(clusterName, clusterID string, st *models.Statistics) []Sample {
+	if st == nil {
+		return nil
+	}
+	var out []Sample
+	for _, c := range st.Clients {
+		labels := clientLabels(clusterName, clusterID, strconv.Itoa(c.Node), c.Protocol, c.Class)
+		out = append(out,
+			Sample{Name: "powerscale_client_operations_per_second", Labels: labels, Value: c.OpsPerSec},
+			Sample{Name: "powerscale_client_in_bytes_per_second", Labels: labels, Value: c.InBps},
+			Sample{Name: "powerscale_client_out_bytes_per_second", Labels: labels, Value: c.OutBps},
+		)
 	}
 	return out
 }

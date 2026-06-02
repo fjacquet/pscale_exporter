@@ -1,0 +1,4 @@
+{"client": [
+  {"node": 1, "protocol": "nfs3", "class": "read", "ops": 50, "in": 1024, "out": 2048},
+  {"node": 1, "protocol": "smb2", "class": "write", "ops": 30, "in": 4096, "out": 512}
+]}

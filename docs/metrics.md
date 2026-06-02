@@ -112,6 +112,38 @@ emits no series.
 | `powerscale_synciq_last_run_failed` | bool | `1` if the policy's last run failed / needs attention. | + `policy` |
 | `powerscale_active_events` | count | Unresolved OneFS event-group occurrences. | + `severity` |
 
+## Storage efficiency (provisional)
+
+Cluster-wide deduplication, from `dedupe/dedupe-summary`. Best-effort; the field names are
+provisional — validate against your OneFS release.
+
+| Metric | Unit | Description |
+|---|---|---|
+| `powerscale_dedupe_logical_saved_bytes` | bytes | Logical space saved by deduplication. |
+| `powerscale_dedupe_deduplicated_bytes` | bytes | Logical data that has been deduplicated. |
+
+## Per-drive (provisional)
+
+From `statistics/summary/drive`. Best-effort; schema is provisional. Labels: `cluster`,
+`cluster_id`, `node`, `bay`, `type` (e.g. `SSD`, `HDD`).
+
+| Metric | Unit | Description |
+|---|---|---|
+| `powerscale_drive_operations_per_second` | ops/s | Per-drive operation rate. |
+| `powerscale_drive_busy_percent` | percent | Per-drive busy time. |
+
+## Per-client (provisional)
+
+From `statistics/summary/client`, aggregated by `node` / `protocol` / `class` to bound
+cardinality (individual remote clients are intentionally not exported). Best-effort;
+schema is provisional.
+
+| Metric | Unit | Description |
+|---|---|---|
+| `powerscale_client_operations_per_second` | ops/s | Operation rate per node/protocol/class. |
+| `powerscale_client_in_bytes_per_second` | bytes/s | Inbound throughput. |
+| `powerscale_client_out_bytes_per_second` | bytes/s | Outbound throughput. |
+
 ## Health & metadata
 
 These carry only the `cluster` label.

@@ -62,3 +62,21 @@ func policyLabels(clusterName, clusterID, policy string) []Label {
 func severityLabels(clusterName, clusterID, severity string) []Label {
 	return append(baseLabels(clusterName, clusterID), Label{Name: "severity", Value: severity})
 }
+
+// driveStatLabels builds the canonical per-drive label set.
+func driveStatLabels(clusterName, clusterID, nodeLNN, bay, driveType string) []Label {
+	return append(baseLabels(clusterName, clusterID),
+		Label{Name: "node", Value: nodeLNN},
+		Label{Name: "bay", Value: bay},
+		Label{Name: "type", Value: driveType},
+	)
+}
+
+// clientLabels builds the canonical per-client-class label set.
+func clientLabels(clusterName, clusterID, nodeLNN, proto, class string) []Label {
+	return append(baseLabels(clusterName, clusterID),
+		Label{Name: "node", Value: nodeLNN},
+		Label{Name: "protocol", Value: proto},
+		Label{Name: "class", Value: class},
+	)
+}
