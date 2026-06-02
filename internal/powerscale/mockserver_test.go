@@ -30,7 +30,10 @@ func fixture(t *testing.T, name string) []byte {
 func newMockOneFS(t *testing.T) *httptest.Server {
 	t.Helper()
 	srv := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		p := r.URL.Path
+		// gopowerscale appends a trailing slash to every request path
+		// (e.g. "/platform/latest/"); normalize so suffix matching is
+		// independent of that, without altering any fixture data.
+		p := strings.TrimSuffix(r.URL.Path, "/")
 		w.Header().Set("Content-Type", "application/json")
 		switch {
 		case strings.HasSuffix(p, "/session/1/session") && r.Method == http.MethodPost:
