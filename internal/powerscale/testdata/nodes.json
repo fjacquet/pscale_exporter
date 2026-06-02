@@ -1,8 +1,14 @@
 {"nodes": [
   {"id": 1, "lnn": 1,
    "state": {"readonly": {"enabled": false}, "smartfail": {"state": "not_in_smartfail"}},
-   "drives": [{"ui_state": "HEALTHY"}, {"ui_state": "HEALTHY"}]},
+   "drives": [{"ui_state": "HEALTHY"}, {"ui_state": "HEALTHY"}],
+   "status": {"powersupplies": {"count": 2, "failures": 0}},
+   "sensors": [
+     {"name": "Temperature", "values": [{"name": "CPU0", "value": "35.0", "units": "Celsius"}]},
+     {"name": "Fan", "values": [{"name": "Fan1", "value": 4500}]}
+   ]},
   {"id": 2, "lnn": 2,
    "state": {"readonly": {"enabled": true}, "smartfail": {"state": "smartfail"}},
-   "drives": [{"ui_state": "HEALTHY"}, {"ui_state": "SMARTFAIL"}]}
+   "drives": [{"ui_state": "HEALTHY"}, {"ui_state": "SMARTFAIL"}],
+   "status": {"powersupplies": {"count": 2, "failures": 1}}}
 ], "total": 2}

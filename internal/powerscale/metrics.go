@@ -80,3 +80,11 @@ func clientLabels(clusterName, clusterID, nodeLNN, proto, class string) []Label 
 		Label{Name: "class", Value: class},
 	)
 }
+
+// sensorLabels appends node identity and a hardware sensor name.
+func sensorLabels(clusterName, clusterID, nodeLNN, sensor string) []Label {
+	return append(baseLabels(clusterName, clusterID),
+		Label{Name: "node", Value: nodeLNN},
+		Label{Name: "sensor", Value: sensor},
+	)
+}

@@ -1,6 +1,34 @@
 package models
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"strconv"
+	"strings"
+)
+
+// flexFloat parses a JSON number OR a numeric string (OneFS sensor readings are sometimes
+// quoted, e.g. "35.0"). Unparseable/empty values decode to 0 rather than erroring, keeping
+// the surrounding best-effort parse resilient.
+type flexFloat float64
+
+func (f *flexFloat) UnmarshalJSON(b []byte) error {
+	s := strings.Trim(string(b), `"`)
+	if s == "" || s == "null" {
+		return nil
+	}
+	v, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		return nil
+	}
+	*f = flexFloat(v)
+	return nil
+}
+
+// Sensor is one hardware sensor reading (temperature or fan).
+type Sensor struct {
+	Name  string
+	Value float64
+}
 
 // ClusterInfo identifies a cluster (from platform/3/cluster/config).
 type ClusterInfo struct {
@@ -15,14 +43,18 @@ type Node struct {
 	ID  int // device id (devid)
 	LNN int // logical node number
 
-	Status string
-
 	Readonly  bool // node mounted read-only (state.readonly.enabled)
 	Smartfail bool // node is smartfailing / smartfailed (state.smartfail.state)
 
 	// DrivesByState counts drives by their UI state (e.g. "HEALTHY", "SMARTFAIL",
 	// "DEAD"). Empty when the nodes payload carries no drive list.
 	DrivesByState map[string]int
+
+	// Hardware (best-effort, PROVISIONAL schema from status.powersupplies + sensors).
+	PowerSupplies       int // status.powersupplies.count
+	PowerSupplyFailures int // status.powersupplies.failures
+	Temperatures        []Sensor
+	Fans                []Sensor
 }
 
 // Quota is one directory quota (from platform/1/quota/quotas). Threshold fields are 0
@@ -145,10 +177,9 @@ func ParseClusterConfig(b []byte) (ClusterInfo, error) {
 func ParseNodes(b []byte) ([]Node, error) {
 	var raw struct {
 		Nodes []struct {
-			ID     int    `json:"id"`
-			LNN    int    `json:"lnn"`
-			Status string `json:"status"`
-			State  struct {
+			ID    int `json:"id"`
+			LNN   int `json:"lnn"`
+			State struct {
 				Readonly struct {
 					Enabled bool `json:"enabled"`
 				} `json:"readonly"`
@@ -159,6 +190,19 @@ func ParseNodes(b []byte) ([]Node, error) {
 			Drives []struct {
 				UIState string `json:"ui_state"`
 			} `json:"drives"`
+			Status struct {
+				Powersupplies struct {
+					Count    int `json:"count"`
+					Failures int `json:"failures"`
+				} `json:"powersupplies"`
+			} `json:"status"`
+			Sensors []struct {
+				Name   string `json:"name"`
+				Values []struct {
+					Name  string    `json:"name"`
+					Value flexFloat `json:"value"`
+				} `json:"values"`
+			} `json:"sensors"`
 		} `json:"nodes"`
 	}
 	if err := json.Unmarshal(b, &raw); err != nil {
@@ -177,12 +221,29 @@ func ParseNodes(b []byte) ([]Node, error) {
 				drives[state]++
 			}
 		}
+		var temps, fans []Sensor
+		for _, grp := range n.Sensors {
+			g := strings.ToLower(grp.Name)
+			for _, v := range grp.Values {
+				s := Sensor{Name: v.Name, Value: float64(v.Value)}
+				switch {
+				case strings.Contains(g, "temp"):
+					temps = append(temps, s)
+				case strings.Contains(g, "fan"):
+					fans = append(fans, s)
+				}
+			}
+		}
 		sf := n.State.Smartfail.State
 		nodes = append(nodes, Node{
-			ID: n.ID, LNN: n.LNN, Status: n.Status,
-			Readonly:      n.State.Readonly.Enabled,
-			Smartfail:     sf != "" && sf != "not_in_smartfail",
-			DrivesByState: drives,
+			ID: n.ID, LNN: n.LNN,
+			Readonly:            n.State.Readonly.Enabled,
+			Smartfail:           sf != "" && sf != "not_in_smartfail",
+			DrivesByState:       drives,
+			PowerSupplies:       n.Status.Powersupplies.Count,
+			PowerSupplyFailures: n.Status.Powersupplies.Failures,
+			Temperatures:        temps,
+			Fans:                fans,
 		})
 	}
 	return nodes, nil

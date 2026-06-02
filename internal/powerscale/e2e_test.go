@@ -53,6 +53,8 @@ func TestEndToEndCollectionThroughPrometheus(t *testing.T) {
 		"powerscale_dedupe_logical_saved_bytes":     false,
 		"powerscale_drive_operations_per_second":    false,
 		"powerscale_client_operations_per_second":   false,
+		"powerscale_node_power_supplies_total":      false,
+		"powerscale_node_temperature_celsius":       false,
 	}
 	for _, mf := range mfs {
 		if _, ok := want[mf.GetName()]; ok {

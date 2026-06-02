@@ -32,8 +32,12 @@ func TestBuildSamplesClusterAndNode(t *testing.T) {
 	inv := &models.Inventory{
 		Cluster: models.ClusterInfo{Name: "ignored", GUID: "GUID-1"},
 		Nodes: []models.Node{
-			{ID: 1, LNN: 1, DrivesByState: map[string]int{"HEALTHY": 2}},
-			{ID: 2, LNN: 2, Readonly: true, DrivesByState: map[string]int{"HEALTHY": 1, "SMARTFAIL": 1}},
+			{ID: 1, LNN: 1, DrivesByState: map[string]int{"HEALTHY": 2},
+				PowerSupplies: 2, PowerSupplyFailures: 0,
+				Temperatures: []models.Sensor{{Name: "CPU0", Value: 35}},
+				Fans:         []models.Sensor{{Name: "Fan1", Value: 4500}}},
+			{ID: 2, LNN: 2, Readonly: true, DrivesByState: map[string]int{"HEALTHY": 1, "SMARTFAIL": 1},
+				PowerSupplies: 2, PowerSupplyFailures: 1},
 		},
 		Quotas: []models.Quota{
 			{ID: "q1", Path: "/ifs/data/a", Type: "directory", UsageBytes: 100, HardBytes: 1000, SoftBytes: 800, AdvisoryBytes: 600, PhysicalBytes: 120},
@@ -138,5 +142,14 @@ func TestBuildSamplesClusterAndNode(t *testing.T) {
 	}
 	if s, ok := get("powerscale_client_in_bytes_per_second"); !ok || s.Value != 1024 {
 		t.Fatalf("client in sample wrong: %+v ok=%v", s, ok)
+	}
+	if s, ok := get("powerscale_node_power_supplies_total"); !ok || s.Value != 2 {
+		t.Fatalf("psu total sample wrong: %+v ok=%v", s, ok)
+	}
+	if s, ok := get("powerscale_node_temperature_celsius"); !ok || s.Value != 35 {
+		t.Fatalf("temperature sample wrong: %+v ok=%v", s, ok)
+	}
+	if s, ok := get("powerscale_node_fan_speed_rpm"); !ok || s.Value != 4500 {
+		t.Fatalf("fan sample wrong: %+v ok=%v", s, ok)
 	}
 }
