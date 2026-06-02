@@ -31,3 +31,22 @@ func TestConfigDefaultsPortAndRejectsMissing(t *testing.T) {
 		t.Fatal("expected error for missing endpoint")
 	}
 }
+
+func TestConfigRejectsDuplicateClusterNames(t *testing.T) {
+	cfg := &Config{Clusters: []ClusterConfig{
+		{Name: "dup", Endpoint: "h1", Port: 8080, Username: "u", Password: "p"},
+		{Name: "dup", Endpoint: "h2", Port: 8080, Username: "u", Password: "p"},
+	}}
+	if err := cfg.Validate(); err == nil {
+		t.Fatal("expected error for duplicate cluster names")
+	}
+}
+
+func TestConfigAcceptsPasswordFileOnly(t *testing.T) {
+	cfg := &Config{Clusters: []ClusterConfig{
+		{Name: "c1", Endpoint: "h", Port: 8080, Username: "u", PasswordFile: "/etc/secret"},
+	}}
+	if err := cfg.Validate(); err != nil {
+		t.Fatalf("passwordFile-only config should validate, got: %v", err)
+	}
+}

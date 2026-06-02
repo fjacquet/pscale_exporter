@@ -159,7 +159,7 @@ func (c *Config) validateClusters() error {
 		if cl.Username == "" {
 			return fmt.Errorf("cluster %q: username is required", cl.Name)
 		}
-		if cl.Password == "" {
+		if cl.Password == "" && cl.PasswordFile == "" {
 			return fmt.Errorf("cluster %q: password is required (set password or passwordFile)", cl.Name)
 		}
 	}
