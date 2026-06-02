@@ -44,3 +44,21 @@ func protocolLabels(clusterName, clusterID, nodeLNN, proto, op string) []Label {
 		Label{Name: "op", Value: op},
 	)
 }
+
+// driveLabels appends node identity and a drive UI-state in canonical order.
+func driveLabels(clusterName, clusterID, nodeLNN, state string) []Label {
+	return append(baseLabels(clusterName, clusterID),
+		Label{Name: "node", Value: nodeLNN},
+		Label{Name: "state", Value: state},
+	)
+}
+
+// policyLabels appends a SyncIQ policy name.
+func policyLabels(clusterName, clusterID, policy string) []Label {
+	return append(baseLabels(clusterName, clusterID), Label{Name: "policy", Value: policy})
+}
+
+// severityLabels appends an event severity.
+func severityLabels(clusterName, clusterID, severity string) []Label {
+	return append(baseLabels(clusterName, clusterID), Label{Name: "severity", Value: severity})
+}

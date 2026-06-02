@@ -1,1 +1,8 @@
-{"nodes": [{"id": 1, "lnn": 1}, {"id": 2, "lnn": 2}], "total": 2}
+{"nodes": [
+  {"id": 1, "lnn": 1,
+   "state": {"readonly": {"enabled": false}, "smartfail": {"state": "not_in_smartfail"}},
+   "drives": [{"ui_state": "HEALTHY"}, {"ui_state": "HEALTHY"}]},
+  {"id": 2, "lnn": 2,
+   "state": {"readonly": {"enabled": true}, "smartfail": {"state": "not_in_smartfail"}},
+   "drives": [{"ui_state": "HEALTHY"}, {"ui_state": "SMARTFAIL"}]}
+], "total": 2}

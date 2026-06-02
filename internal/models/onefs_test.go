@@ -27,6 +27,15 @@ func TestParseNodes(t *testing.T) {
 	if err != nil || len(nodes) != 2 || nodes[1].LNN != 2 {
 		t.Fatalf("nodes parse: %+v err=%v", nodes, err)
 	}
+	if nodes[0].Readonly || !nodes[1].Readonly {
+		t.Fatalf("node readonly: n0=%v n1=%v", nodes[0].Readonly, nodes[1].Readonly)
+	}
+	if nodes[0].Smartfail || nodes[1].Smartfail {
+		t.Fatalf("node smartfail should be false: %+v", nodes)
+	}
+	if nodes[0].DrivesByState["HEALTHY"] != 2 || nodes[1].DrivesByState["SMARTFAIL"] != 1 {
+		t.Fatalf("drive states: n0=%v n1=%v", nodes[0].DrivesByState, nodes[1].DrivesByState)
+	}
 }
 
 func TestParseQuotas(t *testing.T) {
@@ -36,6 +45,39 @@ func TestParseQuotas(t *testing.T) {
 	}
 	if qs[0].UsageBytes != 100 || qs[0].HardBytes != 1000 || qs[0].Path != "/ifs/data/proj" {
 		t.Fatalf("quota fields: %+v", qs[0])
+	}
+	if qs[0].PhysicalBytes != 120 || qs[0].SoftBytes != 800 || qs[0].AdvisoryBytes != 600 {
+		t.Fatalf("quota threshold fields: %+v", qs[0])
+	}
+}
+
+func TestParseSnapshotSummary(t *testing.T) {
+	s, err := ParseSnapshotSummary(read(t, "snapshots_summary.json"))
+	if err != nil || s.UsedBytes != 10240 {
+		t.Fatalf("snapshot summary: %+v err=%v", s, err)
+	}
+}
+
+func TestParseSyncPolicies(t *testing.T) {
+	ps, err := ParseSyncPolicies(read(t, "sync_policies.json"))
+	if err != nil || len(ps) != 2 {
+		t.Fatalf("sync policies parse: %+v err=%v", ps, err)
+	}
+	if !ps[0].Enabled || ps[0].Name != "daily-dr" {
+		t.Fatalf("policy[0]: %+v", ps[0])
+	}
+	if ps[1].Enabled || ps[1].LastJobState != "failed" {
+		t.Fatalf("policy[1]: %+v", ps[1])
+	}
+}
+
+func TestParseEventOccurrences(t *testing.T) {
+	ev, err := ParseEventOccurrences(read(t, "events.json"))
+	if err != nil {
+		t.Fatalf("event parse err: %v", err)
+	}
+	if ev["critical"] != 1 || ev["warning"] != 1 {
+		t.Fatalf("event counts (resolved should be excluded): %+v", ev)
 	}
 }
 

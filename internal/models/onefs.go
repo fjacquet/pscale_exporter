@@ -9,21 +9,33 @@ type ClusterInfo struct {
 	Release string
 }
 
-// Node is one cluster node (from platform/3/cluster/nodes).
+// Node is one cluster node (from platform/3/cluster/nodes). Beyond identity it carries
+// best-effort health derived from the node's state and drive list.
 type Node struct {
 	ID  int // device id (devid)
 	LNN int // logical node number
 
 	Status string
+
+	Readonly  bool // node mounted read-only (state.readonly.enabled)
+	Smartfail bool // node is smartfailing / smartfailed (state.smartfail.state)
+
+	// DrivesByState counts drives by their UI state (e.g. "HEALTHY", "SMARTFAIL",
+	// "DEAD"). Empty when the nodes payload carries no drive list.
+	DrivesByState map[string]int
 }
 
-// Quota is one directory quota (from platform/1/quota/quotas).
+// Quota is one directory quota (from platform/1/quota/quotas). Threshold fields are 0
+// when the corresponding threshold is unset (null).
 type Quota struct {
-	ID         string
-	Path       string
-	Type       string
-	UsageBytes float64
-	HardBytes  float64 // 0 if no hard threshold
+	ID            string
+	Path          string
+	Type          string
+	UsageBytes    float64 // logical usage (usage.fslogical)
+	PhysicalBytes float64 // physical usage (usage.fsphysical)
+	HardBytes     float64
+	SoftBytes     float64
+	AdvisoryBytes float64
 }
 
 // Counts holds simple inventory counts.
@@ -33,12 +45,29 @@ type Counts struct {
 	Snapshots  int
 }
 
-// Inventory is the typed OneFS state for one cluster at one collection cycle.
+// SnapshotSummary is the aggregate snapshot space usage (snapshot/snapshots-summary).
+type SnapshotSummary struct {
+	UsedBytes float64
+}
+
+// SyncPolicy is one SyncIQ replication policy (sync/policies).
+type SyncPolicy struct {
+	Name         string
+	Enabled      bool
+	LastJobState string // e.g. "finished", "failed", "needs_attention", "running"
+}
+
+// Inventory is the typed OneFS state for one cluster at one collection cycle. The trailing
+// fields are best-effort: a fetch/parse failure leaves them zero-valued without failing
+// the snapshot.
 type Inventory struct {
-	Cluster ClusterInfo
-	Nodes   []Node
-	Quotas  []Quota
-	Counts  Counts
+	Cluster      ClusterInfo
+	Nodes        []Node
+	Quotas       []Quota
+	Counts       Counts
+	Snapshot     SnapshotSummary
+	SyncPolicies []SyncPolicy
+	Events       map[string]int // unresolved event-group count by severity
 }
 
 // StatPoint is one resolved statistics value. DevID 0 means the cluster aggregate;
@@ -79,13 +108,25 @@ func ParseClusterConfig(b []byte) (ClusterInfo, error) {
 	return ClusterInfo{Name: raw.Name, GUID: raw.GUID, Release: raw.OneFSVersion.Release}, nil
 }
 
-// ParseNodes parses platform/N/cluster/nodes.
+// ParseNodes parses platform/N/cluster/nodes, including best-effort node health from the
+// node state and drive list when the payload carries them.
 func ParseNodes(b []byte) ([]Node, error) {
 	var raw struct {
 		Nodes []struct {
 			ID     int    `json:"id"`
 			LNN    int    `json:"lnn"`
 			Status string `json:"status"`
+			State  struct {
+				Readonly struct {
+					Enabled bool `json:"enabled"`
+				} `json:"readonly"`
+				Smartfail struct {
+					State string `json:"state"`
+				} `json:"smartfail"`
+			} `json:"state"`
+			Drives []struct {
+				UIState string `json:"ui_state"`
+			} `json:"drives"`
 		} `json:"nodes"`
 	}
 	if err := json.Unmarshal(b, &raw); err != nil {
@@ -93,12 +134,29 @@ func ParseNodes(b []byte) ([]Node, error) {
 	}
 	nodes := make([]Node, 0, len(raw.Nodes))
 	for _, n := range raw.Nodes {
-		nodes = append(nodes, Node{ID: n.ID, LNN: n.LNN, Status: n.Status})
+		var drives map[string]int
+		if len(n.Drives) > 0 {
+			drives = make(map[string]int, len(n.Drives))
+			for _, d := range n.Drives {
+				state := d.UIState
+				if state == "" {
+					state = "UNKNOWN"
+				}
+				drives[state]++
+			}
+		}
+		sf := n.State.Smartfail.State
+		nodes = append(nodes, Node{
+			ID: n.ID, LNN: n.LNN, Status: n.Status,
+			Readonly:      n.State.Readonly.Enabled,
+			Smartfail:     sf != "" && sf != "not_in_smartfail",
+			DrivesByState: drives,
+		})
 	}
 	return nodes, nil
 }
 
-// ParseQuotas parses platform/N/quota/quotas. A null hard threshold yields HardBytes 0.
+// ParseQuotas parses platform/N/quota/quotas. A null threshold yields 0 for that field.
 func ParseQuotas(b []byte) ([]Quota, error) {
 	var raw struct {
 		Quotas []struct {
@@ -106,28 +164,101 @@ func ParseQuotas(b []byte) ([]Quota, error) {
 			Path  string `json:"path"`
 			Type  string `json:"type"`
 			Usage struct {
-				FSLogical float64 `json:"fslogical"`
+				FSLogical  float64 `json:"fslogical"`
+				FSPhysical float64 `json:"fsphysical"`
 			} `json:"usage"`
 			Thresholds struct {
-				Hard *float64 `json:"hard"`
+				Hard     *float64 `json:"hard"`
+				Soft     *float64 `json:"soft"`
+				Advisory *float64 `json:"advisory"`
 			} `json:"thresholds"`
 		} `json:"quotas"`
 	}
 	if err := json.Unmarshal(b, &raw); err != nil {
 		return nil, err
 	}
+	deref := func(p *float64) float64 {
+		if p != nil {
+			return *p
+		}
+		return 0
+	}
 	quotas := make([]Quota, 0, len(raw.Quotas))
 	for _, q := range raw.Quotas {
-		var hard float64
-		if q.Thresholds.Hard != nil {
-			hard = *q.Thresholds.Hard
-		}
 		quotas = append(quotas, Quota{
 			ID: q.ID, Path: q.Path, Type: q.Type,
-			UsageBytes: q.Usage.FSLogical, HardBytes: hard,
+			UsageBytes:    q.Usage.FSLogical,
+			PhysicalBytes: q.Usage.FSPhysical,
+			HardBytes:     deref(q.Thresholds.Hard),
+			SoftBytes:     deref(q.Thresholds.Soft),
+			AdvisoryBytes: deref(q.Thresholds.Advisory),
 		})
 	}
 	return quotas, nil
+}
+
+// ParseSnapshotSummary parses platform/N/snapshot/snapshots-summary. UsedBytes prefers the
+// active size (space held by live snapshots) and falls back to the total size.
+func ParseSnapshotSummary(b []byte) (SnapshotSummary, error) {
+	var raw struct {
+		Summary struct {
+			ActiveSize float64 `json:"active_size"`
+			Size       float64 `json:"size"`
+		} `json:"summary"`
+	}
+	if err := json.Unmarshal(b, &raw); err != nil {
+		return SnapshotSummary{}, err
+	}
+	used := raw.Summary.ActiveSize
+	if used == 0 {
+		used = raw.Summary.Size
+	}
+	return SnapshotSummary{UsedBytes: used}, nil
+}
+
+// ParseSyncPolicies parses platform/N/sync/policies.
+func ParseSyncPolicies(b []byte) ([]SyncPolicy, error) {
+	var raw struct {
+		Policies []struct {
+			Name         string `json:"name"`
+			Enabled      bool   `json:"enabled"`
+			LastJobState string `json:"last_job_state"`
+		} `json:"policies"`
+	}
+	if err := json.Unmarshal(b, &raw); err != nil {
+		return nil, err
+	}
+	out := make([]SyncPolicy, 0, len(raw.Policies))
+	for _, p := range raw.Policies {
+		out = append(out, SyncPolicy{Name: p.Name, Enabled: p.Enabled, LastJobState: p.LastJobState})
+	}
+	return out, nil
+}
+
+// ParseEventOccurrences parses platform/N/event/eventgroup-occurrences and returns a count
+// of unresolved occurrences keyed by severity (e.g. "critical", "warning", "information").
+func ParseEventOccurrences(b []byte) (map[string]int, error) {
+	var raw struct {
+		Eventgroups []struct {
+			Severity string `json:"severity"`
+			Resolved bool   `json:"resolved"`
+		} `json:"eventgroups"`
+	}
+	if err := json.Unmarshal(b, &raw); err != nil {
+		return nil, err
+	}
+	counts := map[string]int{}
+	for _, e := range raw.Eventgroups {
+		if e.Resolved {
+			continue
+		}
+		sev := e.Severity
+		if sev == "" {
+			sev = "unknown"
+		}
+		counts[sev]++
+	}
+	return counts, nil
 }
 
 // ParseStatCurrent parses platform/N/statistics/current. Rows with a non-null error or

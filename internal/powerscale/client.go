@@ -94,7 +94,61 @@ func (c *ClusterClient) GetInventory(ctx context.Context) (*models.Inventory, er
 	if err != nil {
 		return nil, fmt.Errorf("cluster %q: parse quotas: %w", c.name, err)
 	}
-	return &models.Inventory{Cluster: info, Nodes: nodes, Quotas: quotas, Counts: c.inventoryCounts(ctx)}, nil
+	return &models.Inventory{
+		Cluster:      info,
+		Nodes:        nodes,
+		Quotas:       quotas,
+		Counts:       c.inventoryCounts(ctx),
+		Snapshot:     c.snapshotSummary(ctx),
+		SyncPolicies: c.syncPolicies(ctx),
+		Events:       c.activeEvents(ctx),
+	}, nil
+}
+
+// snapshotSummary fetches aggregate snapshot usage best-effort: a failure logs at debug
+// and yields a zero summary rather than failing the whole inventory.
+func (c *ClusterClient) snapshotSummary(ctx context.Context) models.SnapshotSummary {
+	var b []byte
+	if err := c.getRaw(ctx, "platform/1/snapshot/snapshots-summary", &b); err != nil {
+		log.Debugf("cluster %q: snapshot summary failed: %v", c.name, err)
+		return models.SnapshotSummary{}
+	}
+	s, err := models.ParseSnapshotSummary(b)
+	if err != nil {
+		log.Debugf("cluster %q: parse snapshot summary failed: %v", c.name, err)
+		return models.SnapshotSummary{}
+	}
+	return s
+}
+
+// syncPolicies fetches SyncIQ policies best-effort (clusters without SyncIQ yield none).
+func (c *ClusterClient) syncPolicies(ctx context.Context) []models.SyncPolicy {
+	var b []byte
+	if err := c.getRaw(ctx, "platform/11/sync/policies", &b); err != nil {
+		log.Debugf("cluster %q: sync policies failed: %v", c.name, err)
+		return nil
+	}
+	p, err := models.ParseSyncPolicies(b)
+	if err != nil {
+		log.Debugf("cluster %q: parse sync policies failed: %v", c.name, err)
+		return nil
+	}
+	return p
+}
+
+// activeEvents fetches unresolved event-group occurrences best-effort, counted by severity.
+func (c *ClusterClient) activeEvents(ctx context.Context) map[string]int {
+	var b []byte
+	if err := c.getRaw(ctx, "platform/3/event/eventgroup-occurrences", &b); err != nil {
+		log.Debugf("cluster %q: event occurrences failed: %v", c.name, err)
+		return nil
+	}
+	ev, err := models.ParseEventOccurrences(b)
+	if err != nil {
+		log.Debugf("cluster %q: parse event occurrences failed: %v", c.name, err)
+		return nil
+	}
+	return ev
 }
 
 // inventoryCounts fetches resource totals best-effort: a failure logs at debug and

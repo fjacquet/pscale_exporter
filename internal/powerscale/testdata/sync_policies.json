@@ -1,0 +1,4 @@
+{"policies": [
+  {"name": "daily-dr", "enabled": true, "last_job_state": "finished"},
+  {"name": "hourly-archive", "enabled": false, "last_job_state": "failed"}
+], "total": 2}
