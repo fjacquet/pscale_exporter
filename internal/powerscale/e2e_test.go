@@ -1,0 +1,58 @@
+package powerscale
+
+import (
+	"context"
+	"net/url"
+	"strconv"
+	"testing"
+	"time"
+
+	"github.com/fjacquet/pscale_exporter/internal/models"
+	"github.com/prometheus/client_golang/prometheus"
+)
+
+func TestEndToEndCollectionThroughPrometheus(t *testing.T) {
+	srv := newMockOneFS(t)
+	u, _ := url.Parse(srv.URL)
+	port, _ := strconv.Atoi(u.Port())
+	cfg := models.ClusterConfig{
+		Name: "clu1", Endpoint: u.Hostname(), Port: port,
+		Username: "u", Password: "p", InsecureSkipVerify: true,
+	}
+	client, err := NewClusterClient(context.Background(), cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = client.Close() })
+
+	store := NewSnapshotStore()
+	coll := NewCollector([]Client{client}, store, time.Second, 10*time.Second, nil)
+	coll.CollectOnce(context.Background())
+
+	reg := prometheus.NewRegistry()
+	if err := reg.Register(NewPromCollector(store)); err != nil {
+		t.Fatal(err)
+	}
+	mfs, err := reg.Gather()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	want := map[string]bool{
+		"powerscale_up": false,
+		"powerscale_cluster_total_capacity_bytes":   false,
+		"powerscale_node_memory_used_bytes":         false,
+		"powerscale_quota_usage_bytes":              false,
+		"powerscale_protocol_operations_per_second": false,
+	}
+	for _, mf := range mfs {
+		if _, ok := want[mf.GetName()]; ok {
+			want[mf.GetName()] = true
+		}
+	}
+	for name, seen := range want {
+		if !seen {
+			t.Errorf("missing metric %s", name)
+		}
+	}
+}
