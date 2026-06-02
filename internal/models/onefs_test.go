@@ -36,6 +36,15 @@ func TestParseNodes(t *testing.T) {
 	if nodes[0].DrivesByState["HEALTHY"] != 2 || nodes[1].DrivesByState["SMARTFAIL"] != 1 {
 		t.Fatalf("drive states: n0=%v n1=%v", nodes[0].DrivesByState, nodes[1].DrivesByState)
 	}
+	if nodes[0].PowerSupplies != 2 || nodes[0].PowerSupplyFailures != 0 || nodes[1].PowerSupplyFailures != 1 {
+		t.Fatalf("psu: n0=%d/%d n1 failures=%d", nodes[0].PowerSupplies, nodes[0].PowerSupplyFailures, nodes[1].PowerSupplyFailures)
+	}
+	if len(nodes[0].Temperatures) != 1 || nodes[0].Temperatures[0].Value != 35 || nodes[0].Temperatures[0].Name != "CPU0" {
+		t.Fatalf("temperatures (string value via flexFloat): %+v", nodes[0].Temperatures)
+	}
+	if len(nodes[0].Fans) != 1 || nodes[0].Fans[0].Value != 4500 {
+		t.Fatalf("fans (numeric value): %+v", nodes[0].Fans)
+	}
 }
 
 func TestParseQuotas(t *testing.T) {

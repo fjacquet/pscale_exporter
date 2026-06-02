@@ -54,6 +54,7 @@ the Overview board:
 - **Storage Efficiency** — deduplication logical saved / deduplicated bytes *(provisional)*.
 - **Per-Drive** — top drive IOPS and busy % *(provisional)*.
 - **Per-Client** — operations by protocol/class and throughput in/out *(provisional)*.
+- **Hardware** — power-supply failures, node temperature and fan speed *(provisional)*.
 
 ## Auto-provisioned (compose stack)
 

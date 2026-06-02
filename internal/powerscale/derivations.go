@@ -25,6 +25,7 @@ func BuildSamples(clusterName string, inv *models.Inventory, st *models.Statisti
 	samples = append(samples, countSamples(clusterName, clusterID, inv.Counts)...)
 	samples = append(samples, protoSamples(clusterName, clusterID, st)...)
 	samples = append(samples, nodeHealthSamples(clusterName, clusterID, inv.Nodes)...)
+	samples = append(samples, hardwareSamples(clusterName, clusterID, inv.Nodes)...)
 	samples = append(samples, snapshotSamples(clusterName, clusterID, inv.Snapshot)...)
 	samples = append(samples, syncSamples(clusterName, clusterID, inv.SyncPolicies)...)
 	samples = append(samples, eventSamples(clusterName, clusterID, inv.Events)...)
@@ -110,6 +111,37 @@ func nodeHealthSamples(clusterName, clusterID string, nodes []models.Node) []Sam
 				Name:   "powerscale_node_drives_total",
 				Labels: driveLabels(clusterName, clusterID, lnn, state),
 				Value:  float64(count),
+			})
+		}
+	}
+	return out
+}
+
+// hardwareSamples emits per-node power-supply health and temperature/fan sensor readings.
+// PSU samples are emitted only when the node reports supplies; sensors only when present.
+func hardwareSamples(clusterName, clusterID string, nodes []models.Node) []Sample {
+	var out []Sample
+	for _, n := range nodes {
+		lnn := strconv.Itoa(n.LNN)
+		if n.PowerSupplies > 0 {
+			base := nodeLabels(clusterName, clusterID, lnn)
+			out = append(out,
+				Sample{Name: "powerscale_node_power_supplies_total", Labels: base, Value: float64(n.PowerSupplies)},
+				Sample{Name: "powerscale_node_power_supply_failures", Labels: base, Value: float64(n.PowerSupplyFailures)},
+			)
+		}
+		for _, t := range n.Temperatures {
+			out = append(out, Sample{
+				Name:   "powerscale_node_temperature_celsius",
+				Labels: sensorLabels(clusterName, clusterID, lnn, t.Name),
+				Value:  t.Value,
+			})
+		}
+		for _, f := range n.Fans {
+			out = append(out, Sample{
+				Name:   "powerscale_node_fan_speed_rpm",
+				Labels: sensorLabels(clusterName, clusterID, lnn, f.Name),
+				Value:  f.Value,
 			})
 		}
 	}

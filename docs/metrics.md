@@ -73,6 +73,19 @@ PromQL as `hit / (hit + miss)`.
 | `powerscale_node_smartfail` | bool | `1` if the node is smartfailing / smartfailed. |
 | `powerscale_node_drives_total` | count | Drive count per node, labelled by `state` (e.g. `HEALTHY`, `SMARTFAIL`, `DEAD`). |
 
+### Hardware (provisional)
+
+Per-node power-supply health and temperature/fan sensors, from the node `status` /
+`sensors` payload. Best-effort; schema is provisional — emits nothing if your OneFS
+release shapes these differently. Temperature/fan series carry a `sensor` label.
+
+| Metric | Unit | Description |
+|---|---|---|
+| `powerscale_node_power_supplies_total` | count | Power supplies present on the node. |
+| `powerscale_node_power_supply_failures` | count | Failed power supplies on the node. |
+| `powerscale_node_temperature_celsius` | °C | Temperature sensor reading. |
+| `powerscale_node_fan_speed_rpm` | rpm | Fan speed reading. |
+
 ## Quota metrics
 
 | Metric | Unit | Description |
