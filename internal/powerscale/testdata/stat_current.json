@@ -1,0 +1,6 @@
+{"stats": [
+  {"devid": 0, "error": null, "key": "ifs.bytes.total", "time": 1700000000, "value": 5000},
+  {"devid": 0, "error": null, "key": "ifs.bytes.used",  "time": 1700000000, "value": 2000},
+  {"devid": 0, "error": null, "key": "cluster.cpu.sys.avg", "time": 1700000000, "value": 12.5},
+  {"devid": 2, "error": null, "key": "node.memory.used", "time": 1700000000, "value": 42}
+]}
