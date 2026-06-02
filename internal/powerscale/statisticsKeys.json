@@ -1,0 +1,16 @@
+[
+  {"key": "cluster.cpu.sys.avg",            "metric": "powerscale_cluster_cpu_sys_percent",            "scope": "cluster"},
+  {"key": "cluster.cpu.user.avg",           "metric": "powerscale_cluster_cpu_user_percent",           "scope": "cluster"},
+  {"key": "cluster.cpu.idle.avg",           "metric": "powerscale_cluster_cpu_idle_percent",           "scope": "cluster"},
+  {"key": "ifs.bytes.total",                "metric": "powerscale_cluster_total_capacity_bytes",       "scope": "cluster"},
+  {"key": "ifs.bytes.used",                 "metric": "powerscale_cluster_used_capacity_bytes",        "scope": "cluster"},
+  {"key": "ifs.bytes.avail",                "metric": "powerscale_cluster_available_capacity_bytes",   "scope": "cluster"},
+  {"key": "ifs.bytes.free",                 "metric": "powerscale_cluster_free_capacity_bytes",        "scope": "cluster"},
+  {"key": "cluster.disk.xfers.rate",        "metric": "powerscale_cluster_disk_operations_per_second", "scope": "cluster"},
+  {"key": "cluster.net.ext.bytes.in.rate",  "metric": "powerscale_cluster_net_in_bytes_per_second",    "scope": "cluster"},
+  {"key": "cluster.net.ext.bytes.out.rate", "metric": "powerscale_cluster_net_out_bytes_per_second",   "scope": "cluster"},
+  {"key": "node.cpu.idle.avg",              "metric": "powerscale_node_cpu_idle_percent",              "scope": "node"},
+  {"key": "node.memory.used",               "metric": "powerscale_node_memory_used_bytes",             "scope": "node"},
+  {"key": "node.disk.xfers.rate.sum",       "metric": "powerscale_node_disk_operations_per_second",    "scope": "node"},
+  {"key": "node.ifs.bytes.used",            "metric": "powerscale_node_used_capacity_bytes",           "scope": "node"}
+]

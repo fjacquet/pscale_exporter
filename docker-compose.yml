@@ -1,0 +1,82 @@
+# Local end-to-end test stack for pscale_exporter.
+#
+#   PSCALE1_PASSWORD='your-monitor-password' docker compose up -d --build
+#
+# Then:
+#   - Exporter metrics:   http://localhost:2112/metrics   (and /health)
+#   - Prometheus:         http://localhost:9090           (Status > Targets, Alerts)
+#   - Grafana:            http://localhost:3000           (admin / ${GF_ADMIN_PASSWORD:-admin})
+#   - Collector metrics:  http://localhost:8889/metrics   (OTLP push, when enabled)
+#
+# Point config.yaml at a real OneFS cluster (endpoint/username) and set PSCALE1_PASSWORD
+# for a true end-to-end test. With the default example cluster (unreachable), the stack
+# still validates wiring: powerscale_up == 0 and the PowerScaleClusterDown alert fires.
+#
+# To exercise the OTLP push path, set opentelemetry.metrics.enabled: true and
+# endpoint: "otel-collector:4317" (insecure: true) in config.yaml, then recreate the
+# exporter. Prometheus scrapes the collector's re-exposed series via the powerscale-otlp job.
+services:
+  pscale_exporter:
+    build: .
+    image: pscale_exporter
+    # Build-only image (no registry). Without this, `docker compose pull`/`up` tries to
+    # pull `pscale_exporter` from Docker Hub and fails with access-denied.
+    pull_policy: build
+    container_name: pscale_exporter
+    ports:
+      - "127.0.0.1:2112:2112"
+    volumes:
+      - ./config.yaml:/etc/pscale_exporter/config.yaml:ro
+      # Persist the log file (config.yaml -> logName). Owned by uid 10001 via the image.
+      - pscale_logs:/var/log/pscale_exporter
+    environment:
+      # Cluster secret referenced as ${PSCALE1_PASSWORD} in config.yaml.
+      - PSCALE1_PASSWORD=${PSCALE1_PASSWORD:-}
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: pscale_prometheus
+    ports:
+      - "127.0.0.1:9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./deploy/prometheus/pscale.rules.yml:/etc/prometheus/pscale.rules.yml:ro
+    depends_on:
+      - pscale_exporter
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    container_name: pscale_grafana
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      # Local test-stack credentials. Override GF_ADMIN_PASSWORD for anything non-local.
+      - GF_SECURITY_ADMIN_USER=${GF_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GF_ADMIN_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      # Auto-provisions the Prometheus datasource on startup. No bundled dashboards yet;
+      # the powerscale_ prefix matches dell/csm-metrics-powerscale, so its Grafana
+      # dashboards can be imported directly.
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+  # Receives the OTLP metric push when opentelemetry.metrics is enabled, and re-exposes
+  # it on :8889 for Prometheus (powerscale-otlp job).
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.111.0
+    container_name: pscale_otel_collector
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
+    ports:
+      - "127.0.0.1:4317:4317" # OTLP gRPC
+      - "127.0.0.1:8889:8889" # collector-exposed Prometheus metrics
+    restart: unless-stopped
+
+volumes:
+  pscale_logs:

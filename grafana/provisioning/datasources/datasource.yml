@@ -1,0 +1,11 @@
+apiVersion: 1
+
+# Auto-provisioned Prometheus datasource for the local test stack. Grafana connects to
+# the in-network Prometheus service on startup; no manual setup needed.
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: true

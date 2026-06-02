@@ -1,0 +1,3 @@
+{"protocol": [
+  {"node": 1, "protocol": "nfs3", "operation": "read", "operation_rate": 12.0, "time_avg": 800.0}
+]}
