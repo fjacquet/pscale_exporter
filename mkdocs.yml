@@ -40,3 +40,15 @@ markdown_extensions:
 
 nav:
   - Home: index.md
+  - Getting Started:
+      - Installation: getting-started/installation.md
+      - Configuration: getting-started/configuration.md
+      - Quick Start: getting-started/quickstart.md
+  - Metrics Reference: metrics.md
+  - Deployment:
+      - Docker: deployment/docker.md
+      - systemd: deployment/systemd.md
+      - Kubernetes: deployment/kubernetes.md
+  - Dashboards: dashboards.md
+  - OpenTelemetry: opentelemetry.md
+  - CI/CD & SBOM: cicd.md

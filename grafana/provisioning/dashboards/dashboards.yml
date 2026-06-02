@@ -1,0 +1,13 @@
+apiVersion: 1
+
+# Auto-provisions bundled dashboards for the local test stack. JSON files live in the
+# json/ subfolder so Grafana never tries to parse this provider config as a dashboard.
+providers:
+  - name: PowerScale
+    type: file
+    disableDeletion: false
+    allowUiUpdates: true
+    updateIntervalSeconds: 30
+    options:
+      path: /etc/grafana/provisioning/dashboards/json
+      foldersFromFilesStructure: false
