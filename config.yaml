@@ -1,0 +1,33 @@
+---
+# PowerScale exporter configuration. One process monitors many OneFS clusters and
+# exposes metrics via a Prometheus /metrics endpoint and (optionally) an OTLP push.
+server:
+  host: "0.0.0.0"
+  port: "2112"
+  uri: "/metrics"
+  logName: "/var/log/pscale_exporter/pscale-exporter.log"
+
+collection:
+  interval: "30s"   # OneFS perf samples are ~30s native; capacity changes slowly
+  timeout: "20s"
+
+opentelemetry:
+  metrics:
+    enabled: false
+    endpoint: "localhost:4317"
+    insecure: true
+    interval: "30s"
+  tracing:
+    enabled: false
+    endpoint: "localhost:4317"
+    insecure: true
+    samplingRate: 0.1
+
+# A read-only (e.g. role with ISI_PRIV_STATISTICS + ISI_PRIV_QUOTA) account is sufficient.
+clusters:
+  - name: pscale-cluster1
+    endpoint: pscale-clu1.example.com
+    port: 8080
+    username: pscale-monitor
+    password: "${PSCALE1_PASSWORD}"
+    insecureSkipVerify: true
