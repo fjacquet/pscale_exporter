@@ -25,7 +25,7 @@ services:
     restart: unless-stopped
 
   prometheus:
-    image: prom/prometheus:v2.53.0
+    image: prom/prometheus:latest
     container_name: pscale_prometheus
     ports:
       - "9090:9090"
@@ -37,7 +37,7 @@ services:
     restart: unless-stopped
 
   grafana:
-    image: grafana/grafana:11.1.0
+    image: grafana/grafana:latest
     container_name: pscale_grafana
     ports:
       - "3000:3000"
@@ -52,7 +52,7 @@ services:
     restart: unless-stopped
 
   otel-collector:
-    image: otel/opentelemetry-collector-contrib:0.111.0
+    image: otel/opentelemetry-collector-contrib:latest
     container_name: pscale_otel_collector
     command: ["--config=/etc/otel-collector-config.yaml"]
     volumes:
