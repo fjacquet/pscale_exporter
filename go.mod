@@ -1,6 +1,6 @@
 module github.com/fjacquet/pscale_exporter
 
-go 1.26.3
+go 1.26.4
 
 require (
 	github.com/dell/gopowerscale v1.21.0
