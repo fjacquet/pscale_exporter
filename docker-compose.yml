@@ -1,12 +1,17 @@
-# Local end-to-end test stack for pscale_exporter.
+# End-to-end stack for pscale_exporter (server deployment).
 #
 #   PSCALE1_PASSWORD='your-monitor-password' docker compose up -d --build
 #
-# Then:
-#   - Exporter metrics:   http://localhost:2112/metrics   (and /health)
-#   - Prometheus:         http://localhost:9090           (Status > Targets, Alerts)
-#   - Grafana:            http://localhost:3000           (admin / ${GF_ADMIN_PASSWORD:-admin})
-#   - Collector metrics:  http://localhost:8889/metrics   (OTLP push, when enabled)
+# Ports are published on all interfaces (0.0.0.0), so reach them at the server's
+# host/IP from another machine. Replace <server> below with that address:
+#   - Exporter metrics:   http://<server>:2112/metrics   (and /health)
+#   - Prometheus:         http://<server>:9090           (Status > Targets, Alerts)
+#   - Grafana:            http://<server>:3000           (admin / ${GF_ADMIN_PASSWORD:-admin})
+#   - Collector metrics:  http://<server>:8889/metrics   (OTLP push, when enabled)
+#
+# SECURITY: these services have no auth in front of them except Grafana. On a server
+# reachable beyond a trusted network, set a strong GF_ADMIN_PASSWORD and restrict the
+# other ports (firewall, reverse proxy, or a per-port bind to a private interface).
 #
 # Point config.yaml at a real OneFS cluster (endpoint/username) and set PSCALE1_PASSWORD
 # for a true end-to-end test. With the default example cluster (unreachable), the stack
@@ -24,7 +29,7 @@ services:
     pull_policy: build
     container_name: pscale_exporter
     ports:
-      - "127.0.0.1:2112:2112"
+      - "2112:2112"
     volumes:
       - ./config.yaml:/etc/pscale_exporter/config.yaml:ro
       # Persist the log file (config.yaml -> logName). Owned by uid 10001 via the image.
@@ -38,7 +43,7 @@ services:
     image: prom/prometheus:v2.53.0
     container_name: pscale_prometheus
     ports:
-      - "127.0.0.1:9090:9090"
+      - "9090:9090"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./deploy/prometheus/pscale.rules.yml:/etc/prometheus/pscale.rules.yml:ro
@@ -50,7 +55,7 @@ services:
     image: grafana/grafana:11.1.0
     container_name: pscale_grafana
     ports:
-      - "127.0.0.1:3000:3000"
+      - "3000:3000"
     environment:
       # Local test-stack credentials. Override GF_ADMIN_PASSWORD for anything non-local.
       - GF_SECURITY_ADMIN_USER=${GF_ADMIN_USER:-admin}
@@ -74,8 +79,8 @@ services:
     volumes:
       - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
     ports:
-      - "127.0.0.1:4317:4317" # OTLP gRPC
-      - "127.0.0.1:8889:8889" # collector-exposed Prometheus metrics
+      - "4317:4317" # OTLP gRPC
+      - "8889:8889" # collector-exposed Prometheus metrics
     restart: unless-stopped
 
 volumes:
