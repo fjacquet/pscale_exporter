@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.3] - 2026-06-05
+
 ### Changed
 
 - Bump `goreleaser/goreleaser-action` v6.4.0 → **v7.2.2** (Node 24 runtime), clearing the
@@ -58,7 +60,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Baseline prior to the release-pipeline rework. See the
   [GitHub releases](https://github.com/fjacquet/pscale_exporter/releases) for earlier history.
 
-[Unreleased]: https://github.com/fjacquet/pscale_exporter/compare/v0.5.2...HEAD
+[Unreleased]: https://github.com/fjacquet/pscale_exporter/compare/v0.5.3...HEAD
+[0.5.3]: https://github.com/fjacquet/pscale_exporter/compare/v0.5.2...v0.5.3
 [0.5.2]: https://github.com/fjacquet/pscale_exporter/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/fjacquet/pscale_exporter/compare/v0.4.2...v0.5.1
 [0.4.2]: https://github.com/fjacquet/pscale_exporter/releases/tag/v0.4.2
