@@ -32,6 +32,40 @@ docker run --rm \
 
 The image runs as a non-root user (`uid 10001`) and exposes port `2112`.
 
+## Homebrew (macOS / Linux)
+
+Install the CLI from the project tap:
+
+```bash
+brew install fjacquet/tap/pscale_exporter
+```
+
+That is shorthand for tapping first, if you prefer to see the tap explicitly:
+
+```bash
+brew tap fjacquet/tap
+brew install pscale_exporter
+```
+
+Then run it with your config and the cluster secret in the environment:
+
+```bash
+export PSCALE1_PASSWORD='your-monitor-password'
+pscale_exporter --config config.yaml
+```
+
+Upgrade and uninstall as usual:
+
+```bash
+brew upgrade pscale_exporter
+brew uninstall pscale_exporter
+```
+
+!!! note "Unsigned binary"
+    The cask is not Apple code-signed; its install hook clears the macOS quarantine bit so
+    Gatekeeper won't block it. If you ever hit a quarantine prompt, run
+    `xattr -dr com.apple.quarantine "$(command -v pscale_exporter)"`.
+
 ## Build from source
 
 Requires the Go toolchain pinned in `go.mod`.
@@ -50,15 +84,17 @@ Other useful targets:
 | `make test` / `make test-race` | Run tests (the latter adds `-race` + coverage). |
 | `make sure` | `fmt` + `vet` + `test` + `build` + `golangci-lint` (local convenience). |
 | `make ci` | The full CI gate: gofmt check, `go vet`, `golangci-lint`, `go test -race`, `govulncheck`. |
-| `make tools` | Install pinned `golangci-lint`, `cyclonedx-gomod`, `govulncheck`. |
+| `make tools` | Install pinned `golangci-lint`, `cyclonedx-gomod`, `govulncheck`, `goreleaser`. |
 | `make sbom` | Generate a CycloneDX SBOM. |
-| `make release` | Cross-compile binaries + SBOM + checksums. |
+| `make release-snapshot` | Run the full GoReleaser pipeline locally, minus publish. |
 
 ## Release binaries
 
-Tagged releases publish cross-compiled binaries, an SBOM, and checksums to the
+Tagged releases publish, via GoReleaser, `tar.gz` archives (per platform), a per-archive
+CycloneDX SBOM, and `checksums.txt` to the
 [GitHub Releases](https://github.com/fjacquet/pscale_exporter/releases) page. Download the
-archive for your platform, verify the checksum, and place the binary on your `PATH`.
+archive for your platform, verify it against `checksums.txt`, and place the binary on your
+`PATH`.
 
 ## Verify it's running
 

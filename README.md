@@ -40,6 +40,7 @@ export PSCALE1_PASSWORD='your-monitor-password'
 # metrics: http://localhost:2112/metrics   health: http://localhost:2112/health
 ```
 
+Or install with Homebrew: `brew install fjacquet/tap/pscale_exporter`.
 Or with Docker: `docker pull ghcr.io/fjacquet/pscale_exporter:latest`.
 
 ## Local test stack
