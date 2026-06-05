@@ -22,15 +22,26 @@ make sure    # local convenience: fmt + vet + test + build + lint
 
 ### `release.yml` — on `v*` tags
 
-- **binaries** — cross-compiles binaries and publishes them with an SBOM and checksums to
-  a GitHub Release.
-- **image** — builds a multi-arch (`linux/amd64`, `linux/arm64`) image, pushes it to
-  `ghcr.io/fjacquet/pscale_exporter`, and attaches SBOM and provenance attestations.
+A single **GoReleaser** job (`.goreleaser.yaml`) produces, from one `git tag`:
+
+- cross-platform binaries (`linux`/`darwin` × `amd64`/`arm64`), `tar.gz` archives, and
+  `checksums.txt`, published to a GitHub Release;
+- a per-archive **CycloneDX SBOM** (syft);
+- the multi-arch (`linux/amd64`, `linux/arm64`) image pushed to
+  `ghcr.io/fjacquet/pscale_exporter`, with **SBOM and provenance attestations** (GoReleaser's
+  `dockers_v2` builder enables both by default);
+- a **Homebrew cask** pushed to `github.com/fjacquet/homebrew-tap`
+  (`brew install fjacquet/tap/pscale_exporter`).
 
 ```bash
-make sbom       # CycloneDX SBOM
-make release    # cross-compile binaries + SBOM + checksums
+make release-snapshot   # full pipeline locally, minus publish (no Release, no image push)
+make release            # goreleaser release --clean (what CI runs)
 ```
+
+!!! note "Required secret"
+    The cask step pushes to a *different* repo, so it needs a `HOMEBREW_TAP_GITHUB_TOKEN`
+    secret (a PAT with `contents:write` on `homebrew-tap`); the default `GITHUB_TOKEN`
+    cannot push cross-repo. The rest of the release works without it.
 
 ### `docs.yml` — on changes to `docs/`, `mkdocs.yml`, or the workflow
 
@@ -53,3 +64,9 @@ uvx --with mkdocs-material --with pymdown-extensions mkdocs build --strict
 
 Each release carries a CycloneDX SBOM (binaries and image) plus build provenance
 attestations on the GHCR image, so consumers can verify what's inside an artifact.
+
+Every GitHub Action is **pinned to a full commit SHA** (with a `# vX.Y.Z` comment) and the
+Semgrep CI container is pinned by image digest, so a moving or compromised upstream tag can't
+silently run with the workflows' write permissions. Dependabot still proposes version bumps
+against the pins. The rationale is recorded in
+[ADR-0001](adr/0001-release-pipeline-and-supply-chain.md).

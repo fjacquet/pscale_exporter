@@ -2,12 +2,12 @@ BIN     = pscale_exporter
 DIST    = dist
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 LDFLAGS = -s -w -X main.version=$(VERSION)
-PLATFORMS = linux/amd64 linux/arm64 darwin/amd64 darwin/arm64
 
 # Pinned tool versions (installed by `make tools`).
 GOLANGCI_LINT_VERSION   ?= v2.12.2
 CYCLONEDX_GOMOD_VERSION ?= latest
 GOVULNCHECK_VERSION     ?= latest
+GORELEASER_VERSION      ?= v2.16.0
 
 all: cli test docker
 
@@ -16,6 +16,7 @@ tools:
 	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
 	go install github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@$(CYCLONEDX_GOMOD_VERSION)
 	go install golang.org/x/vuln/cmd/govulncheck@$(GOVULNCHECK_VERSION)
+	go install github.com/goreleaser/goreleaser/v2@$(GORELEASER_VERSION)
 
 # --- quality gates (used by CI) ---
 
@@ -62,17 +63,14 @@ sbom:
 	cyclonedx-gomod mod -licenses -json -output $(DIST)/sbom.cdx.json
 	@echo "wrote $(DIST)/sbom.cdx.json"
 
-# Cross-compiled release binaries + SBOM + checksums.
-release: clean-dist sbom
-	@mkdir -p $(DIST)
-	@for p in $(PLATFORMS); do \
-	  os=$${p%/*}; arch=$${p#*/}; \
-	  out=$(DIST)/$(BIN)_$(VERSION)_$${os}_$${arch}; \
-	  echo "building $$out"; \
-	  GOOS=$$os GOARCH=$$arch CGO_ENABLED=0 go build -ldflags="$(LDFLAGS)" -o $$out . ; \
-	done
-	cd $(DIST) && sha256sum $(BIN)_* > checksums.txt
-	@echo "release artifacts in $(DIST)/"
+# Tag-triggered release: GoReleaser builds binaries, archives, checksums,
+# per-archive CycloneDX SBOMs, and the multi-arch GHCR image (run by CI).
+release:
+	goreleaser release --clean
+
+# Local dry run: full pipeline minus publish (no GitHub Release, no image push).
+release-snapshot:
+	goreleaser release --snapshot --clean --skip=publish
 
 docker:
 	docker build -t $(BIN):$(VERSION) -t $(BIN):latest .
@@ -87,4 +85,4 @@ clean: clean-dist
 	rm -f bin/$(BIN) coverage.out coverage.html
 
 .PHONY: all tools fmt-check fmt vet lint test test-race test-coverage vuln ci sure \
-        cli sbom release docker run-cli clean-dist clean
+        cli sbom release release-snapshot docker run-cli clean-dist clean

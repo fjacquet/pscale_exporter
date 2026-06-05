@@ -1,0 +1,109 @@
+# GoReleaser v2 config — https://goreleaser.com
+# Run locally: `make release-snapshot` (no publish). Tag-triggered release runs in CI.
+version: 2
+
+project_name: pscale_exporter
+
+before:
+  hooks:
+    - go mod download
+
+builds:
+  - id: pscale_exporter
+    main: .
+    binary: pscale_exporter
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    # Match the Makefile/Dockerfile: strip symbols and inject main.version.
+    ldflags:
+      - -s -w -X main.version={{ .Version }}
+    # Reproducible builds: pin the binary mtime to the commit timestamp.
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    goos: [linux, darwin]
+    goarch: [amd64, arm64]
+
+archives:
+  - id: default
+    ids: [pscale_exporter]
+    # pscale_exporter_<version>_<os>_<arch>.tar.gz
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    formats: [tar.gz]
+    files:
+      - LICENSE
+      - README.md
+      - config.yaml
+
+checksum:
+  name_template: checksums.txt
+
+# CycloneDX SBOM per release archive (syft), matching the project's .cdx.json convention.
+sboms:
+  - id: archives
+    artifacts: archive
+    documents:
+      - "{{ .ArtifactName }}.cdx.json"
+    cmd: syft
+    args:
+      - "$artifact"
+      - "--output"
+      - "cyclonedx-json=$document"
+
+# Multi-arch GHCR image with image-level SBOM + provenance attestations (both on by default).
+dockers_v2:
+  - id: pscale_exporter
+    ids: [pscale_exporter]
+    images:
+      - ghcr.io/fjacquet/pscale_exporter
+    dockerfile: Dockerfile.goreleaser
+    tags:
+      - "{{ .Version }}"
+      - "{{ .Major }}.{{ .Minor }}"
+      - "{{ if not .Prerelease }}latest{{ end }}"
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    # config.yaml is COPYed into the image; stage it into the build context.
+    extra_files:
+      - config.yaml
+    annotations:
+      org.opencontainers.image.title: "{{ .ProjectName }}"
+      org.opencontainers.image.source: "{{ .GitURL }}"
+      org.opencontainers.image.version: "{{ .Version }}"
+      org.opencontainers.image.revision: "{{ .FullCommit }}"
+      org.opencontainers.image.created: "{{ .CommitDate }}"
+
+# Homebrew tap cask, pushed to github.com/fjacquet/homebrew-tap.
+# (GoReleaser deprecated `brews` formulae in favour of `homebrew_casks` for binaries.)
+# Requires a HOMEBREW_TAP_GITHUB_TOKEN secret (PAT with contents:write on the tap repo),
+# since the default GITHUB_TOKEN cannot push to a different repository.
+# Install: `brew install fjacquet/tap/pscale_exporter`.
+homebrew_casks:
+  - name: pscale_exporter
+    binaries:
+      - pscale_exporter
+    repository:
+      owner: fjacquet
+      name: homebrew-tap
+      branch: main
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    directory: Casks
+    homepage: "https://github.com/fjacquet/pscale_exporter"
+    description: "Prometheus & OTLP exporter for Dell PowerScale (OneFS)"
+    # Only cut a cask for stable tags, never -rc/-beta prereleases.
+    skip_upload: "{{ if .Prerelease }}true{{ else }}false{{ end }}"
+    # Strip the macOS quarantine bit so the unsigned binary runs without Gatekeeper prompts.
+    hooks:
+      post:
+        install: |
+          if OS.mac?
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/pscale_exporter"]
+          end
+
+release:
+  github:
+    owner: fjacquet
+    name: pscale_exporter
+  # Mark -rc/-beta tags as GitHub pre-releases automatically.
+  prerelease: auto
