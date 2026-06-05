@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Bump `goreleaser/goreleaser-action` v6.4.0 → **v7.2.2** (Node 24 runtime), clearing the
+  GitHub Actions Node 20 deprecation warning. No change to how the action is invoked.
+
 ## [0.5.2] - 2026-06-05
 
 ### Changed
