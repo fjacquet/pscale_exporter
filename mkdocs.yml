@@ -35,6 +35,10 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.tabbed:
       alternate_style: true
+  - pymdownx.snippets:
+      # Allows docs/changelog.md to include the repo-root CHANGELOG.md verbatim.
+      base_path: ["."]
+      check_paths: true
   - tables
   - attr_list
 
@@ -52,3 +56,7 @@ nav:
   - Dashboards: dashboards.md
   - OpenTelemetry: opentelemetry.md
   - CI/CD & SBOM: cicd.md
+  - Architecture Decisions:
+      - Overview: adr/index.md
+      - ADR-0001 Release pipeline: adr/0001-release-pipeline-and-supply-chain.md
+  - Changelog: changelog.md
