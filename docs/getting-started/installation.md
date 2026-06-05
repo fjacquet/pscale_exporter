@@ -32,7 +32,11 @@ docker run --rm \
 
 The image runs as a non-root user (`uid 10001`) and exposes port `2112`.
 
-## Homebrew (macOS / Linux)
+## Homebrew (macOS)
+
+The exporter is distributed as a **cask** (a prebuilt binary, not built from source).
+Casks are macOS-only — on Linux, use the [release tarball](#release-binaries) or the
+[container image](#container-image-recommended) instead.
 
 Install the CLI from the project tap:
 
