@@ -8,8 +8,10 @@ before:
   hooks:
     - go mod download
 
+# Split by OS so the Homebrew cask (macOS-only) can reference a darwin-only
+# archive id; the linux build feeds the GHCR image. Otherwise identical.
 builds:
-  - id: pscale_exporter
+  - id: pscale_exporter-darwin
     main: .
     binary: pscale_exporter
     env:
@@ -21,13 +23,34 @@ builds:
       - -s -w -X main.version={{ .Version }}
     # Reproducible builds: pin the binary mtime to the commit timestamp.
     mod_timestamp: "{{ .CommitTimestamp }}"
-    goos: [linux, darwin]
+    goos: [darwin]
+    goarch: [amd64, arm64]
+  - id: pscale_exporter-linux
+    main: .
+    binary: pscale_exporter
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X main.version={{ .Version }}
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    goos: [linux]
     goarch: [amd64, arm64]
 
+# pscale_exporter_<version>_<os>_<arch>.tar.gz — one archive config per OS so the
+# cask can pull only `macos`. Both ship to the GitHub Release.
 archives:
-  - id: default
-    ids: [pscale_exporter]
-    # pscale_exporter_<version>_<os>_<arch>.tar.gz
+  - id: macos
+    ids: [pscale_exporter-darwin]
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    formats: [tar.gz]
+    files:
+      - LICENSE
+      - README.md
+      - config.yaml
+  - id: linux
+    ids: [pscale_exporter-linux]
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     formats: [tar.gz]
     files:
@@ -53,7 +76,7 @@ sboms:
 # Multi-arch GHCR image with image-level SBOM + provenance attestations (both on by default).
 dockers_v2:
   - id: pscale_exporter
-    ids: [pscale_exporter]
+    ids: [pscale_exporter-linux]
     images:
       - ghcr.io/fjacquet/pscale_exporter
     dockerfile: Dockerfile.goreleaser
@@ -81,6 +104,8 @@ dockers_v2:
 # Install: `brew install fjacquet/tap/pscale_exporter`.
 homebrew_casks:
   - name: pscale_exporter
+    # macOS-only: pull just the darwin archives (casks don't work on Linux brew).
+    ids: [macos]
     binaries:
       - pscale_exporter
     repository:
