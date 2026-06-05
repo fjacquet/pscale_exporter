@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-06-05
+
 ### Added
 
 - **GoReleaser release pipeline** (`.goreleaser.yaml`). A single tool now produces the
@@ -39,5 +41,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Baseline prior to the release-pipeline rework. See the
   [GitHub releases](https://github.com/fjacquet/pscale_exporter/releases) for earlier history.
 
-[Unreleased]: https://github.com/fjacquet/pscale_exporter/compare/v0.4.2...HEAD
+[Unreleased]: https://github.com/fjacquet/pscale_exporter/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/fjacquet/pscale_exporter/compare/v0.4.2...v0.5.0
 [0.4.2]: https://github.com/fjacquet/pscale_exporter/releases/tag/v0.4.2
