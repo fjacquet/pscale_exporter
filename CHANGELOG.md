@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.5.0] - 2026-06-05
+## [0.5.1] - 2026-06-05
+
+> The `v0.5.0` tag was cut first but its release run failed before publishing anything
+> (a `dockers_v2` `COPY` path bug); `v0.5.1` is the first published release of this work.
 
 ### Added
 
@@ -41,6 +44,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Baseline prior to the release-pipeline rework. See the
   [GitHub releases](https://github.com/fjacquet/pscale_exporter/releases) for earlier history.
 
-[Unreleased]: https://github.com/fjacquet/pscale_exporter/compare/v0.5.0...HEAD
-[0.5.0]: https://github.com/fjacquet/pscale_exporter/compare/v0.4.2...v0.5.0
+[Unreleased]: https://github.com/fjacquet/pscale_exporter/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/fjacquet/pscale_exporter/compare/v0.4.2...v0.5.1
 [0.4.2]: https://github.com/fjacquet/pscale_exporter/releases/tag/v0.4.2
