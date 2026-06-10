@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.4] - 2026-06-10
+
+### Fixed
+
+- **Nodes-payload parsing now matches live OneFS 9.x clusters** (validated against a
+  OneFS 9.13 virtual PowerScale), while remaining compatible with the older shapes:
+  `sensors` may be an object wrapping a nested `sensors` array, `state.smartfail`
+  may carry per-condition booleans (`smartfailed`) instead of a state string, and
+  empty drive bays (`"present": false`) are no longer counted as drives.
+
+### Changed
+
+- Docs: the read-only collection role also needs `ISI_PRIV_DEVICES` read access —
+  the cluster-nodes inventory endpoint refuses without it.
+
 ## [0.5.3] - 2026-06-05
 
 ### Changed
@@ -60,7 +75,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Baseline prior to the release-pipeline rework. See the
   [GitHub releases](https://github.com/fjacquet/pscale_exporter/releases) for earlier history.
 
-[Unreleased]: https://github.com/fjacquet/pscale_exporter/compare/v0.5.3...HEAD
+[Unreleased]: https://github.com/fjacquet/pscale_exporter/compare/v0.5.4...HEAD
+[0.5.4]: https://github.com/fjacquet/pscale_exporter/compare/v0.5.3...v0.5.4
 [0.5.3]: https://github.com/fjacquet/pscale_exporter/compare/v0.5.2...v0.5.3
 [0.5.2]: https://github.com/fjacquet/pscale_exporter/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/fjacquet/pscale_exporter/compare/v0.4.2...v0.5.1
