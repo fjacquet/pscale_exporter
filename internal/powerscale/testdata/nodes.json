@@ -1,14 +1,21 @@
 {"nodes": [
   {"id": 1, "lnn": 1,
-   "state": {"readonly": {"enabled": false}, "smartfail": {"state": "not_in_smartfail"}},
-   "drives": [{"ui_state": "HEALTHY"}, {"ui_state": "HEALTHY"}],
-   "status": {"powersupplies": {"count": 2, "failures": 0}},
-   "sensors": [
-     {"name": "Temperature", "values": [{"name": "CPU0", "value": "35.0", "units": "Celsius"}]},
-     {"name": "Fan", "values": [{"name": "Fan1", "value": 4500}]}
-   ]},
+   "state": {"readonly": {"enabled": false}, "smartfail": {"dead": false, "down": false, "in_cluster": true, "smartfailed": false}},
+   "drives": [
+     {"baynum": 1, "present": true, "ui_state": "HEALTHY"},
+     {"baynum": 2, "present": true, "ui_state": "HEALTHY"},
+     {"baynum": 3, "present": false, "ui_state": "EMPTY"}
+   ],
+   "status": {"powersupplies": {"count": 2, "failures": 0, "status": "Power Supplies OK", "supplies": []}},
+   "sensors": {"sensors": [
+     {"count": 1, "name": "Temps", "values": [{"name": "CPU0", "value": "35.0", "units": "Celsius"}]},
+     {"count": 1, "name": "Fans", "values": [{"name": "Fan1", "value": 4500}]}
+   ]}},
   {"id": 2, "lnn": 2,
    "state": {"readonly": {"enabled": true}, "smartfail": {"state": "smartfail"}},
    "drives": [{"ui_state": "HEALTHY"}, {"ui_state": "SMARTFAIL"}],
-   "status": {"powersupplies": {"count": 2, "failures": 1}}}
+   "status": {"powersupplies": {"count": 2, "failures": 1}},
+   "sensors": [
+     {"name": "Temperature", "values": [{"name": "CPU1", "value": 36}]}
+   ]}
 ], "total": 2}

@@ -47,6 +47,47 @@ func TestParseNodes(t *testing.T) {
 	}
 }
 
+// TestParseNodesOneFS913 covers the live OneFS 9.13 nodes payload shape (validated
+// against a virtual PowerScale): "sensors" is an object wrapping a nested "sensors"
+// array, "state.smartfail" is a set of booleans (not a state string), and the drive
+// list includes empty bays flagged "present": false.
+func TestParseNodesOneFS913(t *testing.T) {
+	payload := []byte(`{"nodes": [
+	  {"id": 1, "lnn": 1,
+	   "state": {"readonly": {"enabled": false},
+	             "smartfail": {"dead": false, "down": false, "in_cluster": true, "smartfailed": true}},
+	   "drives": [
+	     {"baynum": 1, "present": true, "ui_state": "HEALTHY"},
+	     {"baynum": 2, "present": true, "ui_state": "HEALTHY"},
+	     {"baynum": 3, "present": false, "ui_state": "EMPTY"}
+	   ],
+	   "status": {"powersupplies": {"count": 0, "failures": 0, "status": "Power Supplies OK", "supplies": []}},
+	   "sensors": {"sensors": [
+	     {"count": 1, "name": "Temps", "values": [{"name": "CPU0", "units": "C", "value": "41.0"}]},
+	     {"count": 0, "name": "Fans", "values": []}
+	   ]}}
+	], "total": 1}`)
+	nodes, err := ParseNodes(payload)
+	if err != nil {
+		t.Fatalf("parse live-shaped nodes payload: %v", err)
+	}
+	if len(nodes) != 1 || nodes[0].LNN != 1 {
+		t.Fatalf("nodes: %+v", nodes)
+	}
+	if !nodes[0].Smartfail {
+		t.Fatalf("smartfail boolean shape not detected: %+v", nodes[0])
+	}
+	if nodes[0].DrivesByState["HEALTHY"] != 2 {
+		t.Fatalf("present drive count: %+v", nodes[0].DrivesByState)
+	}
+	if _, ok := nodes[0].DrivesByState["EMPTY"]; ok {
+		t.Fatalf("empty bay (present=false) counted as a drive: %+v", nodes[0].DrivesByState)
+	}
+	if len(nodes[0].Temperatures) != 1 || nodes[0].Temperatures[0].Value != 41 {
+		t.Fatalf("nested sensors object not parsed: %+v", nodes[0].Temperatures)
+	}
+}
+
 func TestParseQuotas(t *testing.T) {
 	qs, err := ParseQuotas(read(t, "quotas.json"))
 	if err != nil || len(qs) != 1 {
