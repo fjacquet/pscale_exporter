@@ -2,7 +2,10 @@ package powerscale
 
 import (
 	"context"
+	"encoding/json"
 	"net/url"
+	"os"
+	"path/filepath"
 	"strconv"
 	"testing"
 
@@ -10,6 +13,11 @@ import (
 )
 
 func newTestClient(t *testing.T) *ClusterClient {
+	t.Helper()
+	return newTestClientDump(t, "")
+}
+
+func newTestClientDump(t *testing.T, dumpDir string) *ClusterClient {
 	t.Helper()
 	srv := newMockOneFS(t)
 	u, _ := url.Parse(srv.URL)
@@ -22,7 +30,7 @@ func newTestClient(t *testing.T) *ClusterClient {
 		Password:           "p",
 		InsecureSkipVerify: true,
 	}
-	c, err := NewClusterClient(context.Background(), cfg)
+	c, err := NewClusterClient(context.Background(), cfg, dumpDir)
 	if err != nil {
 		t.Fatalf("NewClusterClient: %v", err)
 	}
@@ -55,6 +63,49 @@ func TestClientGetInventory(t *testing.T) {
 	}
 	if inv.Counts.NFSExports != 1 || inv.Counts.SMBShares != 1 || inv.Counts.Snapshots != 1 {
 		t.Fatalf("counts: %+v", inv.Counts)
+	}
+}
+
+// TestClientDumpResponses verifies --dump-dir behavior: every fetched endpoint lands as
+// <dir>/<cluster>/<sanitized_path>.json containing the verbatim (valid-JSON) body, ready
+// to be shipped back from a remote site and dropped into testdata/.
+func TestClientDumpResponses(t *testing.T) {
+	dir := t.TempDir()
+	c := newTestClientDump(t, dir)
+	if _, err := c.GetInventory(context.Background()); err != nil {
+		t.Fatalf("GetInventory: %v", err)
+	}
+	if _, err := c.GetStatistics(context.Background()); err != nil {
+		t.Fatalf("GetStatistics: %v", err)
+	}
+	for _, name := range []string{
+		"platform_3_cluster_config.json",
+		"platform_3_cluster_nodes.json",
+		"platform_1_quota_quotas.json",
+		"platform_1_statistics_current.json",
+		"platform_2_statistics_summary_protocol.json",
+	} {
+		b, err := os.ReadFile(filepath.Join(dir, "clu1", name))
+		if err != nil {
+			t.Fatalf("dump file %s: %v", name, err)
+		}
+		if !json.Valid(b) {
+			t.Fatalf("dump file %s is not valid JSON", name)
+		}
+	}
+}
+
+func TestSanitizeFilename(t *testing.T) {
+	if got := sanitizeFilename("platform/1/statistics/current"); got != "platform_1_statistics_current" {
+		t.Fatalf("sanitizeFilename: %q", got)
+	}
+	if got := sanitizeFilename("../escape attempt"); got != ".._escape_attempt" {
+		t.Fatalf("sanitizeFilename traversal: %q", got)
+	}
+	for _, hazard := range []string{"..", ".", ""} {
+		if got := sanitizeFilename(hazard); got != "_" {
+			t.Fatalf("sanitizeFilename(%q) = %q, want _", hazard, got)
+		}
 	}
 }
 

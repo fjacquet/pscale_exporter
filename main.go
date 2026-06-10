@@ -43,6 +43,7 @@ var (
 	configFile string
 	debug      bool
 	once       bool
+	dumpDir    string
 )
 
 // Server owns the HTTP server, the snapshot store, the collection loop, the per-cluster
@@ -196,7 +197,7 @@ func (s *Server) initOTLP(cfg *models.Config) error {
 func buildClients(ctx context.Context, cfg *models.Config) []powerscale.Client {
 	clients := make([]powerscale.Client, 0, len(cfg.Clusters))
 	for _, cl := range cfg.Clusters {
-		client, err := powerscale.NewClusterClient(ctx, cl)
+		client, err := powerscale.NewClusterClient(ctx, cl, dumpDir)
 		if err != nil {
 			log.Warnf("cluster %q: client init failed, will be marked down: %v", cl.Name, err)
 			continue
@@ -381,6 +382,9 @@ func main() {
 
 			log.Infof("Starting %s...", programName)
 			log.Infof("Monitoring %d cluster(s)", len(safeCfg.Get().Clusters))
+			if dumpDir != "" {
+				log.Infof("Raw API responses will be dumped to %s/<cluster>/", dumpDir)
+			}
 
 			server := NewServer(safeCfg, configFile)
 			if err := server.Start(); err != nil {
@@ -409,6 +413,7 @@ func main() {
 	rootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "", "Path to configuration file (required)")
 	rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "Enable debug mode")
 	rootCmd.PersistentFlags().BoolVar(&once, "once", false, "Run a single collection cycle and exit")
+	rootCmd.PersistentFlags().StringVar(&dumpDir, "dump-dir", "", "Write every raw OneFS API response to DIR/<cluster>/<endpoint>.json (debug aid; combine with --once)")
 	_ = rootCmd.MarkPersistentFlagRequired("config")
 
 	if err := rootCmd.Execute(); err != nil {

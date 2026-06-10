@@ -4,11 +4,14 @@ import (
 	"encoding/json"
 	"strconv"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // flexFloat parses a JSON number OR a numeric string (OneFS sensor readings are sometimes
 // quoted, e.g. "35.0"). Unparseable/empty values decode to 0 rather than erroring, keeping
-// the surrounding best-effort parse resilient.
+// the surrounding best-effort parse resilient; the fallback is logged at debug so a
+// schema surprise on a remote system leaves a trace.
 type flexFloat float64
 
 func (f *flexFloat) UnmarshalJSON(b []byte) error {
@@ -18,6 +21,7 @@ func (f *flexFloat) UnmarshalJSON(b []byte) error {
 	}
 	v, err := strconv.ParseFloat(s, 64)
 	if err != nil {
+		log.Debugf("flexFloat: unparseable value %q decoded to 0", string(b))
 		return nil
 	}
 	*f = flexFloat(v)
@@ -42,7 +46,8 @@ type sensorGroup struct {
 // sensorGroups accepts both shapes OneFS uses for a node's "sensors" field: live 9.x
 // payloads wrap the list in an object ({"sensors": [...]}), older payloads use a bare
 // array. Any other shape decodes to empty rather than failing the whole nodes parse —
-// sensors are best-effort hardware telemetry.
+// sensors are best-effort hardware telemetry — but is logged at debug so a schema
+// surprise on a remote system leaves a trace instead of silently missing metrics.
 type sensorGroups []sensorGroup
 
 func (s *sensorGroups) UnmarshalJSON(b []byte) error {
@@ -56,7 +61,14 @@ func (s *sensorGroups) UnmarshalJSON(b []byte) error {
 	var flat []sensorGroup
 	if err := json.Unmarshal(b, &flat); err == nil {
 		*s = flat
+		return nil
 	}
+	const max = 200
+	trace := string(b)
+	if len(trace) > max {
+		trace = trace[:max] + "..."
+	}
+	log.Debugf("sensors: unrecognized shape decoded to empty: %s", trace)
 	return nil
 }
 

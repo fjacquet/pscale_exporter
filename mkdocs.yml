@@ -55,6 +55,7 @@ nav:
       - Kubernetes: deployment/kubernetes.md
   - Dashboards: dashboards.md
   - OpenTelemetry: opentelemetry.md
+  - Troubleshooting: troubleshooting.md
   - CI/CD & SBOM: cicd.md
   - Architecture Decisions:
       - Overview: adr/index.md
