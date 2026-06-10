@@ -30,6 +30,36 @@ type Sensor struct {
 	Value float64
 }
 
+// sensorGroup is one sensor category in the nodes payload (e.g. "Temps", "Fans").
+type sensorGroup struct {
+	Name   string `json:"name"`
+	Values []struct {
+		Name  string    `json:"name"`
+		Value flexFloat `json:"value"`
+	} `json:"values"`
+}
+
+// sensorGroups accepts both shapes OneFS uses for a node's "sensors" field: live 9.x
+// payloads wrap the list in an object ({"sensors": [...]}), older payloads use a bare
+// array. Any other shape decodes to empty rather than failing the whole nodes parse —
+// sensors are best-effort hardware telemetry.
+type sensorGroups []sensorGroup
+
+func (s *sensorGroups) UnmarshalJSON(b []byte) error {
+	var wrapped struct {
+		Sensors []sensorGroup `json:"sensors"`
+	}
+	if err := json.Unmarshal(b, &wrapped); err == nil {
+		*s = wrapped.Sensors
+		return nil
+	}
+	var flat []sensorGroup
+	if err := json.Unmarshal(b, &flat); err == nil {
+		*s = flat
+	}
+	return nil
+}
+
 // ClusterInfo identifies a cluster (from platform/3/cluster/config).
 type ClusterInfo struct {
 	Name    string
@@ -50,7 +80,8 @@ type Node struct {
 	// "DEAD"). Empty when the nodes payload carries no drive list.
 	DrivesByState map[string]int
 
-	// Hardware (best-effort, PROVISIONAL schema from status.powersupplies + sensors).
+	// Hardware (best-effort, from status.powersupplies + sensors; shape validated
+	// against a live OneFS 9.13 virtual cluster).
 	PowerSupplies       int // status.powersupplies.count
 	PowerSupplyFailures int // status.powersupplies.failures
 	Temperatures        []Sensor
@@ -183,12 +214,18 @@ func ParseNodes(b []byte) ([]Node, error) {
 				Readonly struct {
 					Enabled bool `json:"enabled"`
 				} `json:"readonly"`
+				// Smartfail carries both observed shapes: a state string (older
+				// payloads) and per-condition booleans (live OneFS 9.x).
 				Smartfail struct {
-					State string `json:"state"`
+					State       string `json:"state"`
+					Smartfailed bool   `json:"smartfailed"`
 				} `json:"smartfail"`
 			} `json:"state"`
 			Drives []struct {
 				UIState string `json:"ui_state"`
+				// Present is a pointer so payloads without the field (older
+				// schemas) keep counting every listed drive.
+				Present *bool `json:"present"`
 			} `json:"drives"`
 			Status struct {
 				Powersupplies struct {
@@ -196,13 +233,7 @@ func ParseNodes(b []byte) ([]Node, error) {
 					Failures int `json:"failures"`
 				} `json:"powersupplies"`
 			} `json:"status"`
-			Sensors []struct {
-				Name   string `json:"name"`
-				Values []struct {
-					Name  string    `json:"name"`
-					Value flexFloat `json:"value"`
-				} `json:"values"`
-			} `json:"sensors"`
+			Sensors sensorGroups `json:"sensors"`
 		} `json:"nodes"`
 	}
 	if err := json.Unmarshal(b, &raw); err != nil {
@@ -211,15 +242,18 @@ func ParseNodes(b []byte) ([]Node, error) {
 	nodes := make([]Node, 0, len(raw.Nodes))
 	for _, n := range raw.Nodes {
 		var drives map[string]int
-		if len(n.Drives) > 0 {
-			drives = make(map[string]int, len(n.Drives))
-			for _, d := range n.Drives {
-				state := d.UIState
-				if state == "" {
-					state = "UNKNOWN"
-				}
-				drives[state]++
+		for _, d := range n.Drives {
+			if d.Present != nil && !*d.Present {
+				continue // empty bay, not a drive
 			}
+			state := d.UIState
+			if state == "" {
+				state = "UNKNOWN"
+			}
+			if drives == nil {
+				drives = make(map[string]int, len(n.Drives))
+			}
+			drives[state]++
 		}
 		var temps, fans []Sensor
 		for _, grp := range n.Sensors {
@@ -234,11 +268,11 @@ func ParseNodes(b []byte) ([]Node, error) {
 				}
 			}
 		}
-		sf := n.State.Smartfail.State
+		sf := n.State.Smartfail
 		nodes = append(nodes, Node{
 			ID: n.ID, LNN: n.LNN,
 			Readonly:            n.State.Readonly.Enabled,
-			Smartfail:           sf != "" && sf != "not_in_smartfail",
+			Smartfail:           sf.Smartfailed || (sf.State != "" && sf.State != "not_in_smartfail"),
 			DrivesByState:       drives,
 			PowerSupplies:       n.Status.Powersupplies.Count,
 			PowerSupplyFailures: n.Status.Powersupplies.Failures,

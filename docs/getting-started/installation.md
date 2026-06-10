@@ -5,9 +5,10 @@ whichever fits your environment.
 
 ## OneFS account
 
-Collection only needs a **read-only** OneFS account — a role with `ISI_PRIV_STATISTICS`
-and `ISI_PRIV_QUOTA` is sufficient. Create a dedicated monitoring user rather than reusing
-an admin account.
+Collection only needs a **read-only** OneFS account — a role with read access to
+`ISI_PRIV_STATISTICS`, `ISI_PRIV_QUOTA`, and `ISI_PRIV_DEVICES` (the node inventory
+endpoint refuses without it) is sufficient. Create a dedicated monitoring user rather
+than reusing an admin account.
 
 ## Container image (recommended)
 

@@ -92,8 +92,9 @@ make ci            # the gate CI runs (adds go test -race + govulncheck)
 
 ## Notes
 
-- A read-only OneFS account (a role with `ISI_PRIV_STATISTICS` + `ISI_PRIV_QUOTA`) is
-  sufficient for collection.
+- A read-only OneFS account (a role with read access to `ISI_PRIV_STATISTICS`,
+  `ISI_PRIV_QUOTA`, and `ISI_PRIV_DEVICES` — the latter is required by the
+  cluster-nodes inventory) is sufficient for collection.
 - IOPS and bandwidth are already per-second gauges — aggregate with `sum`/`avg` in
   PromQL, never `rate()`.
 - Metric names are unit-explicit: `_bytes`, `_bytes_per_second`,
