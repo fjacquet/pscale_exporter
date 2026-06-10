@@ -19,7 +19,7 @@ func TestEndToEndCollectionThroughPrometheus(t *testing.T) {
 		Name: "clu1", Endpoint: u.Hostname(), Port: port,
 		Username: "u", Password: "p", InsecureSkipVerify: true,
 	}
-	client, err := NewClusterClient(context.Background(), cfg)
+	client, err := NewClusterClient(context.Background(), cfg, "")
 	if err != nil {
 		t.Fatal(err)
 	}

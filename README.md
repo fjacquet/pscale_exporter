@@ -80,6 +80,7 @@ Full docs at **<https://fjacquet.github.io/pscale_exporter/>**:
   [Kubernetes](https://fjacquet.github.io/pscale_exporter/deployment/kubernetes/)
 - [Dashboards](https://fjacquet.github.io/pscale_exporter/dashboards/) ·
   [OpenTelemetry](https://fjacquet.github.io/pscale_exporter/opentelemetry/) ·
+  [Troubleshooting](https://fjacquet.github.io/pscale_exporter/troubleshooting/) ·
   [CI/CD & SBOM](https://fjacquet.github.io/pscale_exporter/cicd/)
 
 ## Development
@@ -88,6 +89,19 @@ Full docs at **<https://fjacquet.github.io/pscale_exporter/>**:
 make tools         # install golangci-lint, cyclonedx-gomod, govulncheck (pinned)
 make sure          # fmt + vet + test + build + golangci-lint
 make ci            # the gate CI runs (adds go test -race + govulncheck)
+```
+
+## Troubleshooting on a remote site
+
+`--debug` logs every OneFS request (full URL, size, duration), per-cluster parse
+summaries (node/quota/sensor counts, which curated stat keys came back missing), and a
+payload snippet whenever a response doesn't parse. For a schema surprise we can't
+reproduce, ask the operator to run one cycle with response dumping:
+
+```bash
+pscale_exporter --config config.yaml --debug --once --dump-dir /tmp/pscale-dump
+# then ship /tmp/pscale-dump/<cluster>/ back — one verbatim JSON file per endpoint,
+# usable directly as test fixtures. Payloads contain no credentials.
 ```
 
 ## Notes

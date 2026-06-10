@@ -4,6 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
 
 	"github.com/dell/gopowerscale/api"
 	"github.com/fjacquet/pscale_exporter/internal/models"
@@ -22,16 +26,19 @@ var _ Client = (*ClusterClient)(nil)
 // ClusterClient is the OneFS API client for a single cluster. It owns one authenticated
 // gopowerscale session used for both typed resources and the raw statistics API.
 type ClusterClient struct {
-	name string
-	cli  api.Client
+	name    string
+	cli     api.Client
+	baseURL string
+	dumpDir string // when non-empty, every raw response body is written under it
 }
 
 // NewClusterClient establishes one authenticated gopowerscale session for the cluster.
+// A non-empty dumpDir enables raw-response dumping (see dump) for offline diagnosis.
 //
 // gopowerscale builds request URLs by writing the hostname argument directly, so it must
 // be a full base URL (scheme + host + port). It also has no Port field in ClientOptions;
 // the port is therefore carried inside the base URL via models.ClusterConfig.BaseURL().
-func NewClusterClient(ctx context.Context, cfg models.ClusterConfig) (*ClusterClient, error) {
+func NewClusterClient(ctx context.Context, cfg models.ClusterConfig, dumpDir string) (*ClusterClient, error) {
 	if cfg.InsecureSkipVerify {
 		log.Warnf("cluster %q: TLS verification disabled (insecureSkipVerify=true)", cfg.Name)
 	}
@@ -42,7 +49,7 @@ func NewClusterClient(ctx context.Context, cfg models.ClusterConfig) (*ClusterCl
 	if err != nil {
 		return nil, fmt.Errorf("cluster %q: auth failed: %w", cfg.Name, err)
 	}
-	return &ClusterClient{name: cfg.Name, cli: cli}, nil
+	return &ClusterClient{name: cfg.Name, cli: cli, baseURL: cfg.BaseURL(), dumpDir: dumpDir}, nil
 }
 
 // Name returns the configured cluster name.
@@ -57,12 +64,64 @@ func (c *ClusterClient) getRaw(ctx context.Context, path string, dst *[]byte) er
 // json.NewDecoder(...).Decode(resp); RawMessage copies the bytes verbatim, which keeps
 // all parsing centralized in the unit-tested models.Parse* functions.
 func (c *ClusterClient) getRawParams(ctx context.Context, path string, params api.OrderedValues, dst *[]byte) error {
+	start := time.Now()
 	var raw json.RawMessage
 	if err := c.cli.Get(ctx, path, "", params, nil, &raw); err != nil {
-		return fmt.Errorf("cluster %q: GET %s: %w", c.name, path, err)
+		return fmt.Errorf("cluster %q: GET %s/%s: %w", c.name, c.baseURL, path, err)
 	}
+	log.Debugf("cluster %q: GET %s/%s (%d params): %d bytes in %s",
+		c.name, c.baseURL, path, len(params), len(raw), time.Since(start).Round(time.Millisecond))
+	c.dump(path, raw)
 	*dst = raw
 	return nil
+}
+
+// dump writes a raw response body to <dumpDir>/<cluster>/<endpoint>.json so operators on
+// an unreachable-to-us site can ship the exact payloads back for diagnosis; the files are
+// drop-in testdata fixtures. Each cycle overwrites the previous one. Payloads carry no
+// credentials (session cookies live in headers, never in bodies).
+func (c *ClusterClient) dump(path string, body []byte) {
+	if c.dumpDir == "" {
+		return
+	}
+	dir := filepath.Join(c.dumpDir, sanitizeFilename(c.name))
+	if err := os.MkdirAll(dir, 0o750); err != nil {
+		log.Warnf("cluster %q: dump dir %s: %v", c.name, dir, err)
+		return
+	}
+	file := filepath.Join(dir, sanitizeFilename(path)+".json")
+	if err := os.WriteFile(file, body, 0o600); err != nil {
+		log.Warnf("cluster %q: dump %s: %v", c.name, file, err)
+	}
+}
+
+// sanitizeFilename maps an endpoint path or cluster name to a single safe filename
+// component (e.g. "platform/1/statistics/current" -> "platform_1_statistics_current").
+// Separators are replaced, so the result can never traverse out of the dump directory;
+// the lone remaining hazards ("", ".", "..") collapse to "_".
+func sanitizeFilename(s string) string {
+	out := strings.Map(func(r rune) rune {
+		switch {
+		case r >= 'a' && r <= 'z', r >= 'A' && r <= 'Z', r >= '0' && r <= '9', r == '-', r == '.':
+			return r
+		default:
+			return '_'
+		}
+	}, s)
+	if out == "" || strings.Trim(out, ".") == "" {
+		return "_"
+	}
+	return out
+}
+
+// snippet returns a bounded prefix of a payload for debug logs, so a parse failure on a
+// system we can't reach still shows what the API actually returned.
+func snippet(b []byte) string {
+	const max = 256
+	if len(b) <= max {
+		return string(b)
+	}
+	return string(b[:max]) + fmt.Sprintf("... (%d bytes total)", len(b))
 }
 
 // APIVersion returns the platform API version negotiated by the SDK at construction.
@@ -78,6 +137,7 @@ func (c *ClusterClient) GetInventory(ctx context.Context) (*models.Inventory, er
 	}
 	info, err := models.ParseClusterConfig(cfgBytes)
 	if err != nil {
+		log.Debugf("cluster %q: cluster config payload: %s", c.name, snippet(cfgBytes))
 		return nil, fmt.Errorf("cluster %q: parse cluster config: %w", c.name, err)
 	}
 	if err := c.getRaw(ctx, "platform/3/cluster/nodes", &nodesBytes); err != nil {
@@ -85,6 +145,7 @@ func (c *ClusterClient) GetInventory(ctx context.Context) (*models.Inventory, er
 	}
 	nodes, err := models.ParseNodes(nodesBytes)
 	if err != nil {
+		log.Debugf("cluster %q: nodes payload: %s", c.name, snippet(nodesBytes))
 		return nil, fmt.Errorf("cluster %q: parse nodes: %w", c.name, err)
 	}
 	if err := c.getRaw(ctx, "platform/1/quota/quotas", &quotaBytes); err != nil {
@@ -92,9 +153,10 @@ func (c *ClusterClient) GetInventory(ctx context.Context) (*models.Inventory, er
 	}
 	quotas, err := models.ParseQuotas(quotaBytes)
 	if err != nil {
+		log.Debugf("cluster %q: quotas payload: %s", c.name, snippet(quotaBytes))
 		return nil, fmt.Errorf("cluster %q: parse quotas: %w", c.name, err)
 	}
-	return &models.Inventory{
+	inv := &models.Inventory{
 		Cluster:      info,
 		Nodes:        nodes,
 		Quotas:       quotas,
@@ -103,7 +165,19 @@ func (c *ClusterClient) GetInventory(ctx context.Context) (*models.Inventory, er
 		SyncPolicies: c.syncPolicies(ctx),
 		Events:       c.activeEvents(ctx),
 		Dedupe:       c.dedupeSummary(ctx),
-	}, nil
+	}
+	if log.IsLevelEnabled(log.DebugLevel) {
+		var sensors int
+		for _, n := range inv.Nodes {
+			sensors += len(n.Temperatures) + len(n.Fans)
+		}
+		log.Debugf("cluster %q: inventory parsed: release=%s nodes=%d (sensor values=%d) quotas=%d "+
+			"nfs_exports=%d smb_shares=%d snapshots=%d sync_policies=%d events=%v",
+			c.name, inv.Cluster.Release, len(inv.Nodes), sensors, len(inv.Quotas),
+			inv.Counts.NFSExports, inv.Counts.SMBShares, inv.Counts.Snapshots,
+			len(inv.SyncPolicies), inv.Events)
+	}
+	return inv, nil
 }
 
 // dedupeSummary fetches cluster-wide deduplication efficiency best-effort.
@@ -115,7 +189,7 @@ func (c *ClusterClient) dedupeSummary(ctx context.Context) models.DedupeSummary 
 	}
 	s, err := models.ParseDedupeSummary(b)
 	if err != nil {
-		log.Debugf("cluster %q: parse dedupe summary failed: %v", c.name, err)
+		log.Debugf("cluster %q: parse dedupe summary failed: %v; payload: %s", c.name, err, snippet(b))
 		return models.DedupeSummary{}
 	}
 	return s
@@ -131,7 +205,7 @@ func (c *ClusterClient) snapshotSummary(ctx context.Context) models.SnapshotSumm
 	}
 	s, err := models.ParseSnapshotSummary(b)
 	if err != nil {
-		log.Debugf("cluster %q: parse snapshot summary failed: %v", c.name, err)
+		log.Debugf("cluster %q: parse snapshot summary failed: %v; payload: %s", c.name, err, snippet(b))
 		return models.SnapshotSummary{}
 	}
 	return s
@@ -146,7 +220,7 @@ func (c *ClusterClient) syncPolicies(ctx context.Context) []models.SyncPolicy {
 	}
 	p, err := models.ParseSyncPolicies(b)
 	if err != nil {
-		log.Debugf("cluster %q: parse sync policies failed: %v", c.name, err)
+		log.Debugf("cluster %q: parse sync policies failed: %v; payload: %s", c.name, err, snippet(b))
 		return nil
 	}
 	return p
@@ -161,7 +235,7 @@ func (c *ClusterClient) activeEvents(ctx context.Context) map[string]int {
 	}
 	ev, err := models.ParseEventOccurrences(b)
 	if err != nil {
-		log.Debugf("cluster %q: parse event occurrences failed: %v", c.name, err)
+		log.Debugf("cluster %q: parse event occurrences failed: %v; payload: %s", c.name, err, snippet(b))
 		return nil
 	}
 	return ev
@@ -205,6 +279,7 @@ func (c *ClusterClient) GetStatistics(ctx context.Context) (*models.Statistics, 
 	}
 	current, err := models.ParseStatCurrent(curBytes)
 	if err != nil {
+		log.Debugf("cluster %q: statistics payload: %s", c.name, snippet(curBytes))
 		return nil, fmt.Errorf("cluster %q: parse statistics: %w", c.name, err)
 	}
 	st := &models.Statistics{Current: current}
@@ -215,11 +290,27 @@ func (c *ClusterClient) GetStatistics(ctx context.Context) (*models.Statistics, 
 	} else if proto, perr := models.ParseProtocolSummary(protoBytes); perr == nil {
 		st.Proto = proto
 	} else {
-		log.Debugf("cluster %q: parse protocol summary failed: %v", c.name, perr)
+		log.Debugf("cluster %q: parse protocol summary failed: %v; payload: %s", c.name, perr, snippet(protoBytes))
 	}
 
 	st.Drives = c.driveSummary(ctx)
 	st.Clients = c.clientSummary(ctx)
+
+	if log.IsLevelEnabled(log.DebugLevel) {
+		returned := make(map[string]bool, len(st.Current))
+		for _, p := range st.Current {
+			returned[p.Key] = true
+		}
+		var missing []string
+		for _, k := range keys {
+			if !returned[k] {
+				missing = append(missing, k)
+			}
+		}
+		log.Debugf("cluster %q: statistics parsed: keys=%d/%d requested (missing: %v) "+
+			"proto_rows=%d drive_rows=%d client_rows=%d",
+			c.name, len(returned), len(keys), missing, len(st.Proto), len(st.Drives), len(st.Clients))
+	}
 	return st, nil
 }
 
@@ -232,7 +323,7 @@ func (c *ClusterClient) driveSummary(ctx context.Context) []models.DriveStat {
 	}
 	d, err := models.ParseDriveSummary(b)
 	if err != nil {
-		log.Debugf("cluster %q: parse drive summary failed: %v", c.name, err)
+		log.Debugf("cluster %q: parse drive summary failed: %v; payload: %s", c.name, err, snippet(b))
 		return nil
 	}
 	return d
@@ -247,7 +338,7 @@ func (c *ClusterClient) clientSummary(ctx context.Context) []models.ClientStat {
 	}
 	cl, err := models.ParseClientSummary(b)
 	if err != nil {
-		log.Debugf("cluster %q: parse client summary failed: %v", c.name, err)
+		log.Debugf("cluster %q: parse client summary failed: %v; payload: %s", c.name, err, snippet(b))
 		return nil
 	}
 	return cl

@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Remote-debug observability** — designed for diagnosing clusters we never have direct
+  access to:
+    - `--debug` now logs every OneFS request (full URL, parameter count, response size,
+      duration), a per-cluster inventory parse summary (node/quota/sensor/policy/event
+      counts), and a statistics summary naming any curated stat keys the cluster did
+      **not** return.
+    - Parse failures (required and best-effort endpoints) log a bounded payload snippet
+      showing what the API actually returned.
+    - The lenient sensor decoders no longer fall back silently: an unrecognized
+      `sensors` shape or unparseable sensor value is traced at debug level.
+    - New `--dump-dir DIR` flag writes every raw API response verbatim to
+      `DIR/<cluster>/<endpoint>.json` (`0600`; bodies carry no credentials) — operators
+      ship the directory back and the files drop straight into `testdata/` as fixtures.
+- New **Troubleshooting** docs page covering the debug workflow.
+
 ## [0.5.4] - 2026-06-10
 
 ### Fixed
