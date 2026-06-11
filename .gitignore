@@ -8,3 +8,4 @@ coverage.html
 clusters.yaml
 *.local.yaml
 .claude.local.md
+.env
