@@ -104,6 +104,16 @@ pscale_exporter --config config.yaml --debug --once --dump-dir /tmp/pscale-dump
 # usable directly as test fixtures. Payloads contain no credentials.
 ```
 
+To validate a live cluster end to end, `--trace` logs every OneFS API response body
+(method, URL, status; headers — and thus the session cookie — are never logged), and
+`--once --debug` prints every collected sample sorted in exposition style:
+
+```bash
+pscale_exporter --config config.yaml --once --debug --trace > validate.out
+grep -v '^{' validate.out > samples.txt    # every sample (diff against docs/metrics.md)
+grep 'API trace' validate.out              # raw OneFS payloads for anything missing
+```
+
 ## Notes
 
 - A read-only OneFS account (a role with read access to `ISI_PRIV_STATISTICS`,

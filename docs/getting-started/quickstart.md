@@ -18,6 +18,29 @@ docker run --rm -p 2112:2112 \
   ghcr.io/fjacquet/pscale_exporter:latest
 ```
 
+Useful flags:
+
+- `--once` — run a single collection cycle, log the result, and exit (connectivity check).
+- `--debug` — verbose logging, including per-request and parse summaries. Combined with
+  `--once`, it also prints **every collected sample** (sorted, exposition style) so you
+  can diff a live cluster against the [metrics reference](../metrics.md).
+- `--trace` — log every OneFS API response body (method, URL, status, payload; headers —
+  and thus the session cookie — are never logged). Use it when a metric you expect is
+  absent: the exporter never guesses values, so an unexpected payload shape shows up as
+  a missing sample — the trace shows what the cluster actually returned.
+
+## Validating against a live cluster
+
+```bash
+./bin/pscale_exporter --config config.yaml --once --debug --trace > validate.out
+grep -v '^{' validate.out > samples.txt    # every collected sample (compare with docs/metrics.md)
+grep 'API trace' validate.out              # raw OneFS payloads for anything missing or suspicious
+```
+
+Logs are JSON lines on stdout while the sample dump is plain exposition-style text, so
+`grep -v '^{'` separates the two. For a payload archive you can ship offline (drop-in
+test fixtures), add `--dump-dir` — see [Troubleshooting](../troubleshooting.md).
+
 ## Local end-to-end stack
 
 A `docker compose` stack brings up the exporter alongside Prometheus, an OpenTelemetry

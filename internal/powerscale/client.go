@@ -3,7 +3,9 @@ package powerscale
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -30,15 +32,17 @@ type ClusterClient struct {
 	cli     api.Client
 	baseURL string
 	dumpDir string // when non-empty, every raw response body is written under it
+	trace   bool   // when true, every API response body is logged (see traceResponse)
 }
 
 // NewClusterClient establishes one authenticated gopowerscale session for the cluster.
-// A non-empty dumpDir enables raw-response dumping (see dump) for offline diagnosis.
+// A non-empty dumpDir enables raw-response dumping (see dump) for offline diagnosis;
+// trace enables per-request response-body logging (see traceResponse).
 //
 // gopowerscale builds request URLs by writing the hostname argument directly, so it must
 // be a full base URL (scheme + host + port). It also has no Port field in ClientOptions;
 // the port is therefore carried inside the base URL via models.ClusterConfig.BaseURL().
-func NewClusterClient(ctx context.Context, cfg models.ClusterConfig, dumpDir string) (*ClusterClient, error) {
+func NewClusterClient(ctx context.Context, cfg models.ClusterConfig, dumpDir string, trace bool) (*ClusterClient, error) {
 	if cfg.InsecureSkipVerify {
 		log.Warnf("cluster %q: TLS verification disabled (insecureSkipVerify=true)", cfg.Name)
 	}
@@ -49,7 +53,7 @@ func NewClusterClient(ctx context.Context, cfg models.ClusterConfig, dumpDir str
 	if err != nil {
 		return nil, fmt.Errorf("cluster %q: auth failed: %w", cfg.Name, err)
 	}
-	return &ClusterClient{name: cfg.Name, cli: cli, baseURL: cfg.BaseURL(), dumpDir: dumpDir}, nil
+	return &ClusterClient{name: cfg.Name, cli: cli, baseURL: cfg.BaseURL(), dumpDir: dumpDir, trace: trace}, nil
 }
 
 // Name returns the configured cluster name.
@@ -67,13 +71,57 @@ func (c *ClusterClient) getRawParams(ctx context.Context, path string, params ap
 	start := time.Now()
 	var raw json.RawMessage
 	if err := c.cli.Get(ctx, path, "", params, nil, &raw); err != nil {
+		c.traceResponse(path, nil, err)
 		return fmt.Errorf("cluster %q: GET %s/%s: %w", c.name, c.baseURL, path, err)
 	}
 	log.Debugf("cluster %q: GET %s/%s (%d params): %d bytes in %s",
 		c.name, c.baseURL, path, len(params), len(raw), time.Since(start).Round(time.Millisecond))
+	c.traceResponse(path, raw, nil)
 	c.dump(path, raw)
 	*dst = raw
 	return nil
+}
+
+// traceResponse logs one management API exchange for --trace: method, URL, status,
+// and the response BODY — never headers, so OneFS session credentials (the isisessid
+// cookie and CSRF token live exclusively in headers) cannot leak. The
+// /session/1/session login exchange happens inside gopowerscale (api.New and its 401
+// re-authentication) and never flows through this wrapper, so credential endpoints
+// are structurally excluded from tracing. gopowerscale discards the *http.Response
+// after decoding and only yields bodies for 2xx statuses, so the exact code is
+// available only on failures (via its typed errors).
+func (c *ClusterClient) traceResponse(path string, body []byte, err error) {
+	if !c.trace {
+		return
+	}
+	fields := log.Fields{
+		"cluster": c.name,
+		"method":  http.MethodGet,
+		"url":     c.baseURL + "/" + path,
+	}
+	if err != nil {
+		if status := statusFromError(err); status != 0 {
+			fields["status"] = status
+		}
+		log.WithFields(fields).Infof("API trace: request failed: %v", err)
+		return
+	}
+	fields["status"] = "2xx"
+	log.WithFields(fields).Infof("API trace:\n%s", body)
+}
+
+// statusFromError extracts the HTTP status code from gopowerscale's typed errors;
+// 0 when the error carries none (e.g. transport or decode failures).
+func statusFromError(err error) int {
+	var jsonErr *api.JSONError
+	if errors.As(err, &jsonErr) {
+		return jsonErr.StatusCode
+	}
+	var htmlErr *api.HTMLError
+	if errors.As(err, &htmlErr) {
+		return htmlErr.StatusCode
+	}
+	return 0
 }
 
 // dump writes a raw response body to <dumpDir>/<cluster>/<endpoint>.json so operators on

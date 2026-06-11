@@ -33,6 +33,27 @@ problem offline.
 A best-effort endpoint failing (dedupe, SyncIQ, drive/client summaries, …) is logged at
 debug and leaves its metrics at zero — it never takes the cluster down.
 
+## API response tracing (`--trace`)
+
+`--trace` logs **every OneFS API exchange** at info level: method, URL, status, and the
+full response body. Use it when a metric you expect is absent — the exporter never
+guesses values, so an unexpected payload shape shows up as a silently-missing sample,
+and the trace shows what the cluster actually returned. Combined with `--once --debug`
+it is the live-cluster validation recipe:
+
+```bash
+pscale_exporter --config config.yaml --once --debug --trace > validate.out
+grep -v '^{' validate.out > samples.txt    # sorted exposition-style sample dump
+grep 'API trace' validate.out              # raw OneFS payloads
+```
+
+**Token safety:** only response *bodies* are logged, never headers — OneFS session
+credentials (the `isisessid` cookie and CSRF token) live exclusively in headers, and
+the `/session/1/session` login exchange happens inside the gopowerscale SDK without
+passing through the traced code path, so it can never appear in the trace. (For the
+same reason the exact status code is shown only for failed requests; successful
+responses are reported as `2xx`.)
+
 ## Response dumping (`--dump-dir`)
 
 For a schema surprise that debug logs alone can't settle, ask the on-site operator to

@@ -1,23 +1,31 @@
 package powerscale
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/fjacquet/pscale_exporter/internal/models"
+	log "github.com/sirupsen/logrus"
 )
 
 func newTestClient(t *testing.T) *ClusterClient {
 	t.Helper()
-	return newTestClientDump(t, "")
+	return newTestClientOpts(t, "", false)
 }
 
 func newTestClientDump(t *testing.T, dumpDir string) *ClusterClient {
+	t.Helper()
+	return newTestClientOpts(t, dumpDir, false)
+}
+
+func newTestClientOpts(t *testing.T, dumpDir string, trace bool) *ClusterClient {
 	t.Helper()
 	srv := newMockOneFS(t)
 	u, _ := url.Parse(srv.URL)
@@ -30,7 +38,7 @@ func newTestClientDump(t *testing.T, dumpDir string) *ClusterClient {
 		Password:           "p",
 		InsecureSkipVerify: true,
 	}
-	c, err := NewClusterClient(context.Background(), cfg, dumpDir)
+	c, err := NewClusterClient(context.Background(), cfg, dumpDir, trace)
 	if err != nil {
 		t.Fatalf("NewClusterClient: %v", err)
 	}
@@ -91,6 +99,43 @@ func TestClientDumpResponses(t *testing.T) {
 		}
 		if !json.Valid(b) {
 			t.Fatalf("dump file %s is not valid JSON", name)
+		}
+	}
+}
+
+// TestClientTraceLogsBodiesNeverHeaders verifies the --trace token-safety contract:
+// response bodies (plus method/URL, and the status of failed requests) are logged,
+// while header material — where the OneFS session credentials live — never appears.
+// The /session/1/session login happens inside gopowerscale during NewClusterClient,
+// so capturing the log from before construction proves the auth exchange (the mock
+// sets an isisessid=test-session cookie) leaks nothing into the trace.
+func TestClientTraceLogsBodiesNeverHeaders(t *testing.T) {
+	var buf bytes.Buffer
+	log.SetOutput(&buf)
+	t.Cleanup(func() { log.SetOutput(os.Stderr) })
+
+	c := newTestClientOpts(t, "", true)
+	if _, err := c.GetInventory(context.Background()); err != nil {
+		t.Fatalf("GetInventory: %v", err)
+	}
+	var b []byte
+	if err := c.getRaw(context.Background(), "platform/1/no/such/endpoint", &b); err == nil {
+		t.Fatal("expected error for unknown endpoint")
+	}
+
+	out := buf.String()
+	if !strings.Contains(out, "API trace:") {
+		t.Fatal("expected API trace output, got none")
+	}
+	if !strings.Contains(out, "000abc000def") { // cluster GUID, proves the body is logged
+		t.Error("trace output does not contain response body content")
+	}
+	if !strings.Contains(out, "request failed") {
+		t.Error("failed request was not traced")
+	}
+	for _, leak := range []string{"isisessid", "test-session", "Cookie"} {
+		if strings.Contains(out, leak) {
+			t.Errorf("trace output leaked header material %q", leak)
 		}
 	}
 }

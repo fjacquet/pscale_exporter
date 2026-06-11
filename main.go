@@ -3,7 +3,7 @@
 //
 // Usage:
 //
-//	pscale_exporter --config config.yaml [--debug] [--once]
+//	pscale_exporter --config config.yaml [--debug] [--once] [--trace]
 package main
 
 import (
@@ -12,6 +12,8 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sort"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -44,6 +46,7 @@ var (
 	debug      bool
 	once       bool
 	dumpDir    string
+	traceAPI   bool
 )
 
 // Server owns the HTTP server, the snapshot store, the collection loop, the per-cluster
@@ -197,7 +200,7 @@ func (s *Server) initOTLP(cfg *models.Config) error {
 func buildClients(ctx context.Context, cfg *models.Config) []powerscale.Client {
 	clients := make([]powerscale.Client, 0, len(cfg.Clusters))
 	for _, cl := range cfg.Clusters {
-		client, err := powerscale.NewClusterClient(ctx, cl, dumpDir)
+		client, err := powerscale.NewClusterClient(ctx, cl, dumpDir, traceAPI)
 		if err != nil {
 			log.Warnf("cluster %q: client init failed, will be marked down: %v", cl.Name, err)
 			continue
@@ -205,6 +208,27 @@ func buildClients(ctx context.Context, cfg *models.Config) []powerscale.Client {
 		clients = append(clients, client)
 	}
 	return clients
+}
+
+// dumpSamples prints every collected sample in Prometheus exposition style, sorted,
+// so a `--once --debug` run against a live cluster can be diffed against
+// docs/metrics.md to spot silently-absent metrics. Samples go to stdout as plain
+// text; with JSON logging on the same stream, `grep -v '^{'` isolates them.
+func dumpSamples(snap *powerscale.Snapshot) {
+	var lines []string
+	for _, cs := range snap.PerCluster {
+		for _, s := range cs.Samples {
+			parts := make([]string, 0, len(s.Labels))
+			for _, l := range s.Labels {
+				parts = append(parts, fmt.Sprintf("%s=%q", l.Name, l.Value))
+			}
+			lines = append(lines, fmt.Sprintf("%s{%s} %v", s.Name, strings.Join(parts, ","), s.Value))
+		}
+	}
+	sort.Strings(lines)
+	for _, l := range lines {
+		fmt.Println(l)
+	}
 }
 
 // ErrorChan returns the channel that receives fatal HTTP server errors.
@@ -385,6 +409,9 @@ func main() {
 			if dumpDir != "" {
 				log.Infof("Raw API responses will be dumped to %s/<cluster>/", dumpDir)
 			}
+			if traceAPI {
+				log.Info("API tracing enabled (--trace): every OneFS response body is logged; headers are never logged")
+			}
 
 			server := NewServer(safeCfg, configFile)
 			if err := server.Start(); err != nil {
@@ -392,6 +419,9 @@ func main() {
 			}
 
 			if once {
+				if debug {
+					dumpSamples(server.store.Load())
+				}
 				log.Info("--once: single collection cycle complete, exiting")
 				return server.Shutdown()
 			}
@@ -414,6 +444,7 @@ func main() {
 	rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "Enable debug mode")
 	rootCmd.PersistentFlags().BoolVar(&once, "once", false, "Run a single collection cycle and exit")
 	rootCmd.PersistentFlags().StringVar(&dumpDir, "dump-dir", "", "Write every raw OneFS API response to DIR/<cluster>/<endpoint>.json (debug aid; combine with --once)")
+	rootCmd.PersistentFlags().BoolVar(&traceAPI, "trace", false, "Log every OneFS API response body (method, URL, status; never headers) for live-cluster payload validation (very verbose)")
 	_ = rootCmd.MarkPersistentFlagRequired("config")
 
 	if err := rootCmd.Execute(); err != nil {

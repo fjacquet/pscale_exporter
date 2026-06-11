@@ -14,7 +14,8 @@ Everything CI runs is a Makefile target, so it reproduces locally.
 - `make tools` — install pinned `golangci-lint`, `cyclonedx-gomod`, `govulncheck`, `goreleaser`.
 - `make sbom` — CycloneDX SBOM (module-level, used by CI). `make release` — `goreleaser release --clean` (binaries, archives, checksums, per-archive syft SBOM, multi-arch GHCR image, Homebrew cask) driven by `.goreleaser.yaml`. `make release-snapshot` — the full GoReleaser pipeline locally, minus publish.
 - `make docker` — from-source image build (`pscale_exporter:$(VERSION)` + `:latest`) using the root `Dockerfile`.
-- Run it: `./bin/pscale_exporter --config config.yaml [--debug] [--once]`. Cluster secrets are `${ENV_VAR}` references in `config.yaml` (or `passwordFile`); export e.g. `PSCALE1_PASSWORD` before running.
+- Run it: `./bin/pscale_exporter --config config.yaml [--debug] [--once] [--trace] [--dump-dir DIR]`. Cluster secrets are `${ENV_VAR}` references in `config.yaml` (or `passwordFile`); export e.g. `PSCALE1_PASSWORD` before running.
+- Live-cluster validation: `--once --debug` prints every collected sample sorted in exposition style (diff against `docs/metrics.md`); `--trace` logs every OneFS API response body. **Token safety:** trace logs method/URL/status/body only, never headers (OneFS session credentials live in headers); the `/session/1/session` login happens inside gopowerscale and is structurally excluded. Never enable the SDK's own verbose logging (`GOISILON_DEBUG` / `verboseLogging`): it dumps response headers including `Set-Cookie: isisessid=…` unmasked.
 - Docs site (MkDocs Material): `uvx --with mkdocs-material --with pymdown-extensions mkdocs build --strict` (or `serve`).
 - `vendor/` is git-ignored; dependencies are managed with `go mod`.
 

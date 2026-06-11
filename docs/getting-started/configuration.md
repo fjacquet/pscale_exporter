@@ -8,8 +8,13 @@ One process monitors many OneFS clusters.
 | Flag | Purpose |
 |---|---|
 | `--config <path>` | Path to the config file (default `config.yaml`). |
-| `--debug` | Verbose logging. |
+| `--debug` | Verbose logging. Combined with `--once`, also prints every collected sample (sorted, exposition style). |
 | `--once` | Run a single collection cycle and exit (useful for smoke tests / cron). |
+| `--trace` | Log every OneFS API response body (method, URL, status; headers — and thus session credentials — are never logged). Very verbose; for live-cluster payload validation. |
+| `--dump-dir <dir>` | Write every raw OneFS API response to `<dir>/<cluster>/<endpoint>.json` (offline diagnosis; combine with `--once`). |
+
+See the [quickstart](quickstart.md#validating-against-a-live-cluster) for the
+live-cluster validation recipe combining `--once --debug --trace`.
 
 ## Full example
 
