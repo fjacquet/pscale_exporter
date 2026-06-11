@@ -1,6 +1,8 @@
 # End-to-end stack for pscale_exporter (server deployment).
 #
-#   PSCALE1_PASSWORD='your-monitor-password' docker compose up -d --build
+#   PSCALE1_HOSTNAME=onefs.example.com PSCALE1_USERNAME=monitor PSCALE1_PASSWORD='pw' docker compose up -d --build
+# Or copy .env.example → .env, fill in the values, and just run:
+#   docker compose up -d --build
 #
 # Ports are published on all interfaces (0.0.0.0), so reach them at the server's
 # host/IP from another machine. Replace <server> below with that address:
@@ -35,7 +37,10 @@ services:
       # Persist the log file (config.yaml -> logName). Owned by uid 10001 via the image.
       - pscale_logs:/var/log/pscale_exporter
     environment:
-      # Cluster secret referenced as ${PSCALE1_PASSWORD} in config.yaml.
+      # Single-cluster quickstart env vars — referenced as ${PSCALE1_*} in config.yaml.
+      # Override any of these on the shell or in a .env file before running compose.
+      - PSCALE1_HOSTNAME=${PSCALE1_HOSTNAME:-pscale-clu1.example.com}
+      - PSCALE1_USERNAME=${PSCALE1_USERNAME:-pscale-monitor}
       - PSCALE1_PASSWORD=${PSCALE1_PASSWORD:-}
     restart: unless-stopped
 

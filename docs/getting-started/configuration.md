@@ -87,8 +87,70 @@ Never put plaintext passwords in the file. Two options:
 
 - **Environment reference** — `password: "${PSCALE1_PASSWORD}"` expands the named env var
   at load time. Export it before starting the process (or pass `-e` to `docker run`).
+  The same expansion works for `endpoint` and `username` — all three fields support `${VAR}`.
 - **`passwordFile`** — point at a file whose contents are the password (handy with
   Kubernetes/Docker secrets mounted as files).
+
+## Environment variables / .env
+
+The compose files pass through a set of `PSCALE1_*` variables as a **single-cluster
+quickstart convenience** — the `1` in the name is literal and scopes these to the first
+(and only) cluster in the default `config.yaml`.
+
+```
+PSCALE1_HOSTNAME=onefs.example.com   # → config clusters[0].endpoint
+PSCALE1_USERNAME=pscale-monitor      # → config clusters[0].username
+PSCALE1_PASSWORD=secret              # → config clusters[0].password
+```
+
+`config.yaml` is always the source of truth and is always consumed by the exporter.
+The compose `environment:` block just injects the shell (or `.env`) values into the
+container so the `${PSCALE1_*}` references inside `config.yaml` resolve correctly.
+
+Copy `.env.example` to `.env`, fill in real values, and run:
+
+```bash
+docker compose up -d --build
+```
+
+### Multi-cluster
+
+For more than one cluster, add one entry per cluster in `config.yaml`.  You can use
+literal values or introduce your own env refs — you just have to also pass them through in
+`docker-compose.yml`'s `environment:` block.  The compose files do **not** auto-discover
+`PSCALE2_*` etc.; you add them explicitly.
+
+Example `config.yaml` snippet for two clusters:
+
+```yaml
+clusters:
+  - name: pscale-cluster1
+    endpoint: "${PSCALE1_HOSTNAME}"
+    port: 8080
+    username: "${PSCALE1_USERNAME}"
+    password: "${PSCALE1_PASSWORD}"
+    insecureSkipVerify: false
+
+  - name: pscale-cluster2
+    endpoint: "${PSCALE2_HOSTNAME}"
+    port: 8080
+    username: "${PSCALE2_USERNAME}"
+    password: "${PSCALE2_PASSWORD}"
+    insecureSkipVerify: false
+```
+
+And the matching addition to the `pscale_exporter` service's `environment:` in
+`docker-compose.yml`:
+
+```yaml
+    environment:
+      - PSCALE1_HOSTNAME=${PSCALE1_HOSTNAME:-pscale-clu1.example.com}
+      - PSCALE1_USERNAME=${PSCALE1_USERNAME:-pscale-monitor}
+      - PSCALE1_PASSWORD=${PSCALE1_PASSWORD:-}
+      - PSCALE2_HOSTNAME=${PSCALE2_HOSTNAME:-}
+      - PSCALE2_USERNAME=${PSCALE2_USERNAME:-}
+      - PSCALE2_PASSWORD=${PSCALE2_PASSWORD:-}
+```
 
 ## Hot reload
 

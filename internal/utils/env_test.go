@@ -48,3 +48,31 @@ func TestResolveSecretsInterpolatesAndLoadsFile(t *testing.T) {
 		t.Errorf("file password = %q (want trimmed 'filepass')", cfg.Clusters[1].Password)
 	}
 }
+
+func TestResolveSecretsExpandsUsername(t *testing.T) {
+	t.Setenv("PSCALE_USER1", "monitor-user")
+	t.Setenv("PSCALE_PW1", "secret")
+
+	cfg := &models.Config{Clusters: []models.ClusterConfig{
+		{Name: "a", Endpoint: "onefs-a", Port: 8080, Username: "${PSCALE_USER1}", Password: "${PSCALE_PW1}"},
+	}}
+
+	if err := ResolveSecrets(cfg); err != nil {
+		t.Fatalf("ResolveSecrets: %v", err)
+	}
+	if cfg.Clusters[0].Username != "monitor-user" {
+		t.Errorf("username = %q, want %q", cfg.Clusters[0].Username, "monitor-user")
+	}
+}
+
+func TestResolveSecretsUnsetUsernameVarFails(t *testing.T) {
+	t.Setenv("PSCALE_PW1", "secret")
+
+	cfg := &models.Config{Clusters: []models.ClusterConfig{
+		{Name: "a", Endpoint: "onefs-a", Port: 8080, Username: "${PSCALE_DEFINITELY_UNSET_USER}", Password: "${PSCALE_PW1}"},
+	}}
+
+	if err := ResolveSecrets(cfg); err == nil {
+		t.Error("expected error for unset username variable, got nil")
+	}
+}

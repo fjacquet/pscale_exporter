@@ -43,6 +43,12 @@ func ResolveSecrets(cfg *models.Config) error {
 		}
 		cl.Endpoint = endpoint
 
+		username, err := ExpandEnv(cl.Username)
+		if err != nil {
+			return fmt.Errorf("cluster %q username: %w", cl.Name, err)
+		}
+		cl.Username = username
+
 		if cl.Password == "" && cl.PasswordFile != "" {
 			data, err := os.ReadFile(cl.PasswordFile)
 			if err != nil {

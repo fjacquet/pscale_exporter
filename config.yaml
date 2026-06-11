@@ -24,11 +24,23 @@ opentelemetry:
     samplingRate: 0.1
 
 # A read-only (e.g. role with ISI_PRIV_STATISTICS + ISI_PRIV_QUOTA) account is sufficient.
+#
+# Single-cluster quickstart: endpoint/username/password are driven by PSCALE1_* env vars
+# (set them in .env or on the shell). The PSCALE1_ prefix and the `1` are a naming
+# convention for exactly one cluster — the compose files pass these through automatically.
+#
+# Multi-cluster: add one entry per cluster with literal values or your own env refs,
+# e.g.:
+#   - name: pscale-cluster2
+#     endpoint: "${PSCALE2_HOSTNAME}"
+#     username: "${PSCALE2_USERNAME}"
+#     password: "${PSCALE2_PASSWORD}"
+# and pass PSCALE2_* through in compose environment:.
 clusters:
   - name: pscale-cluster1
-    endpoint: pscale-clu1.example.com
+    endpoint: "${PSCALE1_HOSTNAME}"
     port: 8080
-    username: pscale-monitor
+    username: "${PSCALE1_USERNAME}"
     password: "${PSCALE1_PASSWORD}"
     # Enable ONLY for clusters with self-signed certs (common in test/lab); keep false in production.
     insecureSkipVerify: false
