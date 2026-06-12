@@ -391,6 +391,8 @@ func main() {
 		Short:   "Prometheus/OTLP exporter for Dell PowerScale (OneFS)",
 		Long:    "PowerScale Exporter collects metrics from PowerScale (OneFS) clusters and exposes them via Prometheus and OTLP.",
 		RunE: func(_ *cobra.Command, _ []string) error {
+			utils.LoadDotEnv(configFile)
+
 			cfg, err := validateConfig(configFile)
 			if err != nil {
 				return err

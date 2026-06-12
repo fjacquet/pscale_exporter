@@ -91,6 +91,22 @@ Never put plaintext passwords in the file. Two options:
 - **`passwordFile`** — point at a file whose contents are the password (handy with
   Kubernetes/Docker secrets mounted as files).
 
+## .env loading
+
+`pscale_exporter` loads a `.env` file **natively at startup** — before config
+interpolation — so the `cp .env.example .env` quickstart works for bare-metal runs as
+well as Docker Compose (which reads `.env` natively).
+
+Search order (first found wins):
+
+1. `.env` in the **working directory** (typical for direct invocations).
+2. `.env` next to **`config.yaml`** (covers systemd units whose `WorkingDirectory` is
+   not the install dir).
+
+**No-override semantics**: already-set environment variables always win. A stray `.env`
+file can never shadow a secret injected via the shell, a secrets manager, or a container
+environment. The load is silent when no `.env` file is found.
+
 ## Environment variables / .env
 
 The compose files pass through a set of `PSCALE1_*` variables as a **single-cluster
