@@ -6,13 +6,13 @@
 make cli
 export PSCALE1_PASSWORD='your-monitor-password'
 ./bin/pscale_exporter --config config.yaml
-# metrics: http://localhost:2112/metrics   health: http://localhost:2112/health
+# metrics: http://localhost:2115/metrics   health: http://localhost:2115/health
 ```
 
 Or with Docker:
 
 ```bash
-docker run --rm -p 2112:2112 \
+docker run --rm -p 2115:2115 \
   -v "$PWD/config.yaml:/etc/pscale_exporter/config.yaml:ro" \
   -e PSCALE1_PASSWORD='your-monitor-password' \
   ghcr.io/fjacquet/pscale_exporter:latest
@@ -53,7 +53,7 @@ PSCALE1_PASSWORD='your-monitor-password' docker compose up -d --build
 
 | Service | URL | Purpose |
 |---|---|---|
-| Exporter | <http://localhost:2112/metrics> (`/health`) | the `/metrics` pull endpoint |
+| Exporter | <http://localhost:2115/metrics> (`/health`) | the `/metrics` pull endpoint |
 | Prometheus | <http://localhost:9090> | scrapes the exporter; alert rules in `deploy/prometheus/pscale.rules.yml` |
 | Grafana | <http://localhost:3000> (`admin`/`admin`) | Prometheus datasource + PowerScale dashboard auto-provisioned |
 | OTLP collector | <http://localhost:8889/metrics> | receives the OTLP push and re-exposes it |

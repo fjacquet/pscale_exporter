@@ -3,7 +3,7 @@
 # exposes metrics via a Prometheus /metrics endpoint and (optionally) an OTLP push.
 server:
   host: "0.0.0.0"
-  port: "2112"
+  port: "2115"
   uri: "/metrics"
   logName: "/var/log/pscale_exporter/pscale-exporter.log"
 

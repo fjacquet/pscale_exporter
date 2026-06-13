@@ -6,7 +6,7 @@
 #
 # Ports are published on all interfaces (0.0.0.0), so reach them at the server's
 # host/IP from another machine. Replace <server> below with that address:
-#   - Exporter metrics:   http://<server>:2112/metrics   (and /health)
+#   - Exporter metrics:   http://<server>:2115/metrics   (and /health)
 #   - Prometheus:         http://<server>:9090           (Status > Targets, Alerts)
 #   - Grafana:            http://<server>:3000           (admin / ${GF_ADMIN_PASSWORD:-admin})
 #   - Collector metrics:  http://<server>:8889/metrics   (OTLP push, when enabled)
@@ -31,7 +31,7 @@ services:
     pull_policy: build
     container_name: pscale_exporter
     ports:
-      - "2112:2112"
+      - "2115:2115"
     volumes:
       - ./config.yaml:/etc/pscale_exporter/config.yaml:ro
       # Persist the log file (config.yaml -> logName). Owned by uid 10001 via the image.

@@ -28,7 +28,7 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certifi
 COPY --from=builder /app/pscale_exporter /usr/bin/pscale_exporter
 COPY config.yaml /etc/pscale_exporter/config.yaml
 
-EXPOSE 2112
+EXPOSE 2115
 
 USER pscale
 
