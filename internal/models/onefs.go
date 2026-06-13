@@ -86,7 +86,7 @@ type Node struct {
 	LNN int // logical node number
 
 	Readonly  bool // node mounted read-only (state.readonly.enabled)
-	Smartfail bool // node is smartfailing / smartfailed (state.smartfail.state)
+	Smartfail bool // node is smartfailing / smartfailed (state.smartfail.smartfailed)
 
 	// DrivesByState counts drives by their UI state (e.g. "HEALTHY", "SMARTFAIL",
 	// "DEAD"). Empty when the nodes payload carries no drive list.
@@ -163,7 +163,7 @@ type DriveStat struct {
 }
 
 // ClientStat is one per-client-class row (statistics/summary/client). Aggregated by
-// node/protocol/class to bound cardinality. PROVISIONAL schema — best-effort.
+// node/protocol/class to bound cardinality. Best-effort.
 type ClientStat struct {
 	Node      int
 	Protocol  string
@@ -525,7 +525,7 @@ func splitDriveID(s string) (lnn int, bay string, ok bool) {
 	return n, s[i+1:], true
 }
 
-// ParseClientSummary parses platform/N/statistics/summary/client. PROVISIONAL schema.
+// ParseClientSummary parses platform/N/statistics/summary/client.
 func ParseClientSummary(b []byte) ([]ClientStat, error) {
 	var raw struct {
 		Client []struct {

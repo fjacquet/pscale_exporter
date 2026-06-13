@@ -362,7 +362,7 @@ func (c *ClusterClient) GetStatistics(ctx context.Context) (*models.Statistics, 
 	return st, nil
 }
 
-// driveSummary fetches per-drive performance best-effort (PROVISIONAL schema).
+// driveSummary fetches per-drive performance best-effort.
 func (c *ClusterClient) driveSummary(ctx context.Context) []models.DriveStat {
 	var b []byte
 	if err := c.getRaw(ctx, "platform/3/statistics/summary/drive", &b); err != nil {
@@ -377,7 +377,7 @@ func (c *ClusterClient) driveSummary(ctx context.Context) []models.DriveStat {
 	return d
 }
 
-// clientSummary fetches per-client-class performance best-effort (PROVISIONAL schema).
+// clientSummary fetches per-client-class performance best-effort.
 func (c *ClusterClient) clientSummary(ctx context.Context) []models.ClientStat {
 	var b []byte
 	if err := c.getRaw(ctx, "platform/3/statistics/summary/client", &b); err != nil {
