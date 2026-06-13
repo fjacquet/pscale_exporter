@@ -156,8 +156,12 @@ func TestParseCount(t *testing.T) {
 
 func TestParseDedupeSummary(t *testing.T) {
 	d, err := ParseDedupeSummary(read(t, "dedupe_summary.json"))
-	if err != nil || d.LogicalSavedBytes != 1000 || d.DeduplicatedBytes != 5000 {
-		t.Fatalf("dedupe parse: %+v err=%v", d, err)
+	if err != nil {
+		t.Fatalf("dedupe parse err: %v", err)
+	}
+	// bytes = blocks * block_size: saved 1000*8192, deduplicated 5000*8192
+	if d.LogicalSavedBytes != 8192000 || d.DeduplicatedBytes != 40960000 {
+		t.Fatalf("dedupe parse: %+v", d)
 	}
 }
 

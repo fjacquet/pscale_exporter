@@ -133,11 +133,10 @@ type SyncPolicy struct {
 }
 
 // DedupeSummary is cluster-wide deduplication/efficiency (dedupe/dedupe-summary).
-// PROVISIONAL: field names follow the documented dedupe-summary schema; validate against
-// a live OneFS as the response is best-effort.
+// OneFS reports block counts; bytes are derived as blocks * block_size.
 type DedupeSummary struct {
-	LogicalSavedBytes float64 // logical_saving
-	DeduplicatedBytes float64 // logical_deduplicated
+	LogicalSavedBytes float64 // saved_logical_blocks * block_size
+	DeduplicatedBytes float64 // logical_blocks * block_size
 }
 
 // Inventory is the typed OneFS state for one cluster at one collection cycle. The trailing
@@ -457,12 +456,14 @@ func ParseProtocolSummary(b []byte) ([]ProtoStat, error) {
 	return out, nil
 }
 
-// ParseDedupeSummary parses platform/N/dedupe/dedupe-summary. PROVISIONAL schema.
+// ParseDedupeSummary parses platform/N/dedupe/dedupe-summary. The OneFS schema reports
+// block counts, not bytes; bytes are derived as blocks * block_size.
 func ParseDedupeSummary(b []byte) (DedupeSummary, error) {
 	var raw struct {
 		Summary struct {
-			LogicalSaving       *float64 `json:"logical_saving"`
-			LogicalDeduplicated *float64 `json:"logical_deduplicated"`
+			SavedLogicalBlocks *float64 `json:"saved_logical_blocks"`
+			LogicalBlocks      *float64 `json:"logical_blocks"`
+			BlockSize          *float64 `json:"block_size"`
 		} `json:"summary"`
 	}
 	if err := json.Unmarshal(b, &raw); err != nil {
@@ -474,9 +475,10 @@ func ParseDedupeSummary(b []byte) (DedupeSummary, error) {
 		}
 		return 0
 	}
+	bs := deref(raw.Summary.BlockSize)
 	return DedupeSummary{
-		LogicalSavedBytes: deref(raw.Summary.LogicalSaving),
-		DeduplicatedBytes: deref(raw.Summary.LogicalDeduplicated),
+		LogicalSavedBytes: deref(raw.Summary.SavedLogicalBlocks) * bs,
+		DeduplicatedBytes: deref(raw.Summary.LogicalBlocks) * bs,
 	}, nil
 }
 

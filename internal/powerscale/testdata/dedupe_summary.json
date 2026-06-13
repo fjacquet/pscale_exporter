@@ -1,1 +1,1 @@
-{"summary": {"logical_saving": 1000, "logical_deduplicated": 5000, "estimated_saving": 1200}}
+{"summary": {"saved_logical_blocks": 1000, "logical_blocks": 5000, "block_size": 8192, "used_blocks": 4096, "total_blocks": 16384}}
