@@ -1,4 +1,4 @@
-{"drives": [
-  {"lnn": 1, "bay": "1", "type": "SSD", "op_rate": 120, "busy": 15.5},
-  {"lnn": 2, "bay": "3", "type": "HDD", "op_rate": 80, "busy": 42.0}
+{"drive": [
+  {"drive_id": "1:1", "type": "SSD", "busy": 15.5, "xfers_in": 50, "xfers_out": 70, "access_latency": 0.4},
+  {"drive_id": "2:3", "type": "HDD", "busy": 42.0, "xfers_in": 30, "xfers_out": 50, "access_latency": 6.1}
 ]}

@@ -153,13 +153,12 @@ type Inventory struct {
 	Dedupe       DedupeSummary
 }
 
-// DriveStat is one per-drive performance row (statistics/summary/drive). PROVISIONAL
-// schema — best-effort; validate against a live OneFS.
+// DriveStat is one per-drive performance row (statistics/summary/drive).
 type DriveStat struct {
-	Node        int
-	Bay         string
+	Node        int     // LNN, parsed from drive_id "LNN:bay"
+	Bay         string  // bay, parsed from drive_id "LNN:bay"
 	Type        string  // e.g. "SSD", "HDD"
-	OpsPerSec   float64 // op_rate
+	OpsPerSec   float64 // xfers_in + xfers_out
 	BusyPercent float64 // busy (0-100)
 }
 
@@ -482,28 +481,49 @@ func ParseDedupeSummary(b []byte) (DedupeSummary, error) {
 	}, nil
 }
 
-// ParseDriveSummary parses platform/N/statistics/summary/drive. PROVISIONAL schema.
+// ParseDriveSummary parses platform/N/statistics/summary/drive. The OneFS schema returns
+// a "drive" array whose items carry drive_id ("LNN:bay") and per-direction transfer rates;
+// ops/sec is the sum of read+write transfer rates.
 func ParseDriveSummary(b []byte) ([]DriveStat, error) {
 	var raw struct {
-		Drives []struct {
-			LNN    int     `json:"lnn"`
-			Bay    string  `json:"bay"`
-			Type   string  `json:"type"`
-			OpRate float64 `json:"op_rate"`
-			Busy   float64 `json:"busy"`
-		} `json:"drives"`
+		Drive []struct {
+			DriveID  string  `json:"drive_id"`
+			Type     string  `json:"type"`
+			Busy     float64 `json:"busy"`
+			XfersIn  float64 `json:"xfers_in"`
+			XfersOut float64 `json:"xfers_out"`
+		} `json:"drive"`
 	}
 	if err := json.Unmarshal(b, &raw); err != nil {
 		return nil, err
 	}
-	out := make([]DriveStat, 0, len(raw.Drives))
-	for _, d := range raw.Drives {
+	out := make([]DriveStat, 0, len(raw.Drive))
+	for _, d := range raw.Drive {
+		lnn, bay, ok := splitDriveID(d.DriveID)
+		if !ok {
+			log.Debugf("drive summary: unparseable drive_id %q skipped", d.DriveID)
+			continue
+		}
 		out = append(out, DriveStat{
-			Node: d.LNN, Bay: d.Bay, Type: d.Type,
-			OpsPerSec: d.OpRate, BusyPercent: d.Busy,
+			Node: lnn, Bay: bay, Type: d.Type,
+			OpsPerSec:   d.XfersIn + d.XfersOut,
+			BusyPercent: d.Busy,
 		})
 	}
 	return out, nil
+}
+
+// splitDriveID parses an OneFS drive_id "LNN:bay" into its node LNN and bay string.
+func splitDriveID(s string) (lnn int, bay string, ok bool) {
+	i := strings.IndexByte(s, ':')
+	if i <= 0 || i == len(s)-1 {
+		return 0, "", false
+	}
+	n, err := strconv.Atoi(s[:i])
+	if err != nil {
+		return 0, "", false
+	}
+	return n, s[i+1:], true
 }
 
 // ParseClientSummary parses platform/N/statistics/summary/client. PROVISIONAL schema.
