@@ -181,6 +181,31 @@ func TestParseDriveSummary(t *testing.T) {
 	}
 }
 
+func TestSplitDriveID(t *testing.T) {
+	cases := []struct {
+		in      string
+		wantLNN int
+		wantBay string
+		wantOK  bool
+	}{
+		{"1:1", 1, "1", true},
+		{"12:bay4", 12, "bay4", true},
+		{"1:2:3", 1, "2:3", true}, // bay is everything after the first colon
+		{"", 0, "", false},
+		{"abc", 0, "", false},
+		{":bay", 0, "", false},
+		{"1:", 0, "", false},
+		{"abc:1", 0, "", false},
+	}
+	for _, c := range cases {
+		lnn, bay, ok := splitDriveID(c.in)
+		if lnn != c.wantLNN || bay != c.wantBay || ok != c.wantOK {
+			t.Errorf("splitDriveID(%q) = (%d, %q, %v), want (%d, %q, %v)",
+				c.in, lnn, bay, ok, c.wantLNN, c.wantBay, c.wantOK)
+		}
+	}
+}
+
 func TestParseClientSummary(t *testing.T) {
 	cs, err := ParseClientSummary(read(t, "stat_client.json"))
 	if err != nil || len(cs) != 2 {

@@ -523,6 +523,7 @@ func splitDriveID(s string) (lnn int, bay string, ok bool) {
 	if err != nil {
 		return 0, "", false
 	}
+	// bay is everything after the first colon; "1:2:3" yields bay="2:3".
 	return n, s[i+1:], true
 }
 
