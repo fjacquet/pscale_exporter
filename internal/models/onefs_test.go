@@ -163,6 +163,12 @@ func TestParseDedupeSummary(t *testing.T) {
 	if d.LogicalSavedBytes != 8192000 || d.DeduplicatedBytes != 40960000 {
 		t.Fatalf("dedupe parse: %+v", d)
 	}
+
+	// Missing/zero block_size must yield 0, not panic (best-effort contract).
+	d2, err2 := ParseDedupeSummary([]byte(`{"summary":{}}`))
+	if err2 != nil || d2.LogicalSavedBytes != 0 || d2.DeduplicatedBytes != 0 {
+		t.Fatalf("zero block_size: %+v err=%v", d2, err2)
+	}
 }
 
 func TestParseDriveSummary(t *testing.T) {
