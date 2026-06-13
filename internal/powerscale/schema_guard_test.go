@@ -51,6 +51,7 @@ func undocumentedFields(v any, prefix string, doc map[string]struct{}) []string 
 			}
 			if _, ok := doc[p]; !ok {
 				out = append(out, p)
+				continue // don't recurse into children of an undocumented parent
 			}
 			out = append(out, undocumentedFields(sub, p, doc)...)
 		}

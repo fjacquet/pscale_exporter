@@ -12,7 +12,9 @@ import (
 	"strings"
 )
 
-// endpoint path -> fixture filename consumed by that endpoint.
+// targets maps each consumed endpoint to its fixture. Fixtures with no typed response
+// schema (nfs_exports.json, smb_shares.json, snapshots.json, session.json, latest.json)
+// are intentionally not guarded.
 var targets = map[string]string{
 	"/platform/3/cluster/config":               "cluster_config.json",
 	"/platform/3/cluster/nodes":                "nodes.json",
@@ -28,6 +30,7 @@ var targets = map[string]string{
 }
 
 const (
+	// defaultSpec must be updated when adopting a new OneFS spec (see docs/swagger/README.md).
 	defaultSpec = "docs/swagger/11035-9.14.0.json"
 	outPath     = "internal/powerscale/testdata/onefs_schemas.json"
 	maxDepth    = 8
@@ -98,6 +101,11 @@ func dig(m map[string]any, keys ...string) map[string]any {
 
 func responseSchema(doc map[string]any, path string) map[string]any {
 	content := dig(doc, "paths", path, "get", "responses", "200", "content")
+	if m, ok := content["application/json"].(map[string]any); ok {
+		if s, ok := m["schema"].(map[string]any); ok {
+			return s
+		}
+	}
 	for _, v := range content {
 		if m, ok := v.(map[string]any); ok {
 			if s, ok := m["schema"].(map[string]any); ok {
@@ -158,8 +166,9 @@ func walk(schema map[string]any, prefix string, fs *fieldSet, comps map[string]a
 		return
 	}
 	if items, ok := schema["items"].(map[string]any); ok {
+		// Descend into the element schema, then fall through: an array node may also
+		// carry allOf/properties (OpenAPI composition) that define additional fields.
 		walk(items, prefix, fs, comps, seen, depth)
-		return
 	}
 	for _, kw := range []string{"allOf", "anyOf", "oneOf"} {
 		if arr, ok := schema[kw].([]any); ok {
