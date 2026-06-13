@@ -168,7 +168,7 @@ type ClientStat struct {
 	Node      int
 	Protocol  string
 	Class     string
-	OpsPerSec float64 // ops
+	OpsPerSec float64 // operation_rate
 	InBps     float64 // in
 	OutBps    float64 // out
 }
@@ -533,10 +533,10 @@ func ParseClientSummary(b []byte) ([]ClientStat, error) {
 		Client []struct {
 			Node     int     `json:"node"`
 			Protocol string  `json:"protocol"`
-			Class    string  `json:"class"`
-			Ops      float64 `json:"ops"`
-			In       float64 `json:"in"`
-			Out      float64 `json:"out"`
+			Class         string  `json:"class"`
+			OperationRate float64 `json:"operation_rate"`
+			In            float64 `json:"in"`
+			Out           float64 `json:"out"`
 		} `json:"client"`
 	}
 	if err := json.Unmarshal(b, &raw); err != nil {
@@ -546,7 +546,7 @@ func ParseClientSummary(b []byte) ([]ClientStat, error) {
 	for _, c := range raw.Client {
 		out = append(out, ClientStat{
 			Node: c.Node, Protocol: c.Protocol, Class: c.Class,
-			OpsPerSec: c.Ops, InBps: c.In, OutBps: c.Out,
+			OpsPerSec: c.OperationRate, InBps: c.In, OutBps: c.Out,
 		})
 	}
 	return out, nil
