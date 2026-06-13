@@ -25,13 +25,13 @@ Run it with your config mounted and the cluster secret in the environment:
 
 ```bash
 docker run --rm \
-  -p 2112:2112 \
+  -p 2115:2115 \
   -v "$PWD/config.yaml:/etc/pscale_exporter/config.yaml:ro" \
   -e PSCALE1_PASSWORD='your-monitor-password' \
   ghcr.io/fjacquet/pscale_exporter:latest
 ```
 
-The image runs as a non-root user (`uid 10001`) and exposes port `2112`.
+The image runs as a non-root user (`uid 10001`) and exposes port `2115`.
 
 ## Homebrew (macOS)
 
@@ -104,8 +104,8 @@ archive for your platform, verify it against `checksums.txt`, and place the bina
 ## Verify it's running
 
 ```bash
-curl -s http://localhost:2112/metrics | grep '^powerscale_up'
-curl -s http://localhost:2112/health
+curl -s http://localhost:2115/metrics | grep '^powerscale_up'
+curl -s http://localhost:2115/health
 ```
 
 Next: [Configuration](configuration.md) · [Quick Start](quickstart.md).

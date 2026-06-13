@@ -12,13 +12,13 @@
 # Same topology and endpoints as docker-compose.yml; see that file's header for details.
 # Ports are published on all interfaces (0.0.0.0) — reach them at the server's host/IP.
 # SECURITY: only Grafana has auth. Set a strong GF_ADMIN_PASSWORD and firewall/proxy the
-# other ports (9090/2112/4317/8889) on any server reachable beyond a trusted network.
+# other ports (9090/2115/4317/8889) on any server reachable beyond a trusted network.
 services:
   pscale_exporter:
     image: ghcr.io/fjacquet/pscale_exporter:${PSCALE_TAG:-latest}
     container_name: pscale_exporter
     ports:
-      - "2112:2112"
+      - "2115:2115"
     volumes:
       - ./config.yaml:/etc/pscale_exporter/config.yaml:ro
       - pscale_logs:/var/log/pscale_exporter

@@ -66,7 +66,7 @@ WantedBy=multi-user.target
 sudo systemctl daemon-reload
 sudo systemctl enable --now pscale_exporter
 sudo systemctl status pscale_exporter
-curl -s http://localhost:2112/health
+curl -s http://localhost:2115/health
 ```
 
 `ExecReload` wires `systemctl reload pscale_exporter` to the exporter's `SIGHUP`
