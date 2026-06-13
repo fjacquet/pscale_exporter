@@ -529,8 +529,8 @@ func splitDriveID(s string) (lnn int, bay string, ok bool) {
 func ParseClientSummary(b []byte) ([]ClientStat, error) {
 	var raw struct {
 		Client []struct {
-			Node     int     `json:"node"`
-			Protocol string  `json:"protocol"`
+			Node          int     `json:"node"`
+			Protocol      string  `json:"protocol"`
 			Class         string  `json:"class"`
 			OperationRate float64 `json:"operation_rate"`
 			In            float64 `json:"in"`
