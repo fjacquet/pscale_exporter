@@ -12,10 +12,10 @@
      {"count": 1, "name": "Fans", "values": [{"name": "Fan1", "value": 4500}]}
    ]}},
   {"id": 2, "lnn": 2,
-   "state": {"readonly": {"enabled": true}, "smartfail": {"state": "smartfail"}},
+   "state": {"readonly": {"enabled": true}, "smartfail": {"dead": false, "down": false, "in_cluster": true, "smartfailed": true}},
    "drives": [{"ui_state": "HEALTHY"}, {"ui_state": "SMARTFAIL"}],
    "status": {"powersupplies": {"count": 2, "failures": 1}},
-   "sensors": [
-     {"name": "Temperature", "values": [{"name": "CPU1", "value": 36}]}
-   ]}
+   "sensors": {"sensors": [
+     {"count": 1, "name": "Temperature", "values": [{"name": "CPU1", "value": 36}]}
+   ]}}
 ], "total": 2}

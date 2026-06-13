@@ -215,3 +215,19 @@ func TestParseClientSummary(t *testing.T) {
 		t.Fatalf("client[0] fields: %+v", cs[0])
 	}
 }
+
+// TestParseNodesLegacySensors covers the older OneFS shape where "sensors" is a bare
+// array (not wrapped in an object). The dual-shape support in sensorGroups must keep
+// parsing it even though 9.14.0 fixtures use the wrapped shape.
+func TestParseNodesLegacySensors(t *testing.T) {
+	payload := []byte(`{"nodes":[{"id":1,"lnn":1,
+	  "state":{"readonly":{"enabled":false},"smartfail":{"smartfailed":false}},
+	  "sensors":[{"name":"Temps","values":[{"name":"CPU0","value":"40.0"}]}]}]}`)
+	nodes, err := ParseNodes(payload)
+	if err != nil {
+		t.Fatalf("parse legacy nodes: %v", err)
+	}
+	if len(nodes) != 1 || len(nodes[0].Temperatures) != 1 || nodes[0].Temperatures[0].Value != 40 {
+		t.Fatalf("flat sensors array not parsed: %+v", nodes)
+	}
+}

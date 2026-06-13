@@ -224,11 +224,10 @@ func ParseNodes(b []byte) ([]Node, error) {
 				Readonly struct {
 					Enabled bool `json:"enabled"`
 				} `json:"readonly"`
-				// Smartfail carries both observed shapes: a state string (older
-				// payloads) and per-condition booleans (live OneFS 9.x).
+				// Smartfail uses boolean sub-fields only (9.14.0+). The legacy
+				// state string is no longer present in 9.14 payloads.
 				Smartfail struct {
-					State       string `json:"state"`
-					Smartfailed bool   `json:"smartfailed"`
+					Smartfailed bool `json:"smartfailed"`
 				} `json:"smartfail"`
 			} `json:"state"`
 			Drives []struct {
@@ -278,11 +277,10 @@ func ParseNodes(b []byte) ([]Node, error) {
 				}
 			}
 		}
-		sf := n.State.Smartfail
 		nodes = append(nodes, Node{
 			ID: n.ID, LNN: n.LNN,
 			Readonly:            n.State.Readonly.Enabled,
-			Smartfail:           sf.Smartfailed || (sf.State != "" && sf.State != "not_in_smartfail"),
+			Smartfail:           n.State.Smartfail.Smartfailed,
 			DrivesByState:       drives,
 			PowerSupplies:       n.Status.Powersupplies.Count,
 			PowerSupplyFailures: n.Status.Powersupplies.Failures,
