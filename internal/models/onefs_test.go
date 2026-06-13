@@ -230,4 +230,7 @@ func TestParseNodesLegacySensors(t *testing.T) {
 	if len(nodes) != 1 || len(nodes[0].Temperatures) != 1 || nodes[0].Temperatures[0].Value != 40 {
 		t.Fatalf("flat sensors array not parsed: %+v", nodes)
 	}
+	if nodes[0].Smartfail {
+		t.Fatalf("smartfailed:false must yield Smartfail=false: %+v", nodes[0])
+	}
 }
