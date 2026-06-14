@@ -12,18 +12,22 @@ Because the `powerscale_` prefix matches
 [`dell/csm-metrics-powerscale`](https://github.com/dell/csm-metrics-powerscale), existing
 CSM dashboards also work against this exporter without modification.
 
+Every panel carries a description (hover the ⓘ); provisional panels note that their stat keys are not yet live-validated against OneFS.
+
 ## Overview dashboard
 
-One comprehensive board with these rows:
+One comprehensive board with these rows (in display order):
 
-- **Health & Overview** — clusters up, per-cluster up/down status, detected OneFS API
-  version, last-scrape age, and NFS export / SMB share / snapshot counts.
-- **Capacity & Quotas** — capacity used %, a used/available/free/total timeseries, and a
-  table of the top quotas (usage vs hard limit).
-- **CPU** — cluster system / user / idle percent.
-- **Network & Disk** — external in/out throughput and cluster disk IOPS.
-- **Protocol** — operations and average latency, broken down by `protocol` and `op`.
-- **Per-Node** — node CPU idle, memory used, disk IOPS, and used capacity.
+- **SLI Summary** — clusters up, per-cluster up/down status, detected OneFS API version,
+  last-scrape age, and NFS export / SMB share / snapshot counts.
+- **Capacity — Utilization & Saturation** — capacity used %, a used/available/free/total
+  timeseries, and a table of the top quotas (usage vs hard limit).
+- **Compute — Utilization** — cluster system / user / idle percent.
+- **Network & Disk — Utilization** — external in/out throughput and cluster disk IOPS.
+- **Protocol — Rate & Duration (RED)** — operations and average latency, broken down by
+  `protocol` and `op`.
+- **Per-Node Detail** *(collapsed by default)* — node CPU idle, memory used, disk IOPS, and
+  used capacity.
 
 ### Template variables
 
@@ -31,7 +35,7 @@ One comprehensive board with these rows:
 |---|---|
 | `datasource` | Any Prometheus datasource — so the board works on import, not just in the bundled stack. |
 | `cluster` | `label_values(powerscale_up, cluster)` — multi-select, includes *All*. |
-| `node` | `label_values(powerscale_node_cpu_idle_percent{cluster=~"$cluster"}, node)` — drives the Per-Node row. |
+| `node` | `label_values(powerscale_node_cpu_idle_percent{cluster=~"$cluster"}, node)` — drives the Per-Node Detail row. |
 
 !!! note "Per-second gauges"
     IOPS / throughput / protocol panels read per-second gauges directly with `sum`/`avg`
@@ -40,17 +44,26 @@ One comprehensive board with these rows:
 ## Advanced dashboard
 
 The Advanced board surfaces the health/state and efficiency metrics, with a link back to
-the Overview board:
+the Overview board.
+
+### Validated rows
 
 - **Cluster Health** — nodes read-only / smartfailing, drives by state, active events by
   severity, SyncIQ policies failed.
 - **Data Protection** — SyncIQ policy table (enabled + last-run-failed) and snapshot space
   used.
+- **Node CPU Detail** — per-node sys / user / idle.
+- **Quota Detail** — logical + physical usage vs advisory / soft / hard thresholds.
+
+### Provisional rows (collapsed by default)
+
+The following rows are collapsed by default. Their panels note that the underlying stat
+keys are provisional — the key names have been verified against the OneFS 9.14.0 API
+specification but have not been confirmed against a live cluster.
+
 - **Cache Efficiency** — L1/L2/L3 read hit-vs-miss and a computed hit-ratio. These use the
   *provisional* `cache.*` keys; the panels stay empty if your OneFS release exposes
   different key strings (see [Metrics Reference](metrics.md#cache-provisional)).
-- **Node CPU Detail** — per-node sys / user / idle.
-- **Quota Detail** — logical + physical usage vs advisory / soft / hard thresholds.
 - **Storage Efficiency** — deduplication logical saved / deduplicated bytes *(provisional)*.
 - **Per-Drive** — top drive IOPS and busy % *(provisional)*.
 - **Per-Client** — operations by protocol/class and throughput in/out *(provisional)*.
