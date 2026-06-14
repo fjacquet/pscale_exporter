@@ -126,7 +126,8 @@
       },
       "fieldConfig": {
         "defaults": {}
-      }
+      },
+      "panels": []
     },
     {
       "type": "stat",
@@ -508,7 +509,8 @@
       },
       "fieldConfig": {
         "defaults": {}
-      }
+      },
+      "panels": []
     },
     {
       "type": "table",
@@ -703,8 +705,8 @@
     },
     {
       "type": "row",
-      "id": 11,
-      "title": "Cache Efficiency (provisional keys \u2014 verify via statistics/keys)",
+      "id": 14,
+      "title": "Node CPU Detail",
       "collapsed": false,
       "gridPos": {
         "h": 1,
@@ -714,207 +716,8 @@
       },
       "fieldConfig": {
         "defaults": {}
-      }
-    },
-    {
-      "type": "timeseries",
-      "id": 12,
-      "title": "Cache Read Hit vs Miss (L1/L2/L3)",
-      "description": "L1/L2/L3 cache read hit vs miss throughput. Provisional: stat keys not yet live-validated against an OneFS cluster.",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
       },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 23
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "lineWidth": 1,
-            "showPoints": "never",
-            "stacking": {
-              "mode": "none"
-            }
-          },
-          "unit": "Bps"
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "table",
-          "placement": "bottom",
-          "calcs": [
-            "lastNotNull",
-            "max",
-            "mean"
-          ]
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "editorMode": "code",
-          "expr": "sum by (cluster) (powerscale_node_cache_l1_read_hit_bytes_per_second{cluster=~\"$cluster\"})",
-          "legendFormat": "{{cluster}} L1 hit",
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "editorMode": "code",
-          "expr": "sum by (cluster) (powerscale_node_cache_l2_read_hit_bytes_per_second{cluster=~\"$cluster\"})",
-          "legendFormat": "{{cluster}} L2 hit",
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "editorMode": "code",
-          "expr": "sum by (cluster) (powerscale_node_cache_l3_read_hit_bytes_per_second{cluster=~\"$cluster\"})",
-          "legendFormat": "{{cluster}} L3 hit",
-          "refId": "C"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "editorMode": "code",
-          "expr": "sum by (cluster) (powerscale_node_cache_l1_read_miss_bytes_per_second{cluster=~\"$cluster\"})",
-          "legendFormat": "{{cluster}} L1 miss",
-          "refId": "D"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "editorMode": "code",
-          "expr": "sum by (cluster) (powerscale_node_cache_l2_read_miss_bytes_per_second{cluster=~\"$cluster\"})",
-          "legendFormat": "{{cluster}} L2 miss",
-          "refId": "E"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "editorMode": "code",
-          "expr": "sum by (cluster) (powerscale_node_cache_l3_read_miss_bytes_per_second{cluster=~\"$cluster\"})",
-          "legendFormat": "{{cluster}} L3 miss",
-          "refId": "F"
-        }
-      ]
-    },
-    {
-      "type": "timeseries",
-      "id": 13,
-      "title": "Cache Hit Ratio by Level",
-      "description": "Read-cache hit ratio per level. Provisional: stat keys not yet live-validated against an OneFS cluster.",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 23
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "lineWidth": 1,
-            "showPoints": "never"
-          },
-          "min": 0,
-          "max": 100,
-          "unit": "percent"
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "table",
-          "placement": "bottom",
-          "calcs": [
-            "lastNotNull",
-            "max",
-            "mean"
-          ]
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "editorMode": "code",
-          "expr": "100 * sum by (cluster) (powerscale_node_cache_l1_read_hit_bytes_per_second{cluster=~\"$cluster\"}) / clamp_min(sum by (cluster) (powerscale_node_cache_l1_read_hit_bytes_per_second{cluster=~\"$cluster\"}) + sum by (cluster) (powerscale_node_cache_l1_read_miss_bytes_per_second{cluster=~\"$cluster\"}), 1)",
-          "legendFormat": "{{cluster}} L1",
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "editorMode": "code",
-          "expr": "100 * sum by (cluster) (powerscale_node_cache_l2_read_hit_bytes_per_second{cluster=~\"$cluster\"}) / clamp_min(sum by (cluster) (powerscale_node_cache_l2_read_hit_bytes_per_second{cluster=~\"$cluster\"}) + sum by (cluster) (powerscale_node_cache_l2_read_miss_bytes_per_second{cluster=~\"$cluster\"}), 1)",
-          "legendFormat": "{{cluster}} L2",
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "editorMode": "code",
-          "expr": "100 * sum by (cluster) (powerscale_node_cache_l3_read_hit_bytes_per_second{cluster=~\"$cluster\"}) / clamp_min(sum by (cluster) (powerscale_node_cache_l3_read_hit_bytes_per_second{cluster=~\"$cluster\"}) + sum by (cluster) (powerscale_node_cache_l3_read_miss_bytes_per_second{cluster=~\"$cluster\"}), 1)",
-          "legendFormat": "{{cluster}} L3",
-          "refId": "C"
-        }
-      ]
-    },
-    {
-      "type": "row",
-      "id": 14,
-      "title": "Node CPU Detail",
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 31
-      },
-      "fieldConfig": {
-        "defaults": {}
-      }
+      "panels": []
     },
     {
       "type": "timeseries",
@@ -928,7 +731,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 32
+        "y": 23
       },
       "fieldConfig": {
         "defaults": {
@@ -1002,11 +805,12 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 40
+        "y": 31
       },
       "fieldConfig": {
         "defaults": {}
-      }
+      },
+      "panels": []
     },
     {
       "type": "table",
@@ -1020,7 +824,7 @@
         "h": 9,
         "w": 24,
         "x": 0,
-        "y": 41
+        "y": 32
       },
       "fieldConfig": {
         "defaults": {
@@ -1128,593 +932,803 @@
     },
     {
       "type": "row",
-      "id": 18,
-      "title": "Storage Efficiency (provisional \u2014 dedupe-summary schema)",
-      "collapsed": false,
+      "id": 11,
+      "title": "Cache Efficiency",
+      "collapsed": true,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 50
+        "y": 41
       },
       "fieldConfig": {
         "defaults": {}
-      }
+      },
+      "panels": [
+        {
+          "type": "timeseries",
+          "id": 12,
+          "title": "Cache Read Hit vs Miss (L1/L2/L3)",
+          "description": "L1/L2/L3 cache read hit vs miss throughput. Provisional: stat keys not yet live-validated against an OneFS cluster.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 42
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "lineWidth": 1,
+                "showPoints": "never",
+                "stacking": {
+                  "mode": "none"
+                }
+              },
+              "unit": "Bps"
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "calcs": [
+                "lastNotNull",
+                "max",
+                "mean"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum by (cluster) (powerscale_node_cache_l1_read_hit_bytes_per_second{cluster=~\"$cluster\"})",
+              "legendFormat": "{{cluster}} L1 hit",
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum by (cluster) (powerscale_node_cache_l2_read_hit_bytes_per_second{cluster=~\"$cluster\"})",
+              "legendFormat": "{{cluster}} L2 hit",
+              "refId": "B"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum by (cluster) (powerscale_node_cache_l3_read_hit_bytes_per_second{cluster=~\"$cluster\"})",
+              "legendFormat": "{{cluster}} L3 hit",
+              "refId": "C"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum by (cluster) (powerscale_node_cache_l1_read_miss_bytes_per_second{cluster=~\"$cluster\"})",
+              "legendFormat": "{{cluster}} L1 miss",
+              "refId": "D"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum by (cluster) (powerscale_node_cache_l2_read_miss_bytes_per_second{cluster=~\"$cluster\"})",
+              "legendFormat": "{{cluster}} L2 miss",
+              "refId": "E"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum by (cluster) (powerscale_node_cache_l3_read_miss_bytes_per_second{cluster=~\"$cluster\"})",
+              "legendFormat": "{{cluster}} L3 miss",
+              "refId": "F"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "id": 13,
+          "title": "Cache Hit Ratio by Level",
+          "description": "Read-cache hit ratio per level. Provisional: stat keys not yet live-validated against an OneFS cluster.",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 42
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "lineWidth": 1,
+                "showPoints": "never"
+              },
+              "min": 0,
+              "max": 100,
+              "unit": "percent"
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "calcs": [
+                "lastNotNull",
+                "max",
+                "mean"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "100 * sum by (cluster) (powerscale_node_cache_l1_read_hit_bytes_per_second{cluster=~\"$cluster\"}) / clamp_min(sum by (cluster) (powerscale_node_cache_l1_read_hit_bytes_per_second{cluster=~\"$cluster\"}) + sum by (cluster) (powerscale_node_cache_l1_read_miss_bytes_per_second{cluster=~\"$cluster\"}), 1)",
+              "legendFormat": "{{cluster}} L1",
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "100 * sum by (cluster) (powerscale_node_cache_l2_read_hit_bytes_per_second{cluster=~\"$cluster\"}) / clamp_min(sum by (cluster) (powerscale_node_cache_l2_read_hit_bytes_per_second{cluster=~\"$cluster\"}) + sum by (cluster) (powerscale_node_cache_l2_read_miss_bytes_per_second{cluster=~\"$cluster\"}), 1)",
+              "legendFormat": "{{cluster}} L2",
+              "refId": "B"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "100 * sum by (cluster) (powerscale_node_cache_l3_read_hit_bytes_per_second{cluster=~\"$cluster\"}) / clamp_min(sum by (cluster) (powerscale_node_cache_l3_read_hit_bytes_per_second{cluster=~\"$cluster\"}) + sum by (cluster) (powerscale_node_cache_l3_read_miss_bytes_per_second{cluster=~\"$cluster\"}), 1)",
+              "legendFormat": "{{cluster}} L3",
+              "refId": "C"
+            }
+          ]
+        }
+      ]
     },
     {
-      "type": "stat",
-      "id": 19,
-      "title": "Dedupe Logical Saved",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
+      "type": "row",
+      "id": 18,
+      "title": "Storage Efficiency",
+      "collapsed": true,
       "gridPos": {
-        "h": 6,
-        "w": 12,
+        "h": 1,
+        "w": 24,
         "x": 0,
-        "y": 51
+        "y": 42
       },
       "fieldConfig": {
-        "defaults": {
-          "mappings": [],
-          "unit": "bytes",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
+        "defaults": {}
       },
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "horizontal",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "value_and_name"
-      },
-      "targets": [
+      "panels": [
         {
+          "type": "stat",
+          "id": 19,
+          "title": "Dedupe Logical Saved",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "editorMode": "code",
-          "expr": "powerscale_dedupe_logical_saved_bytes{cluster=~\"$cluster\"}",
-          "legendFormat": "{{cluster}}",
-          "refId": "A"
-        }
-      ],
-      "description": "Logical space saved by deduplication. Provisional: stat keys not yet live-validated against an OneFS cluster."
-    },
-    {
-      "type": "stat",
-      "id": 20,
-      "title": "Deduplicated Data",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 12,
-        "x": 12,
-        "y": 51
-      },
-      "fieldConfig": {
-        "defaults": {
-          "mappings": [],
-          "unit": "bytes",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "blue",
-                "value": null
+          "gridPos": {
+            "h": 6,
+            "w": 12,
+            "x": 0,
+            "y": 43
+          },
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [],
+              "unit": "bytes",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
               }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "horizontal",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
+            },
+            "overrides": []
+          },
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "horizontal",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "value_and_name"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "powerscale_dedupe_logical_saved_bytes{cluster=~\"$cluster\"}",
+              "legendFormat": "{{cluster}}",
+              "refId": "A"
+            }
           ],
-          "fields": "",
-          "values": false
+          "description": "Logical space saved by deduplication. Provisional: stat keys not yet live-validated against an OneFS cluster."
         },
-        "textMode": "value_and_name"
-      },
-      "targets": [
         {
+          "type": "stat",
+          "id": 20,
+          "title": "Deduplicated Data",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "editorMode": "code",
-          "expr": "powerscale_dedupe_deduplicated_bytes{cluster=~\"$cluster\"}",
-          "legendFormat": "{{cluster}}",
-          "refId": "A"
+          "gridPos": {
+            "h": 6,
+            "w": 12,
+            "x": 12,
+            "y": 43
+          },
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [],
+              "unit": "bytes",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "blue",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "horizontal",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "value_and_name"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "powerscale_dedupe_deduplicated_bytes{cluster=~\"$cluster\"}",
+              "legendFormat": "{{cluster}}",
+              "refId": "A"
+            }
+          ],
+          "description": "Logical data that has been deduplicated. Provisional: stat keys not yet live-validated against an OneFS cluster."
         }
-      ],
-      "description": "Logical data that has been deduplicated. Provisional: stat keys not yet live-validated against an OneFS cluster."
+      ]
     },
     {
       "type": "row",
       "id": 21,
-      "title": "Per-Drive (provisional \u2014 summary/drive schema)",
-      "collapsed": false,
+      "title": "Per-Drive",
+      "collapsed": true,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 57
+        "y": 43
       },
       "fieldConfig": {
         "defaults": {}
-      }
-    },
-    {
-      "type": "timeseries",
-      "id": 22,
-      "title": "Top Drive IOPS",
-      "description": "Highest per-drive operation rates. Provisional: stat keys not yet live-validated against an OneFS cluster.",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
       },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 58
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "lineWidth": 1,
-            "showPoints": "never"
-          },
-          "unit": "ops"
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "table",
-          "placement": "bottom",
-          "calcs": [
-            "lastNotNull",
-            "max",
-            "mean"
-          ]
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
+      "panels": [
         {
+          "type": "timeseries",
+          "id": 22,
+          "title": "Top Drive IOPS",
+          "description": "Highest per-drive operation rates. Provisional: stat keys not yet live-validated against an OneFS cluster.",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "editorMode": "code",
-          "expr": "topk(15, powerscale_drive_operations_per_second{cluster=~\"$cluster\", node=~\"$node\"})",
-          "legendFormat": "{{cluster}} n{{node}} bay{{bay}} ({{type}})",
-          "refId": "A"
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 44
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "lineWidth": 1,
+                "showPoints": "never"
+              },
+              "unit": "ops"
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "calcs": [
+                "lastNotNull",
+                "max",
+                "mean"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "topk(15, powerscale_drive_operations_per_second{cluster=~\"$cluster\", node=~\"$node\"})",
+              "legendFormat": "{{cluster}} n{{node}} bay{{bay}} ({{type}})",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "id": 23,
+          "title": "Drive Busy %",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 44
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "lineWidth": 1,
+                "showPoints": "never"
+              },
+              "min": 0,
+              "max": 100,
+              "unit": "percent"
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "calcs": [
+                "lastNotNull",
+                "max",
+                "mean"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "topk(15, powerscale_drive_busy_percent{cluster=~\"$cluster\", node=~\"$node\"})",
+              "legendFormat": "{{cluster}} n{{node}} bay{{bay}}",
+              "refId": "A"
+            }
+          ],
+          "description": "Per-drive busy time. Provisional: stat keys not yet live-validated against an OneFS cluster."
         }
       ]
-    },
-    {
-      "type": "timeseries",
-      "id": 23,
-      "title": "Drive Busy %",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 58
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "lineWidth": 1,
-            "showPoints": "never"
-          },
-          "min": 0,
-          "max": 100,
-          "unit": "percent"
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "table",
-          "placement": "bottom",
-          "calcs": [
-            "lastNotNull",
-            "max",
-            "mean"
-          ]
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "editorMode": "code",
-          "expr": "topk(15, powerscale_drive_busy_percent{cluster=~\"$cluster\", node=~\"$node\"})",
-          "legendFormat": "{{cluster}} n{{node}} bay{{bay}}",
-          "refId": "A"
-        }
-      ],
-      "description": "Per-drive busy time. Provisional: stat keys not yet live-validated against an OneFS cluster."
     },
     {
       "type": "row",
       "id": 24,
-      "title": "Per-Client (provisional \u2014 summary/client schema)",
-      "collapsed": false,
+      "title": "Per-Client",
+      "collapsed": true,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 66
+        "y": 44
       },
       "fieldConfig": {
         "defaults": {}
-      }
-    },
-    {
-      "type": "timeseries",
-      "id": 25,
-      "title": "Client Operations by Protocol/Class",
-      "description": "Per-client operation rate by protocol and class. Provisional: stat keys not yet live-validated against an OneFS cluster.",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
       },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 67
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "lineWidth": 1,
-            "showPoints": "never"
-          },
-          "unit": "ops"
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "table",
-          "placement": "bottom",
-          "calcs": [
-            "lastNotNull",
-            "max",
-            "mean"
-          ]
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
+      "panels": [
         {
+          "type": "timeseries",
+          "id": 25,
+          "title": "Client Operations by Protocol/Class",
+          "description": "Per-client operation rate by protocol and class. Provisional: stat keys not yet live-validated against an OneFS cluster.",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "editorMode": "code",
-          "expr": "sum by (protocol, class) (powerscale_client_operations_per_second{cluster=~\"$cluster\"})",
-          "legendFormat": "{{protocol}} {{class}}",
-          "refId": "A"
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 45
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "lineWidth": 1,
+                "showPoints": "never"
+              },
+              "unit": "ops"
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "calcs": [
+                "lastNotNull",
+                "max",
+                "mean"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum by (protocol, class) (powerscale_client_operations_per_second{cluster=~\"$cluster\"})",
+              "legendFormat": "{{protocol}} {{class}}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "id": 26,
+          "title": "Client Throughput (in / out)",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 45
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "lineWidth": 1,
+                "showPoints": "never"
+              },
+              "unit": "Bps"
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "calcs": [
+                "lastNotNull",
+                "max",
+                "mean"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum by (protocol) (powerscale_client_in_bytes_per_second{cluster=~\"$cluster\"})",
+              "legendFormat": "{{protocol}} in",
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum by (protocol) (powerscale_client_out_bytes_per_second{cluster=~\"$cluster\"})",
+              "legendFormat": "{{protocol}} out",
+              "refId": "B"
+            }
+          ],
+          "description": "Per-client inbound/outbound throughput. Provisional: stat keys not yet live-validated against an OneFS cluster."
         }
       ]
     },
     {
-      "type": "timeseries",
-      "id": 26,
-      "title": "Client Throughput (in / out)",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 67
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "lineWidth": 1,
-            "showPoints": "never"
-          },
-          "unit": "Bps"
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "table",
-          "placement": "bottom",
-          "calcs": [
-            "lastNotNull",
-            "max",
-            "mean"
-          ]
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "editorMode": "code",
-          "expr": "sum by (protocol) (powerscale_client_in_bytes_per_second{cluster=~\"$cluster\"})",
-          "legendFormat": "{{protocol}} in",
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "editorMode": "code",
-          "expr": "sum by (protocol) (powerscale_client_out_bytes_per_second{cluster=~\"$cluster\"})",
-          "legendFormat": "{{protocol}} out",
-          "refId": "B"
-        }
-      ],
-      "description": "Per-client inbound/outbound throughput. Provisional: stat keys not yet live-validated against an OneFS cluster."
-    },
-    {
       "type": "row",
       "id": 27,
-      "title": "Hardware (provisional \u2014 node status/sensors)",
-      "collapsed": false,
+      "title": "Hardware",
+      "collapsed": true,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 75
+        "y": 45
       },
       "fieldConfig": {
         "defaults": {}
-      }
-    },
-    {
-      "type": "stat",
-      "id": 28,
-      "title": "Power-Supply Failures",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
       },
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 0,
-        "y": 76
-      },
-      "fieldConfig": {
-        "defaults": {
-          "mappings": [],
-          "unit": "none",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 1
+      "panels": [
+        {
+          "type": "stat",
+          "id": 28,
+          "title": "Power-Supply Failures",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 0,
+            "y": 46
+          },
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [],
+              "unit": "none",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 1
+                  }
+                ]
               }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "horizontal",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
+            },
+            "overrides": []
+          },
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "horizontal",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": false
+            },
+            "textMode": "value_and_name"
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum by (cluster, node) (powerscale_node_power_supply_failures{cluster=~\"$cluster\", node=~\"$node\"})",
+              "legendFormat": "n{{node}} failed",
+              "refId": "A"
+            },
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "sum by (cluster, node) (powerscale_node_power_supplies_total{cluster=~\"$cluster\", node=~\"$node\"})",
+              "legendFormat": "n{{node}} total",
+              "refId": "B"
+            }
           ],
-          "fields": "",
-          "values": false
+          "description": "Failed power supplies across nodes. Should be 0. Provisional: stat keys not yet live-validated against an OneFS cluster."
         },
-        "textMode": "value_and_name"
-      },
-      "targets": [
         {
+          "type": "timeseries",
+          "id": 29,
+          "title": "Node Temperature",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "editorMode": "code",
-          "expr": "sum by (cluster, node) (powerscale_node_power_supply_failures{cluster=~\"$cluster\", node=~\"$node\"})",
-          "legendFormat": "n{{node}} failed",
-          "refId": "A"
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 8,
+            "y": 46
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "lineWidth": 1,
+                "showPoints": "never"
+              },
+              "unit": "celsius"
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "calcs": [
+                "lastNotNull",
+                "max",
+                "mean"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "powerscale_node_temperature_celsius{cluster=~\"$cluster\", node=~\"$node\"}",
+              "legendFormat": "n{{node}} {{sensor}}",
+              "refId": "A"
+            }
+          ],
+          "description": "Node temperature sensor readings. Provisional: stat keys not yet live-validated against an OneFS cluster."
         },
         {
+          "type": "timeseries",
+          "id": 30,
+          "title": "Fan Speed",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "editorMode": "code",
-          "expr": "sum by (cluster, node) (powerscale_node_power_supplies_total{cluster=~\"$cluster\", node=~\"$node\"})",
-          "legendFormat": "n{{node}} total",
-          "refId": "B"
-        }
-      ],
-      "description": "Failed power supplies across nodes. Should be 0. Provisional: stat keys not yet live-validated against an OneFS cluster."
-    },
-    {
-      "type": "timeseries",
-      "id": 29,
-      "title": "Node Temperature",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 8,
-        "y": 76
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "lineWidth": 1,
-            "showPoints": "never"
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 16,
+            "y": 46
           },
-          "unit": "celsius"
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "table",
-          "placement": "bottom",
-          "calcs": [
-            "lastNotNull",
-            "max",
-            "mean"
-          ]
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "lineWidth": 1,
+                "showPoints": "never"
+              },
+              "unit": "rotrpm"
+            },
+            "overrides": []
           },
-          "editorMode": "code",
-          "expr": "powerscale_node_temperature_celsius{cluster=~\"$cluster\", node=~\"$node\"}",
-          "legendFormat": "n{{node}} {{sensor}}",
-          "refId": "A"
-        }
-      ],
-      "description": "Node temperature sensor readings. Provisional: stat keys not yet live-validated against an OneFS cluster."
-    },
-    {
-      "type": "timeseries",
-      "id": 30,
-      "title": "Fan Speed",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 16,
-        "y": 76
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "lineWidth": 1,
-            "showPoints": "never"
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "calcs": [
+                "lastNotNull",
+                "max",
+                "mean"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
           },
-          "unit": "rotrpm"
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "table",
-          "placement": "bottom",
-          "calcs": [
-            "lastNotNull",
-            "max",
-            "mean"
-          ]
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "powerscale_node_fan_speed_rpm{cluster=~\"$cluster\", node=~\"$node\"}",
+              "legendFormat": "n{{node}} {{sensor}}",
+              "refId": "A"
+            }
+          ],
+          "description": "Node fan speed readings. Provisional: stat keys not yet live-validated against an OneFS cluster."
         }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "editorMode": "code",
-          "expr": "powerscale_node_fan_speed_rpm{cluster=~\"$cluster\", node=~\"$node\"}",
-          "legendFormat": "n{{node}} {{sensor}}",
-          "refId": "A"
-        }
-      ],
-      "description": "Node fan speed readings. Provisional: stat keys not yet live-validated against an OneFS cluster."
+      ]
     }
   ]
 }
