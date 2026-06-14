@@ -37,9 +37,21 @@ builds:
     mod_timestamp: "{{ .CommitTimestamp }}"
     goos: [linux]
     goarch: [amd64, arm64]
+  - id: pscale_exporter-windows
+    main: .
+    binary: pscale_exporter
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X main.version={{ .Version }}
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    goos: [windows]
+    goarch: [amd64]
 
-# pscale_exporter_<version>_<os>_<arch>.tar.gz — one archive config per OS so the
-# cask can pull only `macos`. Both ship to the GitHub Release.
+# pscale_exporter_<version>_<os>_<arch>.{tar.gz,zip} — one archive config per OS so the
+# cask can pull only `macos`. All ship to the GitHub Release.
 archives:
   - id: macos
     ids: [pscale_exporter-darwin]
@@ -53,6 +65,15 @@ archives:
     ids: [pscale_exporter-linux]
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     formats: [tar.gz]
+    files:
+      - LICENSE
+      - README.md
+      - config.yaml
+  # Windows ships a .zip (the platform convention); the binary is pscale_exporter.exe.
+  - id: windows
+    ids: [pscale_exporter-windows]
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    formats: [zip]
     files:
       - LICENSE
       - README.md
