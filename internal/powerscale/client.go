@@ -196,7 +196,7 @@ func (c *ClusterClient) GetInventory(ctx context.Context) (*models.Inventory, er
 		log.Debugf("cluster %q: nodes payload: %s", c.name, snippet(nodesBytes))
 		return nil, fmt.Errorf("cluster %q: parse nodes: %w", c.name, err)
 	}
-	if err := c.getRaw(ctx, "platform/1/quota/quotas", &quotaBytes); err != nil {
+	if err := c.getRaw(ctx, "platform/8/quota/quotas", &quotaBytes); err != nil {
 		return nil, err
 	}
 	quotas, err := models.ParseQuotas(quotaBytes)
@@ -262,7 +262,7 @@ func (c *ClusterClient) snapshotSummary(ctx context.Context) models.SnapshotSumm
 // syncPolicies fetches SyncIQ policies best-effort (clusters without SyncIQ yield none).
 func (c *ClusterClient) syncPolicies(ctx context.Context) []models.SyncPolicy {
 	var b []byte
-	if err := c.getRaw(ctx, "platform/11/sync/policies", &b); err != nil {
+	if err := c.getRaw(ctx, "platform/7/sync/policies", &b); err != nil {
 		log.Debugf("cluster %q: sync policies failed: %v", c.name, err)
 		return nil
 	}
@@ -333,7 +333,7 @@ func (c *ClusterClient) GetStatistics(ctx context.Context) (*models.Statistics, 
 	st := &models.Statistics{Current: current}
 
 	var protoBytes []byte
-	if err := c.getRaw(ctx, "platform/2/statistics/summary/protocol", &protoBytes); err != nil {
+	if err := c.getRaw(ctx, "platform/3/statistics/summary/protocol", &protoBytes); err != nil {
 		log.Debugf("cluster %q: protocol summary failed: %v", c.name, err)
 	} else if proto, perr := models.ParseProtocolSummary(protoBytes); perr == nil {
 		st.Proto = proto
@@ -362,7 +362,7 @@ func (c *ClusterClient) GetStatistics(ctx context.Context) (*models.Statistics, 
 	return st, nil
 }
 
-// driveSummary fetches per-drive performance best-effort (PROVISIONAL schema).
+// driveSummary fetches per-drive performance best-effort.
 func (c *ClusterClient) driveSummary(ctx context.Context) []models.DriveStat {
 	var b []byte
 	if err := c.getRaw(ctx, "platform/3/statistics/summary/drive", &b); err != nil {
@@ -377,7 +377,7 @@ func (c *ClusterClient) driveSummary(ctx context.Context) []models.DriveStat {
 	return d
 }
 
-// clientSummary fetches per-client-class performance best-effort (PROVISIONAL schema).
+// clientSummary fetches per-client-class performance best-effort.
 func (c *ClusterClient) clientSummary(ctx context.Context) []models.ClientStat {
 	var b []byte
 	if err := c.getRaw(ctx, "platform/3/statistics/summary/client", &b); err != nil {

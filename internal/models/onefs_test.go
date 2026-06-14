@@ -156,8 +156,18 @@ func TestParseCount(t *testing.T) {
 
 func TestParseDedupeSummary(t *testing.T) {
 	d, err := ParseDedupeSummary(read(t, "dedupe_summary.json"))
-	if err != nil || d.LogicalSavedBytes != 1000 || d.DeduplicatedBytes != 5000 {
-		t.Fatalf("dedupe parse: %+v err=%v", d, err)
+	if err != nil {
+		t.Fatalf("dedupe parse err: %v", err)
+	}
+	// bytes = blocks * block_size: saved 1000*8192, deduplicated 5000*8192
+	if d.LogicalSavedBytes != 8192000 || d.DeduplicatedBytes != 40960000 {
+		t.Fatalf("dedupe parse: %+v", d)
+	}
+
+	// Missing/zero block_size must yield 0, not panic (best-effort contract).
+	d2, err2 := ParseDedupeSummary([]byte(`{"summary":{}}`))
+	if err2 != nil || d2.LogicalSavedBytes != 0 || d2.DeduplicatedBytes != 0 {
+		t.Fatalf("zero block_size: %+v err=%v", d2, err2)
 	}
 }
 
@@ -171,6 +181,31 @@ func TestParseDriveSummary(t *testing.T) {
 	}
 }
 
+func TestSplitDriveID(t *testing.T) {
+	cases := []struct {
+		in      string
+		wantLNN int
+		wantBay string
+		wantOK  bool
+	}{
+		{"1:1", 1, "1", true},
+		{"12:bay4", 12, "bay4", true},
+		{"1:2:3", 1, "2:3", true}, // bay is everything after the first colon
+		{"", 0, "", false},
+		{"abc", 0, "", false},
+		{":bay", 0, "", false},
+		{"1:", 0, "", false},
+		{"abc:1", 0, "", false},
+	}
+	for _, c := range cases {
+		lnn, bay, ok := splitDriveID(c.in)
+		if lnn != c.wantLNN || bay != c.wantBay || ok != c.wantOK {
+			t.Errorf("splitDriveID(%q) = (%d, %q, %v), want (%d, %q, %v)",
+				c.in, lnn, bay, ok, c.wantLNN, c.wantBay, c.wantOK)
+		}
+	}
+}
+
 func TestParseClientSummary(t *testing.T) {
 	cs, err := ParseClientSummary(read(t, "stat_client.json"))
 	if err != nil || len(cs) != 2 {
@@ -178,5 +213,24 @@ func TestParseClientSummary(t *testing.T) {
 	}
 	if cs[0].Protocol != "nfs3" || cs[0].Class != "read" || cs[0].OpsPerSec != 50 || cs[0].InBps != 1024 || cs[0].OutBps != 2048 {
 		t.Fatalf("client[0] fields: %+v", cs[0])
+	}
+}
+
+// TestParseNodesLegacySensors covers the older OneFS shape where "sensors" is a bare
+// array (not wrapped in an object). The dual-shape support in sensorGroups must keep
+// parsing it even though 9.14.0 fixtures use the wrapped shape.
+func TestParseNodesLegacySensors(t *testing.T) {
+	payload := []byte(`{"nodes":[{"id":1,"lnn":1,
+	  "state":{"readonly":{"enabled":false},"smartfail":{"smartfailed":false}},
+	  "sensors":[{"name":"Temps","values":[{"name":"CPU0","value":"40.0"}]}]}]}`)
+	nodes, err := ParseNodes(payload)
+	if err != nil {
+		t.Fatalf("parse legacy nodes: %v", err)
+	}
+	if len(nodes) != 1 || len(nodes[0].Temperatures) != 1 || nodes[0].Temperatures[0].Value != 40 {
+		t.Fatalf("flat sensors array not parsed: %+v", nodes)
+	}
+	if nodes[0].Smartfail {
+		t.Fatalf("smartfailed:false must yield Smartfail=false: %+v", nodes[0])
 	}
 }

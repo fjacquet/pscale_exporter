@@ -31,3 +31,6 @@ Thumbs.db
 
 # Repo-specific
 clusters.yaml
+
+# Full OneFS OpenAPI spec (large; source for `make schemas`, not committed)
+docs/swagger/*.json

@@ -86,7 +86,7 @@ type Node struct {
 	LNN int // logical node number
 
 	Readonly  bool // node mounted read-only (state.readonly.enabled)
-	Smartfail bool // node is smartfailing / smartfailed (state.smartfail.state)
+	Smartfail bool // node is smartfailing / smartfailed (state.smartfail.smartfailed)
 
 	// DrivesByState counts drives by their UI state (e.g. "HEALTHY", "SMARTFAIL",
 	// "DEAD"). Empty when the nodes payload carries no drive list.
@@ -133,11 +133,10 @@ type SyncPolicy struct {
 }
 
 // DedupeSummary is cluster-wide deduplication/efficiency (dedupe/dedupe-summary).
-// PROVISIONAL: field names follow the documented dedupe-summary schema; validate against
-// a live OneFS as the response is best-effort.
+// OneFS reports block counts; bytes are derived as blocks * block_size.
 type DedupeSummary struct {
-	LogicalSavedBytes float64 // logical_saving
-	DeduplicatedBytes float64 // logical_deduplicated
+	LogicalSavedBytes float64 // saved_logical_blocks * block_size
+	DeduplicatedBytes float64 // logical_blocks * block_size
 }
 
 // Inventory is the typed OneFS state for one cluster at one collection cycle. The trailing
@@ -154,23 +153,22 @@ type Inventory struct {
 	Dedupe       DedupeSummary
 }
 
-// DriveStat is one per-drive performance row (statistics/summary/drive). PROVISIONAL
-// schema — best-effort; validate against a live OneFS.
+// DriveStat is one per-drive performance row (statistics/summary/drive).
 type DriveStat struct {
-	Node        int
-	Bay         string
+	Node        int     // LNN, parsed from drive_id "LNN:bay"
+	Bay         string  // bay, parsed from drive_id "LNN:bay"
 	Type        string  // e.g. "SSD", "HDD"
-	OpsPerSec   float64 // op_rate
+	OpsPerSec   float64 // xfers_in + xfers_out
 	BusyPercent float64 // busy (0-100)
 }
 
 // ClientStat is one per-client-class row (statistics/summary/client). Aggregated by
-// node/protocol/class to bound cardinality. PROVISIONAL schema — best-effort.
+// node/protocol/class to bound cardinality. Best-effort.
 type ClientStat struct {
 	Node      int
 	Protocol  string
 	Class     string
-	OpsPerSec float64 // ops
+	OpsPerSec float64 // operation_rate
 	InBps     float64 // in
 	OutBps    float64 // out
 }
@@ -226,11 +224,10 @@ func ParseNodes(b []byte) ([]Node, error) {
 				Readonly struct {
 					Enabled bool `json:"enabled"`
 				} `json:"readonly"`
-				// Smartfail carries both observed shapes: a state string (older
-				// payloads) and per-condition booleans (live OneFS 9.x).
+				// Smartfail uses boolean sub-fields only (9.14.0+). The legacy
+				// state string is no longer present in 9.14 payloads.
 				Smartfail struct {
-					State       string `json:"state"`
-					Smartfailed bool   `json:"smartfailed"`
+					Smartfailed bool `json:"smartfailed"`
 				} `json:"smartfail"`
 			} `json:"state"`
 			Drives []struct {
@@ -280,11 +277,10 @@ func ParseNodes(b []byte) ([]Node, error) {
 				}
 			}
 		}
-		sf := n.State.Smartfail
 		nodes = append(nodes, Node{
 			ID: n.ID, LNN: n.LNN,
 			Readonly:            n.State.Readonly.Enabled,
-			Smartfail:           sf.Smartfailed || (sf.State != "" && sf.State != "not_in_smartfail"),
+			Smartfail:           n.State.Smartfail.Smartfailed,
 			DrivesByState:       drives,
 			PowerSupplies:       n.Status.Powersupplies.Count,
 			PowerSupplyFailures: n.Status.Powersupplies.Failures,
@@ -457,12 +453,14 @@ func ParseProtocolSummary(b []byte) ([]ProtoStat, error) {
 	return out, nil
 }
 
-// ParseDedupeSummary parses platform/N/dedupe/dedupe-summary. PROVISIONAL schema.
+// ParseDedupeSummary parses platform/N/dedupe/dedupe-summary. The OneFS schema reports
+// block counts, not bytes; bytes are derived as blocks * block_size.
 func ParseDedupeSummary(b []byte) (DedupeSummary, error) {
 	var raw struct {
 		Summary struct {
-			LogicalSaving       *float64 `json:"logical_saving"`
-			LogicalDeduplicated *float64 `json:"logical_deduplicated"`
+			SavedLogicalBlocks *float64 `json:"saved_logical_blocks"`
+			LogicalBlocks      *float64 `json:"logical_blocks"`
+			BlockSize          *float64 `json:"block_size"`
 		} `json:"summary"`
 	}
 	if err := json.Unmarshal(b, &raw); err != nil {
@@ -474,46 +472,69 @@ func ParseDedupeSummary(b []byte) (DedupeSummary, error) {
 		}
 		return 0
 	}
+	bs := deref(raw.Summary.BlockSize)
 	return DedupeSummary{
-		LogicalSavedBytes: deref(raw.Summary.LogicalSaving),
-		DeduplicatedBytes: deref(raw.Summary.LogicalDeduplicated),
+		LogicalSavedBytes: deref(raw.Summary.SavedLogicalBlocks) * bs,
+		DeduplicatedBytes: deref(raw.Summary.LogicalBlocks) * bs,
 	}, nil
 }
 
-// ParseDriveSummary parses platform/N/statistics/summary/drive. PROVISIONAL schema.
+// ParseDriveSummary parses platform/N/statistics/summary/drive. The OneFS schema returns
+// a "drive" array whose items carry drive_id ("LNN:bay") and per-direction transfer rates;
+// ops/sec is the sum of read+write transfer rates.
 func ParseDriveSummary(b []byte) ([]DriveStat, error) {
 	var raw struct {
-		Drives []struct {
-			LNN    int     `json:"lnn"`
-			Bay    string  `json:"bay"`
-			Type   string  `json:"type"`
-			OpRate float64 `json:"op_rate"`
-			Busy   float64 `json:"busy"`
-		} `json:"drives"`
+		Drive []struct {
+			DriveID  string  `json:"drive_id"`
+			Type     string  `json:"type"`
+			Busy     float64 `json:"busy"`
+			XfersIn  float64 `json:"xfers_in"`
+			XfersOut float64 `json:"xfers_out"`
+		} `json:"drive"`
 	}
 	if err := json.Unmarshal(b, &raw); err != nil {
 		return nil, err
 	}
-	out := make([]DriveStat, 0, len(raw.Drives))
-	for _, d := range raw.Drives {
+	out := make([]DriveStat, 0, len(raw.Drive))
+	for _, d := range raw.Drive {
+		lnn, bay, ok := splitDriveID(d.DriveID)
+		if !ok {
+			log.Debugf("drive summary: unparseable drive_id %q skipped", d.DriveID)
+			continue
+		}
 		out = append(out, DriveStat{
-			Node: d.LNN, Bay: d.Bay, Type: d.Type,
-			OpsPerSec: d.OpRate, BusyPercent: d.Busy,
+			Node: lnn, Bay: bay, Type: d.Type,
+			OpsPerSec:   d.XfersIn + d.XfersOut,
+			BusyPercent: d.Busy,
 		})
 	}
 	return out, nil
 }
 
-// ParseClientSummary parses platform/N/statistics/summary/client. PROVISIONAL schema.
+// splitDriveID parses an OneFS drive_id "LNN:bay" into its node LNN and bay string.
+func splitDriveID(s string) (lnn int, bay string, ok bool) {
+	i := strings.IndexByte(s, ':')
+	if i <= 0 || i == len(s)-1 {
+		return 0, "", false
+	}
+	n, err := strconv.Atoi(s[:i])
+	if err != nil {
+		return 0, "", false
+	}
+	// bay is everything after the first colon; "1:2:3" yields bay="2:3".
+	return n, s[i+1:], true
+}
+
+// ParseClientSummary parses platform/N/statistics/summary/client.
 func ParseClientSummary(b []byte) ([]ClientStat, error) {
 	var raw struct {
 		Client []struct {
-			Node     int     `json:"node"`
-			Protocol string  `json:"protocol"`
-			Class    string  `json:"class"`
-			Ops      float64 `json:"ops"`
-			In       float64 `json:"in"`
-			Out      float64 `json:"out"`
+			Node          int     `json:"node"`
+			Protocol      string  `json:"protocol"`
+			Class         string  `json:"class"`
+			OperationRate float64 `json:"operation_rate"`
+			In            float64 `json:"in"`
+			Out           float64 `json:"out"`
 		} `json:"client"`
 	}
 	if err := json.Unmarshal(b, &raw); err != nil {
@@ -523,7 +544,7 @@ func ParseClientSummary(b []byte) ([]ClientStat, error) {
 	for _, c := range raw.Client {
 		out = append(out, ClientStat{
 			Node: c.Node, Protocol: c.Protocol, Class: c.Class,
-			OpsPerSec: c.Ops, InBps: c.In, OutBps: c.Out,
+			OpsPerSec: c.OperationRate, InBps: c.In, OutBps: c.Out,
 		})
 	}
 	return out, nil

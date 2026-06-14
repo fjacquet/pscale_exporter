@@ -89,9 +89,9 @@ func TestClientDumpResponses(t *testing.T) {
 	for _, name := range []string{
 		"platform_3_cluster_config.json",
 		"platform_3_cluster_nodes.json",
-		"platform_1_quota_quotas.json",
+		"platform_8_quota_quotas.json",
 		"platform_1_statistics_current.json",
-		"platform_2_statistics_summary_protocol.json",
+		"platform_3_statistics_summary_protocol.json",
 	} {
 		b, err := os.ReadFile(filepath.Join(dir, "clu1", name))
 		if err != nil {

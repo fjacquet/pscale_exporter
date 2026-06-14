@@ -125,19 +125,19 @@ emits no series.
 | `powerscale_synciq_last_run_failed` | bool | `1` if the policy's last run failed / needs attention. | + `policy` |
 | `powerscale_active_events` | count | Unresolved OneFS event-group occurrences. | + `severity` |
 
-## Storage efficiency (provisional)
+## Storage efficiency
 
-Cluster-wide deduplication, from `dedupe/dedupe-summary`. Best-effort; the field names are
-provisional — validate against your OneFS release.
+Cluster-wide deduplication, from `dedupe/dedupe-summary`. Best-effort; bytes are derived as
+block counts × block size (validated against the OneFS 9.14.0 schema).
 
 | Metric | Unit | Description |
 |---|---|---|
 | `powerscale_dedupe_logical_saved_bytes` | bytes | Logical space saved by deduplication. |
 | `powerscale_dedupe_deduplicated_bytes` | bytes | Logical data that has been deduplicated. |
 
-## Per-drive (provisional)
+## Per-drive
 
-From `statistics/summary/drive`. Best-effort; schema is provisional. Labels: `cluster`,
+From `statistics/summary/drive`. Best-effort. Labels: `cluster`,
 `cluster_id`, `node`, `bay`, `type` (e.g. `SSD`, `HDD`).
 
 | Metric | Unit | Description |
@@ -145,11 +145,10 @@ From `statistics/summary/drive`. Best-effort; schema is provisional. Labels: `cl
 | `powerscale_drive_operations_per_second` | ops/s | Per-drive operation rate. |
 | `powerscale_drive_busy_percent` | percent | Per-drive busy time. |
 
-## Per-client (provisional)
+## Per-client
 
 From `statistics/summary/client`, aggregated by `node` / `protocol` / `class` to bound
-cardinality (individual remote clients are intentionally not exported). Best-effort;
-schema is provisional.
+cardinality (individual remote clients are intentionally not exported). Best-effort.
 
 | Metric | Unit | Description |
 |---|---|---|

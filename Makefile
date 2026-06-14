@@ -84,5 +84,9 @@ clean-dist:
 clean: clean-dist
 	rm -f bin/$(BIN) coverage.out coverage.html
 
+.PHONY: schemas
+schemas: ## Regenerate testdata/onefs_schemas.json from docs/swagger/<spec>.json
+	go run ./tools/extract-schemas
+
 .PHONY: all tools fmt-check fmt vet lint test test-race test-coverage vuln ci sure \
-        cli sbom release release-snapshot docker run-cli clean-dist clean
+        cli sbom release release-snapshot docker run-cli clean-dist clean schemas

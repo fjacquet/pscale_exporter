@@ -1,5 +1,10 @@
 package powerscale
 
+// NOTE: Stat-key names (e.g. the cache.* keys in statisticsKeys.json) are NOT in the
+// OneFS OpenAPI spec — they are runtime values served by /platform/1/statistics/keys.
+// They cannot be validated by the schema-drift guard (schema_guard_test.go); they need
+// live-cluster validation. See the provisional-onefs-keys memory note.
+
 import (
 	_ "embed"
 	"encoding/json"
