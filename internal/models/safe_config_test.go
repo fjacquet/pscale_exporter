@@ -16,13 +16,13 @@ func writeConfigFile(t *testing.T, body string) string {
 }
 
 const oneCluster = `
-server: {host: "0.0.0.0", port: "2115", uri: "/metrics"}
+server: {host: "0.0.0.0", port: "9444", uri: "/metrics"}
 clusters:
   - {name: a, endpoint: onefs-a, port: 8080, username: u, password: p}
 `
 
 const twoClusters = `
-server: {host: "0.0.0.0", port: "2115", uri: "/metrics"}
+server: {host: "0.0.0.0", port: "9444", uri: "/metrics"}
 clusters:
   - {name: a, endpoint: onefs-a, port: 8080, username: u, password: p}
   - {name: b, endpoint: onefs-b, port: 8080, username: u, password: p}
@@ -56,7 +56,7 @@ func TestReloadDetectsClusterChange(t *testing.T) {
 func TestReloadRejectsInvalidConfigWithoutMutating(t *testing.T) {
 	sc := NewSafeConfig(&Config{Clusters: []ClusterConfig{{Name: "a", Endpoint: "onefs-a", Port: 8080, Username: "u", Password: "p"}}}, nil)
 
-	badPath := writeConfigFile(t, "server: {port: \"2115\"}\nclusters: []\n")
+	badPath := writeConfigFile(t, "server: {port: \"9444\"}\nclusters: []\n")
 	if _, err := sc.ReloadConfig(badPath); err == nil {
 		t.Fatal("expected validation error for config with no clusters")
 	}

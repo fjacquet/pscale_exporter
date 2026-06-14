@@ -9,7 +9,7 @@ scrape_configs:
   - job_name: powerscale
     metrics_path: /metrics
     static_configs:
-      - targets: ["pscale_exporter:2115"]
+      - targets: ["pscale_exporter:9444"]
 
   # OTLP push path: scrape the OpenTelemetry collector, which re-exposes the metrics
   # the exporter pushes to it (only produces series when opentelemetry.metrics is

@@ -25,7 +25,7 @@ data:
   config.yaml: |
     server:
       host: "0.0.0.0"
-      port: "2115"
+      port: "9444"
       uri: "/metrics"
       logName: "/var/log/pscale_exporter/pscale-exporter.log"
     collection:
@@ -64,7 +64,7 @@ spec:
           image: ghcr.io/fjacquet/pscale_exporter:latest
           args: ["--config", "/etc/pscale_exporter/config.yaml"]
           ports:
-            - { name: metrics, containerPort: 2115 }
+            - { name: metrics, containerPort: 9444 }
           envFrom:
             - secretRef: { name: pscale-exporter-secrets }
           livenessProbe:
@@ -89,12 +89,12 @@ metadata:
   labels: { app: pscale-exporter }
   annotations:
     prometheus.io/scrape: "true"
-    prometheus.io/port: "2115"
+    prometheus.io/port: "9444"
     prometheus.io/path: "/metrics"
 spec:
   selector: { app: pscale-exporter }
   ports:
-    - { name: metrics, port: 2115, targetPort: metrics }
+    - { name: metrics, port: 9444, targetPort: metrics }
 ```
 
 !!! note "Single replica"
