@@ -535,7 +535,7 @@
           "refId": "C"
         }
       ],
-      "description": "Used capacity with the 7-day linear projection from the trailing 24h trend (predict_linear). Where the dashed projection meets total is the forecast fill point."
+      "description": "Used capacity (solid) plus the predicted used-bytes 7 days ahead from the trailing 24h trend (dashed, predict_linear). The gap between the dashed projection and total is the forecast headroom; watch it converge on total. Read the precise runway from the Days to Full stat."
     },
     {
       "type": "timeseries",
@@ -715,38 +715,58 @@
   "templating": {
     "list": [
       {
-        "name": "datasource",
-        "type": "datasource",
-        "query": "prometheus",
-        "label": "Data source",
+        "current": {},
+        "hide": 0,
         "includeAll": false,
-        "multi": false
+        "label": "Data source",
+        "multi": false,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
       },
       {
-        "name": "cluster",
-        "type": "query",
+        "current": {},
         "datasource": { "type": "prometheus", "uid": "${datasource}" },
+        "definition": "label_values(powerscale_up, cluster)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Cluster",
+        "multi": true,
+        "name": "cluster",
+        "options": [],
         "query": {
           "qryType": 1,
           "query": "label_values(powerscale_up, cluster)",
           "refId": "PrometheusVariableQueryEditor-VariableQuery"
         },
-        "label": "Cluster",
-        "includeAll": true,
-        "multi": true
+        "refresh": 2,
+        "regex": "",
+        "sort": 1,
+        "type": "query"
       },
       {
-        "name": "node",
-        "type": "query",
+        "current": {},
         "datasource": { "type": "prometheus", "uid": "${datasource}" },
+        "definition": "label_values(powerscale_node_used_capacity_bytes{cluster=~\"$cluster\"}, node)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Node",
+        "multi": true,
+        "name": "node",
+        "options": [],
         "query": {
           "qryType": 1,
           "query": "label_values(powerscale_node_used_capacity_bytes{cluster=~\"$cluster\"}, node)",
           "refId": "PrometheusVariableQueryEditor-VariableQuery"
         },
-        "label": "Node",
-        "includeAll": true,
-        "multi": true
+        "refresh": 2,
+        "regex": "",
+        "sort": 3,
+        "type": "query"
       }
     ]
   },
