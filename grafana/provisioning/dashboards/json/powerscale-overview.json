@@ -106,7 +106,7 @@
     {
       "type": "row",
       "id": 1,
-      "title": "Health & Overview",
+      "title": "SLI Summary",
       "collapsed": false,
       "gridPos": {
         "h": 1,
@@ -116,7 +116,8 @@
       },
       "fieldConfig": {
         "defaults": {}
-      }
+      },
+      "panels": []
     },
     {
       "type": "stat",
@@ -553,7 +554,7 @@
     {
       "type": "row",
       "id": 9,
-      "title": "Capacity & Quotas",
+      "title": "Capacity \u2014 Utilization & Saturation",
       "collapsed": false,
       "gridPos": {
         "h": 1,
@@ -563,7 +564,8 @@
       },
       "fieldConfig": {
         "defaults": {}
-      }
+      },
+      "panels": []
     },
     {
       "type": "gauge",
@@ -819,7 +821,7 @@
     {
       "type": "row",
       "id": 13,
-      "title": "CPU",
+      "title": "Compute \u2014 Utilization",
       "collapsed": false,
       "gridPos": {
         "h": 1,
@@ -829,7 +831,8 @@
       },
       "fieldConfig": {
         "defaults": {}
-      }
+      },
+      "panels": []
     },
     {
       "type": "timeseries",
@@ -914,7 +917,7 @@
     {
       "type": "row",
       "id": 15,
-      "title": "Network & Disk",
+      "title": "Network & Disk \u2014 Utilization",
       "collapsed": false,
       "gridPos": {
         "h": 1,
@@ -924,7 +927,8 @@
       },
       "fieldConfig": {
         "defaults": {}
-      }
+      },
+      "panels": []
     },
     {
       "type": "timeseries",
@@ -1055,7 +1059,7 @@
     {
       "type": "row",
       "id": 18,
-      "title": "Protocol",
+      "title": "Protocol \u2014 Rate & Duration (RED)",
       "collapsed": false,
       "gridPos": {
         "h": 1,
@@ -1065,7 +1069,8 @@
       },
       "fieldConfig": {
         "defaults": {}
-      }
+      },
+      "panels": []
     },
     {
       "type": "timeseries",
@@ -1186,8 +1191,8 @@
     {
       "type": "row",
       "id": 21,
-      "title": "Per-Node",
-      "collapsed": false,
+      "title": "Per-Node Detail",
+      "collapsed": true,
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -1196,241 +1201,243 @@
       },
       "fieldConfig": {
         "defaults": {}
-      }
-    },
-    {
-      "type": "timeseries",
-      "id": 22,
-      "title": "Node CPU Idle",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
       },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 54
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "lineWidth": 1,
-            "showPoints": "never",
-            "stacking": {
-              "mode": "none"
-            }
-          },
-          "min": 0,
-          "max": 100,
-          "unit": "percent"
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "table",
-          "placement": "bottom",
-          "calcs": [
-            "lastNotNull",
-            "max",
-            "mean"
-          ]
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
+      "panels": [
         {
+          "type": "timeseries",
+          "id": 22,
+          "title": "Node CPU Idle",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "editorMode": "code",
-          "expr": "powerscale_node_cpu_idle_percent{cluster=~\"$cluster\", node=~\"$node\"}",
-          "legendFormat": "{{cluster}} node {{node}}",
-          "refId": "A"
-        }
-      ],
-      "description": "Per-node idle CPU; low idle indicates CPU saturation."
-    },
-    {
-      "type": "timeseries",
-      "id": 23,
-      "title": "Node Memory Used",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 54
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "lineWidth": 1,
-            "showPoints": "never",
-            "stacking": {
-              "mode": "none"
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 54
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "lineWidth": 1,
+                "showPoints": "never",
+                "stacking": {
+                  "mode": "none"
+                }
+              },
+              "min": 0,
+              "max": 100,
+              "unit": "percent"
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "calcs": [
+                "lastNotNull",
+                "max",
+                "mean"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
             }
           },
-          "unit": "bytes"
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "powerscale_node_cpu_idle_percent{cluster=~\"$cluster\", node=~\"$node\"}",
+              "legendFormat": "{{cluster}} node {{node}}",
+              "refId": "A"
+            }
+          ],
+          "description": "Per-node idle CPU; low idle indicates CPU saturation."
         },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "table",
-          "placement": "bottom",
-          "calcs": [
-            "lastNotNull",
-            "max",
-            "mean"
-          ]
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
         {
+          "type": "timeseries",
+          "id": 23,
+          "title": "Node Memory Used",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "editorMode": "code",
-          "expr": "powerscale_node_memory_used_bytes{cluster=~\"$cluster\", node=~\"$node\"}",
-          "legendFormat": "{{cluster}} node {{node}}",
-          "refId": "A"
-        }
-      ],
-      "description": "Per-node memory in use."
-    },
-    {
-      "type": "timeseries",
-      "id": 24,
-      "title": "Node Disk IOPS",
-      "description": "Per-node disk transfer rate (ops/s).",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 62
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "lineWidth": 1,
-            "showPoints": "never",
-            "stacking": {
-              "mode": "none"
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 54
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "lineWidth": 1,
+                "showPoints": "never",
+                "stacking": {
+                  "mode": "none"
+                }
+              },
+              "unit": "bytes"
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "calcs": [
+                "lastNotNull",
+                "max",
+                "mean"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
             }
           },
-          "unit": "ops"
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "powerscale_node_memory_used_bytes{cluster=~\"$cluster\", node=~\"$node\"}",
+              "legendFormat": "{{cluster}} node {{node}}",
+              "refId": "A"
+            }
+          ],
+          "description": "Per-node memory in use."
         },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "table",
-          "placement": "bottom",
-          "calcs": [
-            "lastNotNull",
-            "max",
-            "mean"
-          ]
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
         {
+          "type": "timeseries",
+          "id": 24,
+          "title": "Node Disk IOPS",
+          "description": "Per-node disk transfer rate (ops/s).",
           "datasource": {
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "editorMode": "code",
-          "expr": "powerscale_node_disk_operations_per_second{cluster=~\"$cluster\", node=~\"$node\"}",
-          "legendFormat": "{{cluster}} node {{node}}",
-          "refId": "A"
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 62
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "lineWidth": 1,
+                "showPoints": "never",
+                "stacking": {
+                  "mode": "none"
+                }
+              },
+              "unit": "ops"
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "calcs": [
+                "lastNotNull",
+                "max",
+                "mean"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "powerscale_node_disk_operations_per_second{cluster=~\"$cluster\", node=~\"$node\"}",
+              "legendFormat": "{{cluster}} node {{node}}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "id": 25,
+          "title": "Node Used Capacity",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 62
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "lineWidth": 1,
+                "showPoints": "never",
+                "stacking": {
+                  "mode": "none"
+                }
+              },
+              "unit": "bytes"
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "calcs": [
+                "lastNotNull",
+                "max",
+                "mean"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "powerscale_node_used_capacity_bytes{cluster=~\"$cluster\", node=~\"$node\"}",
+              "legendFormat": "{{cluster}} node {{node}}",
+              "refId": "A"
+            }
+          ],
+          "description": "Per-node used /ifs capacity."
         }
       ]
-    },
-    {
-      "type": "timeseries",
-      "id": 25,
-      "title": "Node Used Capacity",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource}"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 62
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "lineWidth": 1,
-            "showPoints": "never",
-            "stacking": {
-              "mode": "none"
-            }
-          },
-          "unit": "bytes"
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "table",
-          "placement": "bottom",
-          "calcs": [
-            "lastNotNull",
-            "max",
-            "mean"
-          ]
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource}"
-          },
-          "editorMode": "code",
-          "expr": "powerscale_node_used_capacity_bytes{cluster=~\"$cluster\", node=~\"$node\"}",
-          "legendFormat": "{{cluster}} node {{node}}",
-          "refId": "A"
-        }
-      ],
-      "description": "Per-node used /ifs capacity."
     }
   ]
 }
