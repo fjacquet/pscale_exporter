@@ -3,7 +3,10 @@
     "list": [
       {
         "builtIn": 1,
-        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
         "enable": true,
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
@@ -17,12 +20,24 @@
   "graphTooltip": 1,
   "id": null,
   "links": [
-    { "asDropdown": false, "icon": "dashboard", "tags": [], "title": "Overview", "type": "link", "url": "/d/powerscale-overview" }
+    {
+      "asDropdown": false,
+      "icon": "dashboard",
+      "tags": [],
+      "title": "Overview",
+      "type": "link",
+      "url": "/d/powerscale-overview"
+    }
   ],
   "liveNow": false,
   "refresh": "30s",
   "schemaVersion": 39,
-  "tags": ["powerscale", "onefs", "dell", "advanced"],
+  "tags": [
+    "powerscale",
+    "onefs",
+    "dell",
+    "advanced"
+  ],
   "templating": {
     "list": [
       {
@@ -41,7 +56,10 @@
       },
       {
         "current": {},
-        "datasource": { "type": "prometheus", "uid": "${datasource}" },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
         "definition": "label_values(powerscale_up, cluster)",
         "hide": 0,
         "includeAll": true,
@@ -49,7 +67,11 @@
         "multi": true,
         "name": "cluster",
         "options": [],
-        "query": { "qryType": 1, "query": "label_values(powerscale_up, cluster)", "refId": "StandardVariableQuery" },
+        "query": {
+          "qryType": 1,
+          "query": "label_values(powerscale_up, cluster)",
+          "refId": "StandardVariableQuery"
+        },
         "refresh": 2,
         "regex": "",
         "sort": 1,
@@ -57,7 +79,10 @@
       },
       {
         "current": {},
-        "datasource": { "type": "prometheus", "uid": "${datasource}" },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
         "definition": "label_values(powerscale_node_readonly{cluster=~\"$cluster\"}, node)",
         "hide": 0,
         "includeAll": true,
@@ -65,7 +90,11 @@
         "multi": true,
         "name": "node",
         "options": [],
-        "query": { "qryType": 1, "query": "label_values(powerscale_node_readonly{cluster=~\"$cluster\"}, node)", "refId": "StandardVariableQuery" },
+        "query": {
+          "qryType": 1,
+          "query": "label_values(powerscale_node_readonly{cluster=~\"$cluster\"}, node)",
+          "refId": "StandardVariableQuery"
+        },
         "refresh": 2,
         "regex": "",
         "sort": 3,
@@ -73,7 +102,10 @@
       }
     ]
   },
-  "time": { "from": "now-6h", "to": "now" },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
   "timepicker": {},
   "timezone": "",
   "title": "PowerScale / OneFS Advanced",
@@ -82,262 +114,1607 @@
   "weekStart": "",
   "panels": [
     {
-      "type": "row", "id": 1, "title": "Cluster Health",
-      "collapsed": false, "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 }
-    },
-    {
-      "type": "stat", "id": 2, "title": "Nodes Read-only",
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 },
-      "fieldConfig": { "defaults": { "mappings": [], "unit": "none",
-        "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 1 } ] } }, "overrides": [] },
-      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
-      "targets": [ { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "count(powerscale_node_readonly{cluster=~\"$cluster\"} == 1) or vector(0)", "legendFormat": "read-only", "refId": "A" } ]
-    },
-    {
-      "type": "stat", "id": 3, "title": "Nodes Smartfailing",
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
-      "fieldConfig": { "defaults": { "mappings": [], "unit": "none",
-        "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 1 } ] } }, "overrides": [] },
-      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
-      "targets": [ { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "count(powerscale_node_smartfail{cluster=~\"$cluster\"} == 1) or vector(0)", "legendFormat": "smartfail", "refId": "A" } ]
-    },
-    {
-      "type": "stat", "id": 4, "title": "Active Critical Events",
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 1 },
-      "fieldConfig": { "defaults": { "mappings": [], "unit": "none",
-        "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 1 } ] } }, "overrides": [] },
-      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
-      "targets": [ { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "sum(powerscale_active_events{cluster=~\"$cluster\", severity=\"critical\"}) or vector(0)", "legendFormat": "critical", "refId": "A" } ]
-    },
-    {
-      "type": "stat", "id": 5, "title": "SyncIQ Policies Failed",
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 1 },
-      "fieldConfig": { "defaults": { "mappings": [], "unit": "none",
-        "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 1 } ] } }, "overrides": [] },
-      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
-      "targets": [ { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "sum(powerscale_synciq_last_run_failed{cluster=~\"$cluster\"}) or vector(0)", "legendFormat": "failed", "refId": "A" } ]
-    },
-    {
-      "type": "table", "id": 6, "title": "Drives by State",
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 5 },
-      "fieldConfig": { "defaults": { "custom": { "align": "auto", "filterable": true }, "unit": "none" }, "overrides": [] },
-      "options": { "showHeader": true, "footer": { "show": false } },
-      "targets": [ { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "sum by (cluster, node, state) (powerscale_node_drives_total{cluster=~\"$cluster\", node=~\"$node\"})", "format": "table", "instant": true, "refId": "A" } ],
-      "transformations": [ { "id": "organize", "options": { "excludeByName": { "Time": true, "__name__": true, "job": true, "instance": true }, "renameByName": { "Value": "drives" } } } ]
-    },
-    {
-      "type": "timeseries", "id": 7, "title": "Active Events by Severity",
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 5 },
-      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 20, "lineWidth": 1, "showPoints": "never", "stacking": { "mode": "normal" } }, "unit": "none" }, "overrides": [] },
-      "options": { "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
-      "targets": [ { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "sum by (severity) (powerscale_active_events{cluster=~\"$cluster\"})", "legendFormat": "{{severity}}", "refId": "A" } ]
-    },
-    {
-      "type": "row", "id": 8, "title": "Data Protection",
-      "collapsed": false, "gridPos": { "h": 1, "w": 24, "x": 0, "y": 13 }
-    },
-    {
-      "type": "table", "id": 9, "title": "SyncIQ Policies",
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 8, "w": 16, "x": 0, "y": 14 },
+      "type": "row",
+      "id": 1,
+      "title": "Cluster Health",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
       "fieldConfig": {
-        "defaults": { "custom": { "align": "auto", "filterable": true }, "unit": "none" },
+        "defaults": {}
+      }
+    },
+    {
+      "type": "stat",
+      "id": 2,
+      "title": "Nodes Read-only",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 1
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "unit": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count(powerscale_node_readonly{cluster=~\"$cluster\"} == 1) or vector(0)",
+          "legendFormat": "read-only",
+          "refId": "A"
+        }
+      ],
+      "description": "Count of nodes mounted read-only (powerscale_node_readonly=1). Should be 0."
+    },
+    {
+      "type": "stat",
+      "id": 3,
+      "title": "Nodes Smartfailing",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 1
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "unit": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "count(powerscale_node_smartfail{cluster=~\"$cluster\"} == 1) or vector(0)",
+          "legendFormat": "smartfail",
+          "refId": "A"
+        }
+      ],
+      "description": "Count of nodes smartfailing or smartfailed. Should be 0."
+    },
+    {
+      "type": "stat",
+      "id": 4,
+      "title": "Active Critical Events",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 1
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "unit": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum(powerscale_active_events{cluster=~\"$cluster\", severity=\"critical\"}) or vector(0)",
+          "legendFormat": "critical",
+          "refId": "A"
+        }
+      ],
+      "description": "Unresolved OneFS event-group occurrences at critical severity."
+    },
+    {
+      "type": "stat",
+      "id": 5,
+      "title": "SyncIQ Policies Failed",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 1
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "unit": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum(powerscale_synciq_last_run_failed{cluster=~\"$cluster\"}) or vector(0)",
+          "legendFormat": "failed",
+          "refId": "A"
+        }
+      ],
+      "description": "SyncIQ replication policies whose last run failed or needs attention."
+    },
+    {
+      "type": "table",
+      "id": 6,
+      "title": "Drives by State",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 5
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "filterable": true
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "footer": {
+          "show": false
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum by (cluster, node, state) (powerscale_node_drives_total{cluster=~\"$cluster\", node=~\"$node\"})",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "instance": true
+            },
+            "renameByName": {
+              "Value": "drives"
+            }
+          }
+        }
+      ],
+      "description": "Drive counts grouped by drive state (HEALTHY, SMARTFAIL, DEAD, ...)."
+    },
+    {
+      "type": "timeseries",
+      "id": 7,
+      "title": "Active Events by Severity",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 5
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "lineWidth": 1,
+            "showPoints": "never",
+            "stacking": {
+              "mode": "normal"
+            }
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max",
+            "mean"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum by (severity) (powerscale_active_events{cluster=~\"$cluster\"})",
+          "legendFormat": "{{severity}}",
+          "refId": "A"
+        }
+      ],
+      "description": "Unresolved OneFS event-group occurrences over time, by severity."
+    },
+    {
+      "type": "row",
+      "id": 8,
+      "title": "Data Protection",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 13
+      },
+      "fieldConfig": {
+        "defaults": {}
+      }
+    },
+    {
+      "type": "table",
+      "id": 9,
+      "title": "SyncIQ Policies",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 16,
+        "x": 0,
+        "y": 14
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "filterable": true
+          },
+          "unit": "none"
+        },
         "overrides": [
-          { "matcher": { "id": "byName", "options": "enabled" }, "properties": [ { "id": "mappings", "value": [ { "type": "value", "options": { "0": { "text": "no", "color": "red" }, "1": { "text": "yes", "color": "green" } } } ] } ] },
-          { "matcher": { "id": "byName", "options": "last run failed" }, "properties": [ { "id": "mappings", "value": [ { "type": "value", "options": { "0": { "text": "ok", "color": "green" }, "1": { "text": "FAILED", "color": "red" } } } ] } ] }
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "enabled"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "no",
+                        "color": "red"
+                      },
+                      "1": {
+                        "text": "yes",
+                        "color": "green"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "last run failed"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "ok",
+                        "color": "green"
+                      },
+                      "1": {
+                        "text": "FAILED",
+                        "color": "red"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
         ]
       },
-      "options": { "showHeader": true, "footer": { "show": false } },
+      "options": {
+        "showHeader": true,
+        "footer": {
+          "show": false
+        }
+      },
       "targets": [
-        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_synciq_policy_enabled{cluster=~\"$cluster\"}", "format": "table", "instant": true, "refId": "A" },
-        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_synciq_last_run_failed{cluster=~\"$cluster\"}", "format": "table", "instant": true, "refId": "B" }
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "powerscale_synciq_policy_enabled{cluster=~\"$cluster\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "powerscale_synciq_last_run_failed{cluster=~\"$cluster\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        }
       ],
       "transformations": [
-        { "id": "merge", "options": {} },
-        { "id": "organize", "options": { "excludeByName": { "Time": true, "__name__": true, "job": true, "instance": true, "cluster_id": true }, "renameByName": { "Value #A": "enabled", "Value #B": "last run failed", "policy": "policy", "cluster": "cluster" } } }
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "instance": true,
+              "cluster_id": true
+            },
+            "renameByName": {
+              "Value #A": "enabled",
+              "Value #B": "last run failed",
+              "policy": "policy",
+              "cluster": "cluster"
+            }
+          }
+        }
+      ],
+      "description": "SyncIQ replication policies with enabled state and last-run result."
+    },
+    {
+      "type": "stat",
+      "id": 10,
+      "title": "Snapshot Space Used",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 14
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "unit": "bytes",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "powerscale_snapshot_used_bytes{cluster=~\"$cluster\"}",
+          "legendFormat": "{{cluster}}",
+          "refId": "A"
+        }
+      ],
+      "description": "Aggregate space held by all snapshots."
+    },
+    {
+      "type": "row",
+      "id": 11,
+      "title": "Cache Efficiency (provisional keys \u2014 verify via statistics/keys)",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 22
+      },
+      "fieldConfig": {
+        "defaults": {}
+      }
+    },
+    {
+      "type": "timeseries",
+      "id": 12,
+      "title": "Cache Read Hit vs Miss (L1/L2/L3)",
+      "description": "L1/L2/L3 cache read hit vs miss throughput. Provisional: stat keys not yet live-validated against an OneFS cluster.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 23
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 1,
+            "showPoints": "never",
+            "stacking": {
+              "mode": "none"
+            }
+          },
+          "unit": "Bps"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max",
+            "mean"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum by (cluster) (powerscale_node_cache_l1_read_hit_bytes_per_second{cluster=~\"$cluster\"})",
+          "legendFormat": "{{cluster}} L1 hit",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum by (cluster) (powerscale_node_cache_l2_read_hit_bytes_per_second{cluster=~\"$cluster\"})",
+          "legendFormat": "{{cluster}} L2 hit",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum by (cluster) (powerscale_node_cache_l3_read_hit_bytes_per_second{cluster=~\"$cluster\"})",
+          "legendFormat": "{{cluster}} L3 hit",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum by (cluster) (powerscale_node_cache_l1_read_miss_bytes_per_second{cluster=~\"$cluster\"})",
+          "legendFormat": "{{cluster}} L1 miss",
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum by (cluster) (powerscale_node_cache_l2_read_miss_bytes_per_second{cluster=~\"$cluster\"})",
+          "legendFormat": "{{cluster}} L2 miss",
+          "refId": "E"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum by (cluster) (powerscale_node_cache_l3_read_miss_bytes_per_second{cluster=~\"$cluster\"})",
+          "legendFormat": "{{cluster}} L3 miss",
+          "refId": "F"
+        }
       ]
     },
     {
-      "type": "stat", "id": 10, "title": "Snapshot Space Used",
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 14 },
-      "fieldConfig": { "defaults": { "mappings": [], "unit": "bytes",
-        "thresholds": { "mode": "absolute", "steps": [ { "color": "blue", "value": null } ] } }, "overrides": [] },
-      "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "horizontal", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value_and_name" },
-      "targets": [ { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_snapshot_used_bytes{cluster=~\"$cluster\"}", "legendFormat": "{{cluster}}", "refId": "A" } ]
-    },
-    {
-      "type": "row", "id": 11, "title": "Cache Efficiency (provisional keys — verify via statistics/keys)",
-      "collapsed": false, "gridPos": { "h": 1, "w": 24, "x": 0, "y": 22 }
-    },
-    {
-      "type": "timeseries", "id": 12, "title": "Cache Read Hit vs Miss (L1/L2/L3)",
-      "description": "Per-second byte rates. Aggregate with sum/avg, never rate().",
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 23 },
-      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 1, "showPoints": "never", "stacking": { "mode": "none" } }, "unit": "Bps" }, "overrides": [] },
-      "options": { "legend": { "calcs": ["mean"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "type": "timeseries",
+      "id": 13,
+      "title": "Cache Hit Ratio by Level",
+      "description": "Read-cache hit ratio per level. Provisional: stat keys not yet live-validated against an OneFS cluster.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 23
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 1,
+            "showPoints": "never"
+          },
+          "min": 0,
+          "max": 100,
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max",
+            "mean"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
       "targets": [
-        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "sum by (cluster) (powerscale_node_cache_l1_read_hit_bytes_per_second{cluster=~\"$cluster\"})", "legendFormat": "{{cluster}} L1 hit", "refId": "A" },
-        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "sum by (cluster) (powerscale_node_cache_l2_read_hit_bytes_per_second{cluster=~\"$cluster\"})", "legendFormat": "{{cluster}} L2 hit", "refId": "B" },
-        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "sum by (cluster) (powerscale_node_cache_l3_read_hit_bytes_per_second{cluster=~\"$cluster\"})", "legendFormat": "{{cluster}} L3 hit", "refId": "C" },
-        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "sum by (cluster) (powerscale_node_cache_l1_read_miss_bytes_per_second{cluster=~\"$cluster\"})", "legendFormat": "{{cluster}} L1 miss", "refId": "D" },
-        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "sum by (cluster) (powerscale_node_cache_l2_read_miss_bytes_per_second{cluster=~\"$cluster\"})", "legendFormat": "{{cluster}} L2 miss", "refId": "E" },
-        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "sum by (cluster) (powerscale_node_cache_l3_read_miss_bytes_per_second{cluster=~\"$cluster\"})", "legendFormat": "{{cluster}} L3 miss", "refId": "F" }
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "100 * sum by (cluster) (powerscale_node_cache_l1_read_hit_bytes_per_second{cluster=~\"$cluster\"}) / clamp_min(sum by (cluster) (powerscale_node_cache_l1_read_hit_bytes_per_second{cluster=~\"$cluster\"}) + sum by (cluster) (powerscale_node_cache_l1_read_miss_bytes_per_second{cluster=~\"$cluster\"}), 1)",
+          "legendFormat": "{{cluster}} L1",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "100 * sum by (cluster) (powerscale_node_cache_l2_read_hit_bytes_per_second{cluster=~\"$cluster\"}) / clamp_min(sum by (cluster) (powerscale_node_cache_l2_read_hit_bytes_per_second{cluster=~\"$cluster\"}) + sum by (cluster) (powerscale_node_cache_l2_read_miss_bytes_per_second{cluster=~\"$cluster\"}), 1)",
+          "legendFormat": "{{cluster}} L2",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "100 * sum by (cluster) (powerscale_node_cache_l3_read_hit_bytes_per_second{cluster=~\"$cluster\"}) / clamp_min(sum by (cluster) (powerscale_node_cache_l3_read_hit_bytes_per_second{cluster=~\"$cluster\"}) + sum by (cluster) (powerscale_node_cache_l3_read_miss_bytes_per_second{cluster=~\"$cluster\"}), 1)",
+          "legendFormat": "{{cluster}} L3",
+          "refId": "C"
+        }
       ]
     },
     {
-      "type": "timeseries", "id": 13, "title": "Cache Hit Ratio by Level",
-      "description": "hit / (hit + miss). Empty if the cache.* keys are not present on your OneFS version.",
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 23 },
-      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 1, "showPoints": "never" }, "min": 0, "max": 100, "unit": "percent" }, "overrides": [] },
-      "options": { "legend": { "calcs": ["mean", "lastNotNull"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "type": "row",
+      "id": 14,
+      "title": "Node CPU Detail",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 31
+      },
+      "fieldConfig": {
+        "defaults": {}
+      }
+    },
+    {
+      "type": "timeseries",
+      "id": 15,
+      "title": "Node CPU (sys / user / idle)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 32
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 1,
+            "showPoints": "never"
+          },
+          "min": 0,
+          "max": 100,
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max",
+            "mean"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
       "targets": [
-        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "100 * sum by (cluster) (powerscale_node_cache_l1_read_hit_bytes_per_second{cluster=~\"$cluster\"}) / clamp_min(sum by (cluster) (powerscale_node_cache_l1_read_hit_bytes_per_second{cluster=~\"$cluster\"}) + sum by (cluster) (powerscale_node_cache_l1_read_miss_bytes_per_second{cluster=~\"$cluster\"}), 1)", "legendFormat": "{{cluster}} L1", "refId": "A" },
-        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "100 * sum by (cluster) (powerscale_node_cache_l2_read_hit_bytes_per_second{cluster=~\"$cluster\"}) / clamp_min(sum by (cluster) (powerscale_node_cache_l2_read_hit_bytes_per_second{cluster=~\"$cluster\"}) + sum by (cluster) (powerscale_node_cache_l2_read_miss_bytes_per_second{cluster=~\"$cluster\"}), 1)", "legendFormat": "{{cluster}} L2", "refId": "B" },
-        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "100 * sum by (cluster) (powerscale_node_cache_l3_read_hit_bytes_per_second{cluster=~\"$cluster\"}) / clamp_min(sum by (cluster) (powerscale_node_cache_l3_read_hit_bytes_per_second{cluster=~\"$cluster\"}) + sum by (cluster) (powerscale_node_cache_l3_read_miss_bytes_per_second{cluster=~\"$cluster\"}), 1)", "legendFormat": "{{cluster}} L3", "refId": "C" }
-      ]
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "powerscale_node_cpu_sys_percent{cluster=~\"$cluster\", node=~\"$node\"}",
+          "legendFormat": "{{cluster}} n{{node}} sys",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "powerscale_node_cpu_user_percent{cluster=~\"$cluster\", node=~\"$node\"}",
+          "legendFormat": "{{cluster}} n{{node}} user",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "powerscale_node_cpu_idle_percent{cluster=~\"$cluster\", node=~\"$node\"}",
+          "legendFormat": "{{cluster}} n{{node}} idle",
+          "refId": "C"
+        }
+      ],
+      "description": "Per-node CPU split into system, user, and idle."
     },
     {
-      "type": "row", "id": 14, "title": "Node CPU Detail",
-      "collapsed": false, "gridPos": { "h": 1, "w": 24, "x": 0, "y": 31 }
+      "type": "row",
+      "id": 16,
+      "title": "Quota Detail",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 40
+      },
+      "fieldConfig": {
+        "defaults": {}
+      }
     },
     {
-      "type": "timeseries", "id": 15, "title": "Node CPU (sys / user / idle)",
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 32 },
-      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 1, "showPoints": "never" }, "min": 0, "max": 100, "unit": "percent" }, "overrides": [] },
-      "options": { "legend": { "calcs": ["mean", "lastNotNull"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "type": "table",
+      "id": 17,
+      "title": "Quota Usage vs Thresholds",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 41
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "filterable": true
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "footer": {
+          "show": false
+        }
+      },
       "targets": [
-        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_node_cpu_sys_percent{cluster=~\"$cluster\", node=~\"$node\"}", "legendFormat": "{{cluster}} n{{node}} sys", "refId": "A" },
-        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_node_cpu_user_percent{cluster=~\"$cluster\", node=~\"$node\"}", "legendFormat": "{{cluster}} n{{node}} user", "refId": "B" },
-        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_node_cpu_idle_percent{cluster=~\"$cluster\", node=~\"$node\"}", "legendFormat": "{{cluster}} n{{node}} idle", "refId": "C" }
-      ]
-    },
-    {
-      "type": "row", "id": 16, "title": "Quota Detail",
-      "collapsed": false, "gridPos": { "h": 1, "w": 24, "x": 0, "y": 40 }
-    },
-    {
-      "type": "table", "id": 17, "title": "Quota Usage vs Thresholds",
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 41 },
-      "fieldConfig": { "defaults": { "custom": { "align": "auto", "filterable": true }, "unit": "bytes" }, "overrides": [] },
-      "options": { "showHeader": true, "footer": { "show": false } },
-      "targets": [
-        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_quota_usage_bytes{cluster=~\"$cluster\"}", "format": "table", "instant": true, "refId": "A" },
-        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_quota_advisory_threshold_bytes{cluster=~\"$cluster\"}", "format": "table", "instant": true, "refId": "B" },
-        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_quota_soft_threshold_bytes{cluster=~\"$cluster\"}", "format": "table", "instant": true, "refId": "C" },
-        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_quota_hard_threshold_bytes{cluster=~\"$cluster\"}", "format": "table", "instant": true, "refId": "D" },
-        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_quota_physical_usage_bytes{cluster=~\"$cluster\"}", "format": "table", "instant": true, "refId": "E" }
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "powerscale_quota_usage_bytes{cluster=~\"$cluster\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "powerscale_quota_advisory_threshold_bytes{cluster=~\"$cluster\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "powerscale_quota_soft_threshold_bytes{cluster=~\"$cluster\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "powerscale_quota_hard_threshold_bytes{cluster=~\"$cluster\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "D"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "powerscale_quota_physical_usage_bytes{cluster=~\"$cluster\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "E"
+        }
       ],
       "transformations": [
-        { "id": "merge", "options": {} },
-        { "id": "organize", "options": { "excludeByName": { "Time": true, "__name__": true, "job": true, "instance": true, "cluster_id": true, "quota_id": true }, "renameByName": { "Value #A": "usage", "Value #B": "advisory", "Value #C": "soft", "Value #D": "hard", "Value #E": "physical", "quota_path": "path", "quota_type": "type", "cluster": "cluster" } } }
-      ]
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "job": true,
+              "instance": true,
+              "cluster_id": true,
+              "quota_id": true
+            },
+            "renameByName": {
+              "Value #A": "usage",
+              "Value #B": "advisory",
+              "Value #C": "soft",
+              "Value #D": "hard",
+              "Value #E": "physical",
+              "quota_path": "path",
+              "quota_type": "type",
+              "cluster": "cluster"
+            }
+          }
+        }
+      ],
+      "description": "Per-quota logical/physical usage against advisory, soft, and hard thresholds."
     },
     {
-      "type": "row", "id": 18, "title": "Storage Efficiency (provisional — dedupe-summary schema)",
-      "collapsed": false, "gridPos": { "h": 1, "w": 24, "x": 0, "y": 50 }
+      "type": "row",
+      "id": 18,
+      "title": "Storage Efficiency (provisional \u2014 dedupe-summary schema)",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 50
+      },
+      "fieldConfig": {
+        "defaults": {}
+      }
     },
     {
-      "type": "stat", "id": 19, "title": "Dedupe Logical Saved",
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 51 },
-      "fieldConfig": { "defaults": { "mappings": [], "unit": "bytes", "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null } ] } }, "overrides": [] },
-      "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "horizontal", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value_and_name" },
-      "targets": [ { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_dedupe_logical_saved_bytes{cluster=~\"$cluster\"}", "legendFormat": "{{cluster}}", "refId": "A" } ]
-    },
-    {
-      "type": "stat", "id": 20, "title": "Deduplicated Data",
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 51 },
-      "fieldConfig": { "defaults": { "mappings": [], "unit": "bytes", "thresholds": { "mode": "absolute", "steps": [ { "color": "blue", "value": null } ] } }, "overrides": [] },
-      "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "horizontal", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value_and_name" },
-      "targets": [ { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_dedupe_deduplicated_bytes{cluster=~\"$cluster\"}", "legendFormat": "{{cluster}}", "refId": "A" } ]
-    },
-    {
-      "type": "row", "id": 21, "title": "Per-Drive (provisional — summary/drive schema)",
-      "collapsed": false, "gridPos": { "h": 1, "w": 24, "x": 0, "y": 57 }
-    },
-    {
-      "type": "timeseries", "id": 22, "title": "Top Drive IOPS",
-      "description": "Per-second gauge — aggregate with sum/avg, never rate().",
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 58 },
-      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 1, "showPoints": "never" }, "unit": "ops" }, "overrides": [] },
-      "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
-      "targets": [ { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "topk(15, powerscale_drive_operations_per_second{cluster=~\"$cluster\", node=~\"$node\"})", "legendFormat": "{{cluster}} n{{node}} bay{{bay}} ({{type}})", "refId": "A" } ]
-    },
-    {
-      "type": "timeseries", "id": 23, "title": "Drive Busy %",
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 58 },
-      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 1, "showPoints": "never" }, "min": 0, "max": 100, "unit": "percent" }, "overrides": [] },
-      "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
-      "targets": [ { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "topk(15, powerscale_drive_busy_percent{cluster=~\"$cluster\", node=~\"$node\"})", "legendFormat": "{{cluster}} n{{node}} bay{{bay}}", "refId": "A" } ]
-    },
-    {
-      "type": "row", "id": 24, "title": "Per-Client (provisional — summary/client schema)",
-      "collapsed": false, "gridPos": { "h": 1, "w": 24, "x": 0, "y": 66 }
-    },
-    {
-      "type": "timeseries", "id": 25, "title": "Client Operations by Protocol/Class",
-      "description": "Per-second gauge — aggregate with sum/avg, never rate().",
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 67 },
-      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 1, "showPoints": "never" }, "unit": "ops" }, "overrides": [] },
-      "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
-      "targets": [ { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "sum by (protocol, class) (powerscale_client_operations_per_second{cluster=~\"$cluster\"})", "legendFormat": "{{protocol}} {{class}}", "refId": "A" } ]
-    },
-    {
-      "type": "timeseries", "id": 26, "title": "Client Throughput (in / out)",
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 67 },
-      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 1, "showPoints": "never" }, "unit": "Bps" }, "overrides": [] },
-      "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
+      "type": "stat",
+      "id": 19,
+      "title": "Dedupe Logical Saved",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 51
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "unit": "bytes",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name"
+      },
       "targets": [
-        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "sum by (protocol) (powerscale_client_in_bytes_per_second{cluster=~\"$cluster\"})", "legendFormat": "{{protocol}} in", "refId": "A" },
-        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "sum by (protocol) (powerscale_client_out_bytes_per_second{cluster=~\"$cluster\"})", "legendFormat": "{{protocol}} out", "refId": "B" }
-      ]
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "powerscale_dedupe_logical_saved_bytes{cluster=~\"$cluster\"}",
+          "legendFormat": "{{cluster}}",
+          "refId": "A"
+        }
+      ],
+      "description": "Logical space saved by deduplication. Provisional: stat keys not yet live-validated against an OneFS cluster."
     },
     {
-      "type": "row", "id": 27, "title": "Hardware (provisional — node status/sensors)",
-      "collapsed": false, "gridPos": { "h": 1, "w": 24, "x": 0, "y": 75 }
-    },
-    {
-      "type": "stat", "id": 28, "title": "Power-Supply Failures",
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 76 },
-      "fieldConfig": { "defaults": { "mappings": [], "unit": "none", "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 1 } ] } }, "overrides": [] },
-      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "horizontal", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "value_and_name" },
+      "type": "stat",
+      "id": 20,
+      "title": "Deduplicated Data",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 51
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "unit": "bytes",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name"
+      },
       "targets": [
-        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "sum by (cluster, node) (powerscale_node_power_supply_failures{cluster=~\"$cluster\", node=~\"$node\"})", "legendFormat": "n{{node}} failed", "refId": "A" },
-        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "sum by (cluster, node) (powerscale_node_power_supplies_total{cluster=~\"$cluster\", node=~\"$node\"})", "legendFormat": "n{{node}} total", "refId": "B" }
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "powerscale_dedupe_deduplicated_bytes{cluster=~\"$cluster\"}",
+          "legendFormat": "{{cluster}}",
+          "refId": "A"
+        }
+      ],
+      "description": "Logical data that has been deduplicated. Provisional: stat keys not yet live-validated against an OneFS cluster."
+    },
+    {
+      "type": "row",
+      "id": 21,
+      "title": "Per-Drive (provisional \u2014 summary/drive schema)",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 57
+      },
+      "fieldConfig": {
+        "defaults": {}
+      }
+    },
+    {
+      "type": "timeseries",
+      "id": 22,
+      "title": "Top Drive IOPS",
+      "description": "Highest per-drive operation rates. Provisional: stat keys not yet live-validated against an OneFS cluster.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 58
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 1,
+            "showPoints": "never"
+          },
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max",
+            "mean"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "topk(15, powerscale_drive_operations_per_second{cluster=~\"$cluster\", node=~\"$node\"})",
+          "legendFormat": "{{cluster}} n{{node}} bay{{bay}} ({{type}})",
+          "refId": "A"
+        }
       ]
     },
     {
-      "type": "timeseries", "id": 29, "title": "Node Temperature",
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 76 },
-      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 1, "showPoints": "never" }, "unit": "celsius" }, "overrides": [] },
-      "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
-      "targets": [ { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_node_temperature_celsius{cluster=~\"$cluster\", node=~\"$node\"}", "legendFormat": "n{{node}} {{sensor}}", "refId": "A" } ]
+      "type": "timeseries",
+      "id": 23,
+      "title": "Drive Busy %",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 58
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 1,
+            "showPoints": "never"
+          },
+          "min": 0,
+          "max": 100,
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max",
+            "mean"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "topk(15, powerscale_drive_busy_percent{cluster=~\"$cluster\", node=~\"$node\"})",
+          "legendFormat": "{{cluster}} n{{node}} bay{{bay}}",
+          "refId": "A"
+        }
+      ],
+      "description": "Per-drive busy time. Provisional: stat keys not yet live-validated against an OneFS cluster."
     },
     {
-      "type": "timeseries", "id": 30, "title": "Fan Speed",
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 76 },
-      "fieldConfig": { "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 1, "showPoints": "never" }, "unit": "rotrpm" }, "overrides": [] },
-      "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi", "sort": "desc" } },
-      "targets": [ { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_node_fan_speed_rpm{cluster=~\"$cluster\", node=~\"$node\"}", "legendFormat": "n{{node}} {{sensor}}", "refId": "A" } ]
+      "type": "row",
+      "id": 24,
+      "title": "Per-Client (provisional \u2014 summary/client schema)",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 66
+      },
+      "fieldConfig": {
+        "defaults": {}
+      }
+    },
+    {
+      "type": "timeseries",
+      "id": 25,
+      "title": "Client Operations by Protocol/Class",
+      "description": "Per-client operation rate by protocol and class. Provisional: stat keys not yet live-validated against an OneFS cluster.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 67
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 1,
+            "showPoints": "never"
+          },
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max",
+            "mean"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum by (protocol, class) (powerscale_client_operations_per_second{cluster=~\"$cluster\"})",
+          "legendFormat": "{{protocol}} {{class}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "id": 26,
+      "title": "Client Throughput (in / out)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 67
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 1,
+            "showPoints": "never"
+          },
+          "unit": "Bps"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max",
+            "mean"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum by (protocol) (powerscale_client_in_bytes_per_second{cluster=~\"$cluster\"})",
+          "legendFormat": "{{protocol}} in",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum by (protocol) (powerscale_client_out_bytes_per_second{cluster=~\"$cluster\"})",
+          "legendFormat": "{{protocol}} out",
+          "refId": "B"
+        }
+      ],
+      "description": "Per-client inbound/outbound throughput. Provisional: stat keys not yet live-validated against an OneFS cluster."
+    },
+    {
+      "type": "row",
+      "id": 27,
+      "title": "Hardware (provisional \u2014 node status/sensors)",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 75
+      },
+      "fieldConfig": {
+        "defaults": {}
+      }
+    },
+    {
+      "type": "stat",
+      "id": 28,
+      "title": "Power-Supply Failures",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 76
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "unit": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum by (cluster, node) (powerscale_node_power_supply_failures{cluster=~\"$cluster\", node=~\"$node\"})",
+          "legendFormat": "n{{node}} failed",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "sum by (cluster, node) (powerscale_node_power_supplies_total{cluster=~\"$cluster\", node=~\"$node\"})",
+          "legendFormat": "n{{node}} total",
+          "refId": "B"
+        }
+      ],
+      "description": "Failed power supplies across nodes. Should be 0. Provisional: stat keys not yet live-validated against an OneFS cluster."
+    },
+    {
+      "type": "timeseries",
+      "id": 29,
+      "title": "Node Temperature",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 76
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 1,
+            "showPoints": "never"
+          },
+          "unit": "celsius"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max",
+            "mean"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "powerscale_node_temperature_celsius{cluster=~\"$cluster\", node=~\"$node\"}",
+          "legendFormat": "n{{node}} {{sensor}}",
+          "refId": "A"
+        }
+      ],
+      "description": "Node temperature sensor readings. Provisional: stat keys not yet live-validated against an OneFS cluster."
+    },
+    {
+      "type": "timeseries",
+      "id": 30,
+      "title": "Fan Speed",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 76
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 1,
+            "showPoints": "never"
+          },
+          "unit": "rotrpm"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max",
+            "mean"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "editorMode": "code",
+          "expr": "powerscale_node_fan_speed_rpm{cluster=~\"$cluster\", node=~\"$node\"}",
+          "legendFormat": "n{{node}} {{sensor}}",
+          "refId": "A"
+        }
+      ],
+      "description": "Node fan speed readings. Provisional: stat keys not yet live-validated against an OneFS cluster."
     }
   ]
 }
