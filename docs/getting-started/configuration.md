@@ -21,7 +21,7 @@ live-cluster validation recipe combining `--once --debug --trace`.
 ```yaml
 server:
   host: "0.0.0.0"
-  port: "2115"
+  port: "9444"
   uri: "/metrics"
   logName: "/var/log/pscale_exporter/pscale-exporter.log"
 

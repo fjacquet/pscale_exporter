@@ -2,12 +2,12 @@
 
 ## Image
 
-The published image runs as a non-root user (`uid 10001`), exposes port `2115`, and
+The published image runs as a non-root user (`uid 10001`), exposes port `9444`, and
 defaults to `--config /etc/pscale_exporter/config.yaml`:
 
 ```bash
 docker run --rm \
-  -p 2115:2115 \
+  -p 9444:9444 \
   -v "$PWD/config.yaml:/etc/pscale_exporter/config.yaml:ro" \
   -e PSCALE1_PASSWORD='your-monitor-password' \
   ghcr.io/fjacquet/pscale_exporter:latest
@@ -34,7 +34,7 @@ PSCALE1_PASSWORD='your-monitor-password' docker compose up -d --build
 
 | Service | URL |
 |---|---|
-| Exporter | <http://localhost:2115/metrics> (`/health`) |
+| Exporter | <http://localhost:9444/metrics> (`/health`) |
 | Prometheus | <http://localhost:9090> |
 | Grafana | <http://localhost:3000> (`admin`/`admin`) |
 | OTLP collector | <http://localhost:8889/metrics> |
@@ -67,5 +67,5 @@ A minimal standalone scrape config:
 scrape_configs:
   - job_name: powerscale
     static_configs:
-      - targets: ["pscale-exporter-host:2115"]
+      - targets: ["pscale-exporter-host:9444"]
 ```
