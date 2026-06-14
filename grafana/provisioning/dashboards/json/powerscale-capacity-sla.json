@@ -1,0 +1,759 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "type": "row",
+      "id": 1,
+      "title": "SLA — Availability & Error Budget",
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "panels": []
+    },
+    {
+      "type": "stat",
+      "id": 2,
+      "title": "Cluster Availability",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "decimals": 3,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 99 },
+              { "color": "green", "value": 100 }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "editorMode": "code",
+          "expr": "100 * avg(powerscale_up{cluster=~\"$cluster\"})",
+          "legendFormat": "availability",
+          "refId": "A"
+        }
+      ],
+      "description": "Mean scrape success across selected clusters, as a percent. 100% means every selected cluster was scraped on the last collection."
+    },
+    {
+      "type": "stat",
+      "id": 3,
+      "title": "Scrape Freshness",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 1 },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 120 }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "editorMode": "code",
+          "expr": "time() - max(powerscale_last_scrape_timestamp_seconds{cluster=~\"$cluster\"})",
+          "legendFormat": "age",
+          "refId": "A"
+        }
+      ],
+      "description": "Seconds since the most recent successful collection. Red indicates stale data (>2x the default 60s collection interval)."
+    },
+    {
+      "type": "stat",
+      "id": 4,
+      "title": "Nodes Read-only",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 1 },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "editorMode": "code",
+          "expr": "count(powerscale_node_readonly{cluster=~\"$cluster\"} == 1) or vector(0)",
+          "legendFormat": "read-only",
+          "refId": "A"
+        }
+      ],
+      "description": "Count of nodes mounted read-only. Should be 0; any non-zero value degrades write availability."
+    },
+    {
+      "type": "stat",
+      "id": 5,
+      "title": "Nodes Smartfailing",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 1 },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "editorMode": "code",
+          "expr": "count(powerscale_node_smartfail{cluster=~\"$cluster\"} == 1) or vector(0)",
+          "legendFormat": "smartfail",
+          "refId": "A"
+        }
+      ],
+      "description": "Count of nodes smartfailing or smartfailed. Should be 0; indicates data is being evacuated off a node."
+    },
+    {
+      "type": "stat",
+      "id": 6,
+      "title": "SyncIQ Failures",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 1 },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "editorMode": "code",
+          "expr": "sum(powerscale_synciq_last_run_failed{cluster=~\"$cluster\"}) or vector(0)",
+          "legendFormat": "failed",
+          "refId": "A"
+        }
+      ],
+      "description": "SyncIQ replication policies whose last run failed or needs attention. Should be 0 to meet the data-protection SLA."
+    },
+    {
+      "type": "stat",
+      "id": 7,
+      "title": "Active Critical Events",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 1 },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "editorMode": "code",
+          "expr": "sum(powerscale_active_events{cluster=~\"$cluster\", severity=\"critical\"}) or vector(0)",
+          "legendFormat": "critical",
+          "refId": "A"
+        }
+      ],
+      "description": "Unresolved OneFS event-group occurrences at critical severity. Treat as the error-budget burn signal."
+    },
+    {
+      "type": "row",
+      "id": 8,
+      "title": "SLA — Latency, Throughput & Errors (RED)",
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "id": 9,
+      "title": "Protocol Latency (Duration)",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 1,
+            "showPoints": "never",
+            "stacking": { "mode": "none" }
+          },
+          "unit": "µs"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["lastNotNull", "max", "mean"]
+        },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "editorMode": "code",
+          "expr": "avg by (protocol, op) (powerscale_protocol_latency_microseconds{cluster=~\"$cluster\"})",
+          "legendFormat": "{{protocol}} {{op}}",
+          "refId": "A"
+        }
+      ],
+      "description": "Average per-protocol operation latency (the Duration SLI). Rising latency at steady load signals saturation."
+    },
+    {
+      "type": "timeseries",
+      "id": 10,
+      "title": "Protocol Operations (Rate)",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 1,
+            "showPoints": "never",
+            "stacking": { "mode": "none" }
+          },
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["lastNotNull", "max", "mean"]
+        },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "editorMode": "code",
+          "expr": "sum by (protocol, op) (powerscale_protocol_operations_per_second{cluster=~\"$cluster\"})",
+          "legendFormat": "{{protocol}} {{op}}",
+          "refId": "A"
+        }
+      ],
+      "description": "Per-protocol operation rate (the Rate SLI), in ops/s. Aggregate with sum/avg, never rate()."
+    },
+    {
+      "type": "timeseries",
+      "id": 11,
+      "title": "Active Events by Severity (Errors)",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 14 },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "lineWidth": 1,
+            "showPoints": "never",
+            "stacking": { "mode": "normal" }
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["lastNotNull", "max", "mean"]
+        },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "editorMode": "code",
+          "expr": "sum by (severity) (powerscale_active_events{cluster=~\"$cluster\"})",
+          "legendFormat": "{{severity}}",
+          "refId": "A"
+        }
+      ],
+      "description": "Unresolved OneFS event-group occurrences over time, stacked by severity (the Errors SLI / error-budget view)."
+    },
+    {
+      "type": "row",
+      "id": 12,
+      "title": "Capacity — Headroom & Forecast",
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 20 },
+      "panels": []
+    },
+    {
+      "type": "gauge",
+      "id": 13,
+      "title": "Capacity Used %",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 6, "x": 0, "y": 21 },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 85 },
+              { "color": "red", "value": 95 }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "editorMode": "code",
+          "expr": "100 * powerscale_cluster_used_capacity_bytes{cluster=~\"$cluster\"} / powerscale_cluster_total_capacity_bytes{cluster=~\"$cluster\"}",
+          "legendFormat": "{{cluster}}",
+          "refId": "A"
+        }
+      ],
+      "description": "Used /ifs capacity as a percent of total. Warning at 85%, critical at 95%."
+    },
+    {
+      "type": "stat",
+      "id": 14,
+      "title": "Days to Full",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 6, "x": 6, "y": 21 },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "orange", "value": 30 },
+              { "color": "yellow", "value": 90 },
+              { "color": "green", "value": 180 }
+            ]
+          },
+          "unit": "d"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "editorMode": "code",
+          "expr": "(powerscale_cluster_total_capacity_bytes{cluster=~\"$cluster\"} - powerscale_cluster_used_capacity_bytes{cluster=~\"$cluster\"}) / clamp_min(deriv(powerscale_cluster_used_capacity_bytes{cluster=~\"$cluster\"}[24h]), 1) / 86400",
+          "legendFormat": "{{cluster}}",
+          "refId": "A"
+        }
+      ],
+      "description": "Projected days until /ifs is full at the trailing 24h growth rate (free bytes / deriv(used[24h])). A flat or shrinking trend clamps to a large number (effectively 'never'). Lower is worse."
+    },
+    {
+      "type": "timeseries",
+      "id": 15,
+      "title": "Capacity Used + 7-Day Forecast",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 21 },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 1,
+            "showPoints": "never",
+            "stacking": { "mode": "none" }
+          },
+          "unit": "bytes"
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byRegexp", "options": ".*projected.*" },
+            "properties": [
+              { "id": "custom.lineStyle", "value": { "fill": "dash", "dash": [10, 10] } }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["lastNotNull", "max", "mean"]
+        },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "editorMode": "code",
+          "expr": "powerscale_cluster_used_capacity_bytes{cluster=~\"$cluster\"}",
+          "legendFormat": "{{cluster}} used",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "editorMode": "code",
+          "expr": "powerscale_cluster_total_capacity_bytes{cluster=~\"$cluster\"}",
+          "legendFormat": "{{cluster}} total",
+          "refId": "B"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "editorMode": "code",
+          "expr": "predict_linear(powerscale_cluster_used_capacity_bytes{cluster=~\"$cluster\"}[24h], 7 * 86400)",
+          "legendFormat": "{{cluster}} projected (+7d)",
+          "refId": "C"
+        }
+      ],
+      "description": "Used capacity with the 7-day linear projection from the trailing 24h trend (predict_linear). Where the dashed projection meets total is the forecast fill point."
+    },
+    {
+      "type": "timeseries",
+      "id": 16,
+      "title": "Per-Node Used Capacity (Balance)",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 29 },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 1,
+            "showPoints": "never",
+            "stacking": { "mode": "none" }
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["lastNotNull", "max", "mean"]
+        },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "editorMode": "code",
+          "expr": "powerscale_node_used_capacity_bytes{cluster=~\"$cluster\", node=~\"$node\"}",
+          "legendFormat": "{{cluster}} node {{node}}",
+          "refId": "A"
+        }
+      ],
+      "description": "Per-node used /ifs capacity. Diverging lines reveal capacity imbalance across nodes before it becomes a problem."
+    },
+    {
+      "type": "timeseries",
+      "id": 17,
+      "title": "Snapshot Space Used",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 29 },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineWidth": 1,
+            "showPoints": "never",
+            "stacking": { "mode": "none" }
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["lastNotNull", "max", "mean"]
+        },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "editorMode": "code",
+          "expr": "powerscale_snapshot_used_bytes{cluster=~\"$cluster\"}",
+          "legendFormat": "{{cluster}} snapshots",
+          "refId": "A"
+        }
+      ],
+      "description": "Aggregate space held by snapshots. Growth here consumes usable capacity and shortens the days-to-full runway."
+    },
+    {
+      "type": "table",
+      "id": 18,
+      "title": "Quotas — Usage vs Hard Limit (closest first)",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 37 },
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "align": "auto", "filterable": true },
+          "unit": "bytes"
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "% of hard" },
+            "properties": [
+              { "id": "unit", "value": "percent" },
+              { "id": "decimals", "value": 1 },
+              { "id": "custom.cellOptions", "value": { "type": "gauge", "mode": "gradient" } },
+              { "id": "max", "value": 100 },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    { "color": "green", "value": null },
+                    { "color": "yellow", "value": 85 },
+                    { "color": "red", "value": 95 }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "footer": { "show": false },
+        "sortBy": [{ "displayName": "% of hard", "desc": true }]
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "editorMode": "code",
+          "expr": "powerscale_quota_usage_bytes{cluster=~\"$cluster\"}",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "editorMode": "code",
+          "expr": "powerscale_quota_hard_threshold_bytes{cluster=~\"$cluster\"}",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "refId": "B"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "editorMode": "code",
+          "expr": "100 * powerscale_quota_usage_bytes{cluster=~\"$cluster\"} / powerscale_quota_hard_threshold_bytes{cluster=~\"$cluster\"}",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "refId": "C"
+        }
+      ],
+      "transformations": [
+        { "id": "merge", "options": {} },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "cluster_id": true,
+              "instance": true,
+              "job": true,
+              "quota_id": true
+            },
+            "renameByName": {
+              "Value #A": "usage",
+              "Value #B": "hard limit",
+              "Value #C": "% of hard",
+              "cluster": "cluster",
+              "quota_path": "path",
+              "quota_type": "type"
+            }
+          }
+        }
+      ],
+      "description": "Quotas that have a hard limit set, ranked by how close usage is to that limit. The % of hard column escalates yellow at 85% and red at 95%."
+    }
+  ],
+  "refresh": "1m",
+  "schemaVersion": 39,
+  "style": null,
+  "tags": ["powerscale", "onefs", "dell", "capacity", "sla"],
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "type": "datasource",
+        "query": "prometheus",
+        "label": "Data source",
+        "includeAll": false,
+        "multi": false
+      },
+      {
+        "name": "cluster",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "${datasource}" },
+        "query": {
+          "qryType": 1,
+          "query": "label_values(powerscale_up, cluster)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "label": "Cluster",
+        "includeAll": true,
+        "multi": true
+      },
+      {
+        "name": "node",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "${datasource}" },
+        "query": {
+          "qryType": 1,
+          "query": "label_values(powerscale_node_used_capacity_bytes{cluster=~\"$cluster\"}, node)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "label": "Node",
+        "includeAll": true,
+        "multi": true
+      }
+    ]
+  },
+  "time": { "from": "now-7d", "to": "now" },
+  "timezone": "",
+  "title": "PowerScale / OneFS Capacity & SLA",
+  "uid": "powerscale-capacity-sla",
+  "version": 1,
+  "weekStart": ""
+}

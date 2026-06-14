@@ -1,12 +1,13 @@
 # Dashboards
 
-Two ready-made Grafana dashboards ship in the repo under
+Three ready-made Grafana dashboards ship in the repo under
 `grafana/provisioning/dashboards/json/`:
 
 | Dashboard | uid | Focus |
 |---|---|---|
 | **PowerScale / OneFS Overview** | `powerscale-overview` | Capacity, performance, protocols — day-to-day health. |
 | **PowerScale / OneFS Advanced** | `powerscale-advanced` | Node/drive health, data protection, cache efficiency, quota & CPU detail. |
+| **PowerScale / OneFS Capacity & SLA** | `powerscale-capacity-sla` | Availability/latency SLIs and capacity headroom with a days-to-full forecast. |
 
 Because the `powerscale_` prefix matches
 [`dell/csm-metrics-powerscale`](https://github.com/dell/csm-metrics-powerscale), existing
@@ -68,6 +69,25 @@ specification but have not been confirmed against a live cluster.
 - **Per-Drive** — top drive IOPS and busy % *(provisional)*.
 - **Per-Client** — operations by protocol/class and throughput in/out *(provisional)*.
 - **Hardware** — power-supply failures, node temperature and fan speed *(provisional)*.
+
+## Capacity & SLA dashboard
+
+A focused planning board built **only on live-validated metrics** (no provisional keys),
+in two sections:
+
+- **SLA — Availability & Error Budget** — a stat strip (cluster availability %, scrape
+  freshness, nodes read-only / smartfailing, SyncIQ failures, active critical events).
+- **SLA — Latency, Throughput & Errors (RED)** — protocol latency (Duration), protocol
+  operations (Rate), and active events by severity (Errors).
+- **Capacity — Headroom & Forecast** — capacity used % gauge, a **Days to Full** stat and a
+  **7-day forecast** line (both from `predict_linear`/`deriv` over the trailing 24h trend),
+  per-node capacity balance, snapshot space, and a quota table ranked by closeness to the
+  hard limit.
+
+!!! note "Forecast is a trend projection"
+    Days-to-full and the +7d line extrapolate the trailing 24h growth rate; a flat or
+    shrinking trend reads as effectively "never". Use a longer dashboard time range
+    (default `now-7d`) so the projection has history to draw from.
 
 ## Auto-provisioned (compose stack)
 
