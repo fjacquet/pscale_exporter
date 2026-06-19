@@ -1,5 +1,6 @@
 BIN     = pscale_exporter
 DIST    = dist
+COVER   ?= coverage.out
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 LDFLAGS = -s -w -X main.version=$(VERSION)
 
@@ -26,6 +27,10 @@ fmt-check:
 fmt:
 	go fmt ./...
 
+# Canonical alias for golangci-lint fmt (matches fjacquet/ci interface).
+format:
+	golangci-lint fmt
+
 vet:
 	go vet ./...
 
@@ -33,7 +38,7 @@ lint:
 	golangci-lint run ./...
 
 test:
-	go test ./...
+	go test -race -coverprofile=$(COVER) -covermode=atomic ./...
 
 test-race:
 	go test -race -coverprofile=coverage.out -covermode=atomic ./...
@@ -43,6 +48,26 @@ test-coverage: test-race
 
 vuln:
 	govulncheck ./...
+
+# Canonical alias: go build for compile-check (matches fjacquet/ci interface).
+build:
+	go build -v ./...
+
+# Canonical alias: download module dependencies.
+install:
+	go mod download
+
+# Semgrep SAST scan (matches fjacquet/ci interface; uvx provided by CI setup-uv step).
+security:
+	uvx semgrep scan --config auto --error --skip-unknown-extensions
+
+# Upload coverage to Codecov (matches fjacquet/ci interface).
+coverage-upload:
+	uvx --from codecov-cli codecov upload-process --file $(COVER) || true
+
+# Build MkDocs site (matches fjacquet/ci interface).
+docs:
+	uvx --with mkdocs-material --with pymdown-extensions mkdocs build --strict --site-dir site
 
 # Aggregate gate run by CI.
 ci: fmt-check vet lint test-race vuln
@@ -88,5 +113,6 @@ clean: clean-dist
 schemas: ## Regenerate testdata/onefs_schemas.json from docs/swagger/<spec>.json
 	go run ./tools/extract-schemas
 
-.PHONY: all tools fmt-check fmt vet lint test test-race test-coverage vuln ci sure \
+.PHONY: all tools fmt-check fmt format vet lint test test-race test-coverage vuln \
+        build install security coverage-upload docs ci sure \
         cli sbom release release-snapshot docker run-cli clean-dist clean schemas
