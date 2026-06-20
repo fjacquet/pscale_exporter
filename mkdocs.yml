@@ -4,6 +4,9 @@ site_url: https://fjacquet.github.io/pscale_exporter/
 repo_url: https://github.com/fjacquet/pscale_exporter
 repo_name: fjacquet/pscale_exporter
 
+extra:
+  version: v0.12.2
+
 theme:
   name: material
   palette:
