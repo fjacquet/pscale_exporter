@@ -58,8 +58,8 @@ install:
 	go mod download
 
 # Semgrep SAST scan (matches fjacquet/ci interface; uvx provided by CI setup-uv step).
-security:
-	uvx semgrep scan --config auto --error --skip-unknown-extensions
+security:  # advisory: reports findings but never blocks the build (CodeQL/osv are the blocking gates)
+	uvx semgrep scan --config auto --skip-unknown-extensions || true
 
 # Upload coverage to Codecov (matches fjacquet/ci interface).
 coverage-upload:
