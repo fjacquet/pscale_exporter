@@ -9,6 +9,8 @@ extra:
 
 theme:
   name: material
+  favicon: assets/favicon.png
+  logo: assets/logo.png
   palette:
     - scheme: default
       primary: indigo
