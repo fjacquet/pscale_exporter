@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"runtime"
 	"sort"
 	"strings"
 	"sync"
@@ -102,6 +103,10 @@ func (s *Server) Start() error {
 
 	if err := s.registry.Register(powerscale.NewPromCollector(s.store)); err != nil {
 		return fmt.Errorf("failed to register collector: %w", err)
+	}
+
+	if err := s.registry.Register(powerscale.NewBuildInfoCollector(version, runtime.Version())); err != nil {
+		return fmt.Errorf("failed to register build-info collector: %w", err)
 	}
 
 	mux := http.NewServeMux()

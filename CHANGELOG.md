@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`pscale_exporter_build_info` metric** — an exporter-level gauge (constant `1`) exposing the
+  running exporter `version` and `goversion` as labels, so a scrape reveals exactly which build
+  is serving `/metrics`. Standard Prometheus build-info pattern.
+
 ## [0.6.0] - 2026-06-10
 
 ### Added

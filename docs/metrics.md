@@ -166,6 +166,14 @@ These carry only the `cluster` label.
 | `powerscale_last_scrape_timestamp_seconds` | unix seconds | Time of the last successful collection. |
 | `powerscale_cluster_api_version` | version | Detected OneFS platform API version. |
 
+## Exporter metadata
+
+Exporter-level, not tied to any cluster (no `cluster` label).
+
+| Metric | Unit | Description |
+|---|---|---|
+| `pscale_exporter_build_info` | constant `1` | Exporter build information; the running version and Go version are carried in the `version` and `goversion` labels. |
+
 ## Example queries
 
 ```promql
