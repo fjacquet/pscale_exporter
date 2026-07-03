@@ -7,11 +7,114 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.4] - 2026-07-03
+
 ### Added
 
 - **`pscale_exporter_build_info` metric** — an exporter-level gauge (constant `1`) exposing the
   running exporter `version` and `goversion` as labels, so a scrape reveals exactly which build
   is serving `/metrics`. Standard Prometheus build-info pattern.
+
+## [0.12.3] - 2026-07-01
+
+### Changed
+
+- Docs: document how to handle special characters in the monitoring password.
+- Docs: use the brand icon as the MkDocs favicon and logo.
+
+## [0.12.2] - 2026-06-20
+
+### Changed
+
+- CI: migrate to the `fjacquet/ci` reusable (make-based) workflows; the `security` job is now
+  advisory to match the central default.
+
+## [0.12.1] - 2026-06-16
+
+### Added
+
+- **Helm chart** with lockstep publishing alongside releases.
+
+## [0.12.0] - 2026-06-14
+
+### Added
+
+- **Node Exporter Full (1860) Grafana dashboard.**
+
+### Changed
+
+- **BREAKING:** the canonical metrics port is now `9444`.
+
+## [0.11.0] - 2026-06-14
+
+### Changed
+
+- Polish the Grafana dashboards: RED/USE restructure with per-panel descriptions.
+
+## [0.10.3] - 2026-06-14
+
+### Changed
+
+- Docs: add an ADR recording the snapshot model, stat-key table, and metric naming.
+
+## [0.10.2] - 2026-06-14
+
+### Added
+
+- Windows (amd64) binary and `.zip` archive to the release artifacts.
+
+## [0.10.1] - 2026-06-14
+
+### Fixed
+
+- Parse the OneFS block-based dedupe-summary into bytes.
+- Parse `drive_id` and transfer rates from OneFS `summary/drive`.
+- Read `operation_rate` from OneFS `summary/client`.
+- Use the OneFS 9.14.0-documented endpoint versions.
+
+### Changed
+
+- Align node parsing to OneFS 9.14 (drop the dead `smartfail.state` branch) and drop obsolete
+  provisional caveats now that the schemas are validated.
+
+## [0.10.0] - 2026-06-13
+
+### Changed
+
+- Change the default metrics port from `2112` to `2115`.
+
+## [0.9.1] - 2026-06-12
+
+### Fixed
+
+- Docker: copy the CA bundle from the builder stage instead of `apk add`.
+
+## [0.9.0] - 2026-06-12
+
+### Added
+
+- Load `.env` natively at startup (no-override semantics).
+
+## [0.8.0] - 2026-06-11
+
+### Added
+
+- Expand `${ENV}` references in `username`; parameterize the Compose stack via `PSCALE1_*`
+  variables.
+
+### Changed
+
+- Align `.gitignore` with the family canonical template.
+
+## [0.7.0] - 2026-06-11
+
+### Added
+
+- `--trace` flag and `--once --debug` sample dump for live-cluster validation.
+
+### Changed
+
+- CI: backport workflow hardening from obs_exporter.
 
 ## [0.6.0] - 2026-06-10
 
@@ -100,7 +203,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Baseline prior to the release-pipeline rework. See the
   [GitHub releases](https://github.com/fjacquet/pscale_exporter/releases) for earlier history.
 
-[Unreleased]: https://github.com/fjacquet/pscale_exporter/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/fjacquet/pscale_exporter/compare/v0.12.4...HEAD
+[0.12.4]: https://github.com/fjacquet/pscale_exporter/compare/v0.12.3...v0.12.4
+[0.12.3]: https://github.com/fjacquet/pscale_exporter/compare/v0.12.2...v0.12.3
+[0.12.2]: https://github.com/fjacquet/pscale_exporter/compare/v0.12.1...v0.12.2
+[0.12.1]: https://github.com/fjacquet/pscale_exporter/compare/v0.12.0...v0.12.1
+[0.12.0]: https://github.com/fjacquet/pscale_exporter/compare/v0.11.0...v0.12.0
+[0.11.0]: https://github.com/fjacquet/pscale_exporter/compare/v0.10.3...v0.11.0
+[0.10.3]: https://github.com/fjacquet/pscale_exporter/compare/v0.10.2...v0.10.3
+[0.10.2]: https://github.com/fjacquet/pscale_exporter/compare/v0.10.1...v0.10.2
+[0.10.1]: https://github.com/fjacquet/pscale_exporter/compare/v0.10.0...v0.10.1
+[0.10.0]: https://github.com/fjacquet/pscale_exporter/compare/v0.9.1...v0.10.0
+[0.9.1]: https://github.com/fjacquet/pscale_exporter/compare/v0.9.0...v0.9.1
+[0.9.0]: https://github.com/fjacquet/pscale_exporter/compare/v0.8.0...v0.9.0
+[0.8.0]: https://github.com/fjacquet/pscale_exporter/compare/v0.7.0...v0.8.0
+[0.7.0]: https://github.com/fjacquet/pscale_exporter/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/fjacquet/pscale_exporter/compare/v0.5.4...v0.6.0
 [0.5.4]: https://github.com/fjacquet/pscale_exporter/compare/v0.5.3...v0.5.4
 [0.5.3]: https://github.com/fjacquet/pscale_exporter/compare/v0.5.2...v0.5.3
