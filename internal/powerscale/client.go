@@ -377,6 +377,7 @@ func (c *ClusterClient) GetStatistics(ctx context.Context) (*models.Statistics, 
 
 	st.Drives = c.driveSummary(ctx)
 	st.Clients = c.clientSummary(ctx)
+	st.Workloads = c.workloadSummary(ctx)
 
 	if log.IsLevelEnabled(log.DebugLevel) {
 		returned := make(map[string]bool, len(st.Current))
@@ -390,8 +391,8 @@ func (c *ClusterClient) GetStatistics(ctx context.Context) (*models.Statistics, 
 			}
 		}
 		log.Debugf("cluster %q: statistics parsed: keys=%d/%d requested (missing: %v) "+
-			"proto_rows=%d drive_rows=%d client_rows=%d",
-			c.name, len(returned), len(keys), missing, len(st.Proto), len(st.Drives), len(st.Clients))
+			"proto_rows=%d drive_rows=%d client_rows=%d workload_rows=%d",
+			c.name, len(returned), len(keys), missing, len(st.Proto), len(st.Drives), len(st.Clients), len(st.Workloads))
 	}
 	return st, nil
 }
@@ -424,6 +425,23 @@ func (c *ClusterClient) clientSummary(ctx context.Context) []models.ClientStat {
 		return nil
 	}
 	return cl
+}
+
+// workloadSummary fetches per-workload performance best-effort. Rows require OneFS
+// performance datasets (isi performance datasets) to be configured; without one this yields
+// few or no rows.
+func (c *ClusterClient) workloadSummary(ctx context.Context) []models.Workload {
+	var b []byte
+	if err := c.getRaw(ctx, "platform/4/statistics/summary/workload", &b); err != nil {
+		log.Debugf("cluster %q: workload summary failed: %v", c.name, err)
+		return nil
+	}
+	w, err := models.ParseWorkloadSummary(b)
+	if err != nil {
+		log.Debugf("cluster %q: parse workload summary failed: %v; payload: %s", c.name, err, snippet(b))
+		return nil
+	}
+	return w
 }
 
 // Close releases resources. gopowerscale holds no long-lived resources beyond the
