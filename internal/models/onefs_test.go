@@ -273,3 +273,20 @@ func TestParseNodesLegacySensors(t *testing.T) {
 		t.Fatalf("smartfailed:false must yield Smartfail=false: %+v", nodes[0])
 	}
 }
+
+func TestParseWorkloadSummary(t *testing.T) {
+	data := []byte(`{"workload":[
+		{"node":1,"zone_name":"System","protocol":"nfs3","username":"alice","system_name":null,"job_type":null,"ops":120.5,"bytes_in":1024,"bytes_out":2048,"cpu":50000},
+		{"node":0,"zone_name":null,"protocol":null,"username":null,"system_name":null,"job_type":null,"ops":5,"bytes_in":10,"bytes_out":20,"cpu":100}
+	]}`)
+	ws, err := ParseWorkloadSummary(data)
+	if err != nil || len(ws) != 2 {
+		t.Fatalf("parse: %d err=%v", len(ws), err)
+	}
+	if ws[0] != (Workload{Node: 1, Zone: "System", Protocol: "nfs3", Username: "alice", Ops: 120.5, BytesIn: 1024, BytesOut: 2048, CPUMicros: 50000}) {
+		t.Fatalf("workload[0]: %+v", ws[0])
+	}
+	if ws[1].Node != 0 || ws[1].Zone != "" || ws[1].Protocol != "" {
+		t.Fatalf("workload[1] (aggregate, null dims -> empty string): %+v", ws[1])
+	}
+}

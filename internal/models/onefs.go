@@ -175,6 +175,23 @@ type ClientStat struct {
 	OutBps    float64 // out
 }
 
+// Workload is one per-workload performance row (statistics/summary/workload). The identity
+// dimensions are populated per the cluster's OneFS performance-dataset definition; an
+// unpinned dimension is the empty string. All perf fields are per-second rates (CPUMicros is
+// microseconds of CPU per second across all cores).
+type Workload struct {
+	Node       int
+	Zone       string
+	Protocol   string
+	Username   string
+	SystemName string
+	JobType    string
+	Ops        float64
+	BytesIn    float64
+	BytesOut   float64
+	CPUMicros  float64
+}
+
 // StatPoint is one resolved statistics value. DevID 0 means the cluster aggregate;
 // >0 maps to a node LNN.
 type StatPoint struct {
@@ -194,10 +211,11 @@ type ProtoStat struct {
 
 // Statistics holds the raw statistics fetched for one cluster.
 type Statistics struct {
-	Current []StatPoint
-	Proto   []ProtoStat
-	Drives  []DriveStat
-	Clients []ClientStat
+	Current   []StatPoint
+	Proto     []ProtoStat
+	Drives    []DriveStat
+	Clients   []ClientStat
+	Workloads []Workload
 }
 
 // ParseClusterConfig parses platform/N/cluster/config.
@@ -646,6 +664,46 @@ func ParseClientSummary(b []byte) ([]ClientStat, error) {
 		out = append(out, ClientStat{
 			Node: c.Node, Protocol: c.Protocol, Class: c.Class,
 			OpsPerSec: c.OperationRate, InBps: c.In, OutBps: c.Out,
+		})
+	}
+	return out, nil
+}
+
+// ParseWorkloadSummary parses platform/N/statistics/summary/workload. Perf fields are JSON
+// numbers; nullable identity strings decode to "" (encoding/json leaves a string field
+// unchanged on JSON null). node is a JSON number decoded via float64 then truncated to int,
+// so a "1.0"-style value cannot fail the parse.
+func ParseWorkloadSummary(b []byte) ([]Workload, error) {
+	var raw struct {
+		Workload []struct {
+			Node       float64 `json:"node"`
+			ZoneName   string  `json:"zone_name"`
+			Protocol   string  `json:"protocol"`
+			Username   string  `json:"username"`
+			SystemName string  `json:"system_name"`
+			JobType    string  `json:"job_type"`
+			Ops        float64 `json:"ops"`
+			BytesIn    float64 `json:"bytes_in"`
+			BytesOut   float64 `json:"bytes_out"`
+			CPU        float64 `json:"cpu"`
+		} `json:"workload"`
+	}
+	if err := json.Unmarshal(b, &raw); err != nil {
+		return nil, err
+	}
+	out := make([]Workload, 0, len(raw.Workload))
+	for _, w := range raw.Workload {
+		out = append(out, Workload{
+			Node:       int(w.Node),
+			Zone:       w.ZoneName,
+			Protocol:   w.Protocol,
+			Username:   w.Username,
+			SystemName: w.SystemName,
+			JobType:    w.JobType,
+			Ops:        w.Ops,
+			BytesIn:    w.BytesIn,
+			BytesOut:   w.BytesOut,
+			CPUMicros:  w.CPU,
 		})
 	}
 	return out, nil
