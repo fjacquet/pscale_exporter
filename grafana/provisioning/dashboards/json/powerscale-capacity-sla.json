@@ -873,7 +873,7 @@
         "textMode": "auto"
       },
       "targets": [
-        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "min(powerscale_license_days_to_expiry{cluster=~\"$cluster\"})", "legendFormat": "min days", "refId": "A" }
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "min(((powerscale_license_expiration_timestamp_seconds{cluster=~\"$cluster\"} > 0) - time()) / 86400)", "legendFormat": "min days", "refId": "A" }
       ],
       "description": "Fewest days to expiry across all expiring licenses on the selected clusters. Perpetual licenses carry no expiry and are excluded. Red under 30 days, yellow under 90; shows No data when nothing expires."
     },
@@ -906,7 +906,7 @@
         "textMode": "auto"
       },
       "targets": [
-        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "sum(powerscale_license_expired{cluster=~\"$cluster\"}) or vector(0)", "legendFormat": "expired", "refId": "A" }
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "count(powerscale_license_active{cluster=~\"$cluster\", status=\"Expired\"}) or vector(0)", "legendFormat": "expired", "refId": "A" }
       ],
       "description": "Count of licensed features currently marked expired on the selected clusters. Should be 0."
     }

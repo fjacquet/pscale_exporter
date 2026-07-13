@@ -1511,7 +1511,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "powerscale_license_info{cluster=~\"$cluster\"}",
+          "expr": "powerscale_license_active{cluster=~\"$cluster\"}",
           "format": "table",
           "instant": true,
           "legendFormat": "__auto",
@@ -1524,7 +1524,6 @@
           "options": {
             "excludeByName": {
               "Time": true,
-              "Value": true,
               "__name__": true,
               "cluster_id": true,
               "instance": true,
@@ -1532,6 +1531,7 @@
             },
             "indexByName": {},
             "renameByName": {
+              "Value": "active",
               "cluster": "cluster",
               "name": "feature",
               "status": "status"
@@ -1608,7 +1608,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "powerscale_license_days_to_expiry{cluster=~\"$cluster\"}",
+          "expr": "((powerscale_license_expiration_timestamp_seconds{cluster=~\"$cluster\"} > 0) - time()) / 86400",
           "format": "table",
           "instant": true,
           "legendFormat": "__auto",
@@ -1635,7 +1635,7 @@
           }
         }
       ],
-      "description": "Days remaining until each expiring license lapses (perpetual licenses are omitted at the source). Sorted soonest-first; red under 30 days, yellow under 90."
+      "description": "Days remaining until each expiring license lapses; perpetual licenses report no expiry (0) and are filtered out by the query. Sorted soonest-first; red under 30 days, yellow under 90."
     }
   ]
 }
