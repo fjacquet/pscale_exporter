@@ -15,10 +15,10 @@
   {"key": "node.memory.used",               "metric": "powerscale_node_memory_used_bytes",             "scope": "node"},
   {"key": "node.disk.xfers.rate.sum",       "metric": "powerscale_node_disk_operations_per_second",    "scope": "node"},
   {"key": "node.ifs.bytes.used",            "metric": "powerscale_node_used_capacity_bytes",           "scope": "node"},
-  {"key": "cache.l1.data.read.hit",         "metric": "powerscale_node_cache_l1_read_hit_bytes_per_second",  "scope": "node"},
-  {"key": "cache.l1.data.read.miss",        "metric": "powerscale_node_cache_l1_read_miss_bytes_per_second", "scope": "node"},
-  {"key": "cache.l2.data.read.hit",         "metric": "powerscale_node_cache_l2_read_hit_bytes_per_second",  "scope": "node"},
-  {"key": "cache.l2.data.read.miss",        "metric": "powerscale_node_cache_l2_read_miss_bytes_per_second", "scope": "node"},
-  {"key": "cache.l3.data.read.hit",         "metric": "powerscale_node_cache_l3_read_hit_bytes_per_second",  "scope": "node"},
-  {"key": "cache.l3.data.read.miss",        "metric": "powerscale_node_cache_l3_read_miss_bytes_per_second", "scope": "node"}
+  {"key": "node.ifs.cache.l1.data.read.hit",  "metric": "powerscale_node_cache_l1_read_hit_bytes_per_second",  "scope": "node"},
+  {"key": "node.ifs.cache.l1.data.read.miss", "metric": "powerscale_node_cache_l1_read_miss_bytes_per_second", "scope": "node"},
+  {"key": "node.ifs.cache.l2.data.read.hit",  "metric": "powerscale_node_cache_l2_read_hit_bytes_per_second",  "scope": "node"},
+  {"key": "node.ifs.cache.l2.data.read.miss", "metric": "powerscale_node_cache_l2_read_miss_bytes_per_second", "scope": "node"},
+  {"key": "node.ifs.cache.l3.data.read.hit",  "metric": "powerscale_node_cache_l3_read_hit_bytes_per_second",  "scope": "node"},
+  {"key": "node.ifs.cache.l3.data.read.miss", "metric": "powerscale_node_cache_l3_read_miss_bytes_per_second", "scope": "node"}
 ]

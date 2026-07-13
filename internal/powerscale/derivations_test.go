@@ -153,3 +153,49 @@ func TestBuildSamplesClusterAndNode(t *testing.T) {
 		t.Fatalf("fan sample wrong: %+v ok=%v", s, ok)
 	}
 }
+
+func TestBuildSamplesNodeIfsCacheKeys(t *testing.T) {
+	inv := &models.Inventory{
+		Cluster: models.ClusterInfo{Name: "ignored", GUID: "GUID-1"},
+		Nodes:   []models.Node{{ID: 1, LNN: 1}},
+	}
+	st := &models.Statistics{
+		Current: []models.StatPoint{
+			{Key: "node.ifs.cache.l1.data.read.hit", DevID: 1, Value: 1000},
+			{Key: "node.ifs.cache.l1.data.read.miss", DevID: 1, Value: 100},
+			{Key: "node.ifs.cache.l2.data.read.hit", DevID: 1, Value: 2000},
+			{Key: "node.ifs.cache.l2.data.read.miss", DevID: 1, Value: 200},
+			{Key: "node.ifs.cache.l3.data.read.hit", DevID: 1, Value: 3000},
+			{Key: "node.ifs.cache.l3.data.read.miss", DevID: 1, Value: 300},
+		},
+	}
+	samples := BuildSamples("clu1", inv, st)
+	get := func(name string) (Sample, bool) {
+		for _, s := range samples {
+			if s.Name == name {
+				return s, true
+			}
+		}
+		return Sample{}, false
+	}
+	cases := []struct {
+		metric string
+		value  float64
+	}{
+		{"powerscale_node_cache_l1_read_hit_bytes_per_second", 1000},
+		{"powerscale_node_cache_l1_read_miss_bytes_per_second", 100},
+		{"powerscale_node_cache_l2_read_hit_bytes_per_second", 2000},
+		{"powerscale_node_cache_l2_read_miss_bytes_per_second", 200},
+		{"powerscale_node_cache_l3_read_hit_bytes_per_second", 3000},
+		{"powerscale_node_cache_l3_read_miss_bytes_per_second", 300},
+	}
+	for _, c := range cases {
+		s, ok := get(c.metric)
+		if !ok || s.Value != c.value {
+			t.Fatalf("cache sample %s wrong: %+v ok=%v", c.metric, s, ok)
+		}
+		if s.Labels[2].Value != "1" { // nodeLabels = [cluster, cluster_id, node]
+			t.Fatalf("cache sample %s node label wrong: %+v", c.metric, s.Labels)
+		}
+	}
+}
