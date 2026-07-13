@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-07-13
+
+### Added
+
+- **OneFS license status & expiry metrics** — two best-effort gauges derived from
+  `platform/N/license/licenses`: `powerscale_license_expiration_timestamp_seconds`
+  (Unix-seconds expiry per feature; `0` for perpetual or unlicensed features) and
+  `powerscale_license_active{status}` (`1` when the feature is Licensed/Activated/Evaluation,
+  else `0`, carrying the raw OneFS status as a label). `docs/metrics.md` includes an
+  expiry alert example. (#34, #35)
+- **OneFS storage-pool capacity metrics** — per-pool/tier capacity labelled `pool` and
+  `type` (`nodepool` | `tier`): aggregate
+  `powerscale_storagepool_{total,used,available}_capacity_bytes` plus the media split
+  `powerscale_storagepool_{ssd,hdd}_{total,used,available}_capacity_bytes`. (#33, #36)
+- **OneFS per-workload performance metrics** — dataset-dependent per-workload series from
+  the performance dataset: `powerscale_workload_operations_per_second`,
+  `powerscale_workload_{in,out}_bytes_per_second`, and
+  `powerscale_workload_cpu_microseconds_per_second`, labelled by the curated workload
+  identity dimensions (`node`, `zone`, `protocol`, `username`, `system_name`, `job_type`). (#32, #37)
+- **Grafana dashboards for the new metrics** — a Licensing row (status table + days-to-expiry)
+  on `powerscale-overview` plus min-days-to-expiry and expired-count license stats on
+  `powerscale-capacity-sla`; a Storage Pools capacity row (aggregate + SSD/HDD) on
+  `powerscale-capacity-sla`; and a new `powerscale-workloads` board (per-workload
+  ops/throughput/CPU with datasource/cluster/zone/protocol/username template variables).
+  Documented in `docs/dashboards.md`. (#38)
+
 ## [0.13.0] - 2026-07-13
 
 ### Added
