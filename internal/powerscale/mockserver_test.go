@@ -69,6 +69,8 @@ func newMockOneFS(t *testing.T) *httptest.Server {
 			writeBytes(w, fixture(t, "stat_drive.json"))
 		case strings.HasSuffix(p, "/statistics/summary/client"):
 			writeBytes(w, fixture(t, "stat_client.json"))
+		case strings.HasSuffix(p, "/license/licenses"):
+			writeBytes(w, fixture(t, "licenses.json"))
 		default:
 			http.Error(w, "not found: "+p, http.StatusNotFound)
 		}
