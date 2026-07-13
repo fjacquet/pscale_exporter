@@ -143,20 +143,22 @@ block counts × block size (validated against the OneFS 9.14.0 schema).
 
 ## Licenses
 
-Per-feature OneFS license status, fetched best-effort from `license/licenses` (requires
-`ISI_PRIV_LICENSE`; absent if the account lacks it). `days_to_expiry` is emitted **only for
-licenses that carry an expiration** — perpetual licenses omit it.
+Per-feature OneFS license state, fetched best-effort from `license/licenses` (requires
+`ISI_PRIV_LICENSE`; absent if the account lacks it). The OneFS `expiration` date is parsed
+to an absolute Unix timestamp; perpetual/unlicensed features carry no expiration and report
+`0`.
 
 | Metric | Labels | Description |
 | --- | --- | --- |
-| `powerscale_license_days_to_expiry` | `name` | Days until the feature's license expires (omitted for perpetual licenses). |
-| `powerscale_license_expired` | `name` | `1` when OneFS flags the feature's license as expired, else `0`. |
-| `powerscale_license_info` | `name`, `status` | Constant `1`; the raw OneFS license `status` is carried as a label. |
+| `powerscale_license_expiration_timestamp_seconds` | `name` | Unix timestamp when the feature's license expires; `0` for perpetual/unlicensed features. |
+| `powerscale_license_active` | `name`, `status` | `1` when the feature is licensed and usable (OneFS status `Licensed` / `Activated` / `Evaluation`), else `0`. The raw OneFS `status` is carried as a label. |
 
-Alert on a feature expiring within 30 days:
+Alert on a feature expiring within 30 days (perpetual features report `0` and are excluded
+by the `> 0` guard):
 
 ```promql
-powerscale_license_days_to_expiry < 30
+powerscale_license_expiration_timestamp_seconds > 0
+  and (powerscale_license_expiration_timestamp_seconds - time()) < 30 * 86400
 ```
 
 ## Storage pools
