@@ -834,6 +834,81 @@
         { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_storagepool_hdd_available_capacity_bytes{cluster=~\"$cluster\"}", "legendFormat": "{{pool}} HDD", "refId": "B" }
       ],
       "description": "Available capacity on SSD vs HDD media per pool — surfaces tiering/cache-media headroom the aggregate figure hides. An all-HDD pool reports SSD=0."
+    },
+    {
+      "type": "row",
+      "id": 23,
+      "title": "Licensing",
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 64 },
+      "panels": []
+    },
+    {
+      "type": "stat",
+      "id": 24,
+      "title": "Min Days to License Expiry",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 65 },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 30 },
+              { "color": "green", "value": 90 }
+            ]
+          },
+          "unit": "d"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "min(powerscale_license_days_to_expiry{cluster=~\"$cluster\"})", "legendFormat": "min days", "refId": "A" }
+      ],
+      "description": "Fewest days to expiry across all expiring licenses on the selected clusters. Perpetual licenses carry no expiry and are excluded. Red under 30 days, yellow under 90; shows No data when nothing expires."
+    },
+    {
+      "type": "stat",
+      "id": 25,
+      "title": "Licenses Expired",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 65 },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "sum(powerscale_license_expired{cluster=~\"$cluster\"}) or vector(0)", "legendFormat": "expired", "refId": "A" }
+      ],
+      "description": "Count of licensed features currently marked expired on the selected clusters. Should be 0."
     }
   ],
   "refresh": "1m",
