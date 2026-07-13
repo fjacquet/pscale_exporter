@@ -23,7 +23,7 @@ Like the license collector, storage-pool capacity is **structural, schema-docume
 Response shape (`{ "storagepools": [ … ], "total": N }`), per the 9.14 schema. Fields consumed per row:
 
 | field | type | use |
-|---|---|---|
+| --- | --- | --- |
 | `name` | string | pool/tier name → `pool` label |
 | `type` | string (`nodepool`\|`tier`) | → `type` label |
 | `usage.total_bytes` | **string** | `powerscale_storagepool_total_capacity_bytes` |
@@ -45,7 +45,7 @@ Not consumed: `usable_*`, `free_*`, `virtual_hot_spare_bytes`, `pct_used*`, `bal
 All best-effort; an empty/failed fetch emits nothing. Canonical leading labels `cluster`, `cluster_id`, then `pool`, `type`.
 
 | Metric | Value |
-|---|---|
+| --- | --- |
 | `powerscale_storagepool_total_capacity_bytes` | `usage.total_bytes` |
 | `powerscale_storagepool_used_capacity_bytes` | `usage.used_bytes` |
 | `powerscale_storagepool_available_capacity_bytes` | `usage.avail_bytes` |
@@ -97,11 +97,13 @@ Percentage is intentionally not emitted — left to PromQL (`used / total`), mat
 ## Docs
 
 - New `## Storage pools` section in `docs/metrics.md`: the 9 metrics, the `pool`/`type` labels, the **double-counting note** (filter `type="nodepool"` for a cluster total), and a tiering-headroom alert example:
+
   ```promql
   # a node pool over 85% full
   100 * powerscale_storagepool_used_capacity_bytes
     / powerscale_storagepool_total_capacity_bytes > 85
   ```
+
 - Add `ISI_PRIV_SMARTPOOLS` to the documented read-only privilege set (configuration.md / installation.md). Note it is best-effort: without the privilege, storage-pool metrics are simply absent.
 
 ## Non-goals

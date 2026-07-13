@@ -706,6 +706,209 @@
         }
       ],
       "description": "Quotas that have a hard limit set, ranked by how close usage is to that limit. The % of hard column escalates yellow at 85% and red at 95%."
+    },
+    {
+      "type": "row",
+      "id": 19,
+      "title": "Storage Pools — Capacity",
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 46 },
+      "panels": []
+    },
+    {
+      "type": "table",
+      "id": 20,
+      "title": "Pool Capacity (node pools & tiers)",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 47 },
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "align": "auto", "filterable": true },
+          "unit": "bytes"
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "used %" },
+            "properties": [
+              { "id": "unit", "value": "percent" },
+              { "id": "decimals", "value": 1 },
+              { "id": "custom.cellOptions", "value": { "type": "gauge", "mode": "gradient" } },
+              { "id": "max", "value": 100 },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    { "color": "green", "value": null },
+                    { "color": "yellow", "value": 75 },
+                    { "color": "red", "value": 90 }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "footer": { "show": false },
+        "sortBy": [{ "displayName": "used %", "desc": true }]
+      },
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "100 * powerscale_storagepool_used_capacity_bytes{cluster=~\"$cluster\"} / powerscale_storagepool_total_capacity_bytes{cluster=~\"$cluster\"}", "format": "table", "instant": true, "legendFormat": "__auto", "refId": "A" },
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_storagepool_used_capacity_bytes{cluster=~\"$cluster\"}", "format": "table", "instant": true, "legendFormat": "__auto", "refId": "B" },
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_storagepool_total_capacity_bytes{cluster=~\"$cluster\"}", "format": "table", "instant": true, "legendFormat": "__auto", "refId": "C" },
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_storagepool_available_capacity_bytes{cluster=~\"$cluster\"}", "format": "table", "instant": true, "legendFormat": "__auto", "refId": "D" },
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_storagepool_ssd_used_capacity_bytes{cluster=~\"$cluster\"}", "format": "table", "instant": true, "legendFormat": "__auto", "refId": "E" },
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_storagepool_ssd_total_capacity_bytes{cluster=~\"$cluster\"}", "format": "table", "instant": true, "legendFormat": "__auto", "refId": "F" },
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_storagepool_hdd_used_capacity_bytes{cluster=~\"$cluster\"}", "format": "table", "instant": true, "legendFormat": "__auto", "refId": "G" },
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_storagepool_hdd_total_capacity_bytes{cluster=~\"$cluster\"}", "format": "table", "instant": true, "legendFormat": "__auto", "refId": "H" }
+      ],
+      "transformations": [
+        { "id": "merge", "options": {} },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": { "Time": true, "__name__": true, "cluster_id": true, "instance": true, "job": true },
+            "indexByName": {},
+            "renameByName": {
+              "Value #A": "used %",
+              "Value #B": "used",
+              "Value #C": "total",
+              "Value #D": "available",
+              "Value #E": "SSD used",
+              "Value #F": "SSD total",
+              "Value #G": "HDD used",
+              "Value #H": "HDD total",
+              "pool": "pool",
+              "type": "type"
+            }
+          }
+        }
+      ],
+      "description": "Per node pool and tier capacity: aggregate used %, used/total/available, and the SSD vs HDD media split. The list holds both node pools and tiers (a tier is the sum of its child node pools), distinguished by the type column — filter type=nodepool for a non-overlapping cluster total."
+    },
+    {
+      "type": "timeseries",
+      "id": 21,
+      "title": "Node-Pool Used % (trend)",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 56 },
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 1, "showPoints": "never", "stacking": { "mode": "none" } },
+          "unit": "percent",
+          "min": 0,
+          "max": 100
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull", "max"] },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "100 * powerscale_storagepool_used_capacity_bytes{cluster=~\"$cluster\", type=\"nodepool\"} / powerscale_storagepool_total_capacity_bytes{cluster=~\"$cluster\", type=\"nodepool\"}", "legendFormat": "{{cluster}} / {{pool}}", "refId": "A" }
+      ],
+      "description": "Used % over time per node pool (type=nodepool only, so tiers don't double-count their child pools). Thresholds: yellow at 75%, red at 90%."
+    },
+    {
+      "type": "timeseries",
+      "id": 22,
+      "title": "SSD vs HDD Available (per node pool)",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 56 },
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 1, "showPoints": "never", "stacking": { "mode": "none" } },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull", "min"] },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_storagepool_ssd_available_capacity_bytes{cluster=~\"$cluster\", type=\"nodepool\"}", "legendFormat": "{{pool}} SSD", "refId": "A" },
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_storagepool_hdd_available_capacity_bytes{cluster=~\"$cluster\", type=\"nodepool\"}", "legendFormat": "{{pool}} HDD", "refId": "B" }
+      ],
+      "description": "Available capacity on SSD vs HDD media per node pool (type=nodepool only, so tiers don't double-count their child pools — consistent with the used-% trend). Surfaces tiering/cache-media headroom the aggregate figure hides. An all-HDD pool reports SSD=0."
+    },
+    {
+      "type": "row",
+      "id": 23,
+      "title": "Licensing",
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 64 },
+      "panels": []
+    },
+    {
+      "type": "stat",
+      "id": 24,
+      "title": "Min Days to License Expiry",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 65 },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 30 },
+              { "color": "green", "value": 90 }
+            ]
+          },
+          "unit": "d"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "min(((powerscale_license_expiration_timestamp_seconds{cluster=~\"$cluster\"} > 0) - time()) / 86400)", "legendFormat": "min days", "refId": "A" }
+      ],
+      "description": "Fewest days to expiry across all expiring licenses on the selected clusters. Perpetual licenses carry no expiry and are excluded. Red under 30 days, yellow under 90; shows No data when nothing expires."
+    },
+    {
+      "type": "stat",
+      "id": 25,
+      "title": "Licenses Expired",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 65 },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "count(powerscale_license_active{cluster=~\"$cluster\", status=\"Expired\"}) or vector(0)", "legendFormat": "expired", "refId": "A" }
+      ],
+      "description": "Count of licensed features currently marked expired on the selected clusters. Should be 0."
     }
   ],
   "refresh": "1m",

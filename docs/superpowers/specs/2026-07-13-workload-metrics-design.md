@@ -27,7 +27,7 @@ Unlike license (enumerated `type`/`status`) and storagepool (fixed capacity fiel
 Response shape (`{ "workload": [ … ] }`), per the 9.14 schema. Fields consumed per row:
 
 | field | type | use |
-|---|---|---|
+| --- | --- | --- |
 | `node` | number | `node` label (row's node; `0` = cluster-scoped) |
 | `zone_name` | string,null | `zone` label |
 | `protocol` | string,null | `protocol` label |
@@ -48,7 +48,7 @@ Not consumed (excluded by design): `path`, `local_address`/`local_name`, `remote
 All best-effort; an empty/failed fetch emits nothing. Canonical leading labels `cluster`, `cluster_id`, then the fixed workload label set.
 
 | Metric | Value | Unit |
-|---|---|---|
+| --- | --- | --- |
 | `powerscale_workload_operations_per_second` | `ops` | operations/sec |
 | `powerscale_workload_in_bytes_per_second` | `bytes_in` | bytes/sec |
 | `powerscale_workload_out_bytes_per_second` | `bytes_out` | bytes/sec |
@@ -99,10 +99,12 @@ Every metric is emitted for every returned workload row (no conditional skipping
 ## Docs
 
 - New `## Workloads` section in `docs/metrics.md`: the 4 metrics, the 8-label set, a **prominent prerequisite note** (workload metrics require configured OneFS performance datasets — `isi performance datasets`; absent otherwise), the cardinality guidance (dataset design is the tuning lever; `path`/IP dimensions intentionally omitted), that `cpu` is µs-of-CPU-per-second (a per-second gauge), and that **latency is a planned follow-up**. Example:
+
   ```promql
   # top 5 workloads by operations/sec, per cluster
   topk(5, sum by (cluster, zone, username, protocol) (powerscale_workload_operations_per_second))
   ```
+
 - **No privilege-doc change** — `ISI_PRIV_STATISTICS` is already documented.
 
 ## Non-goals

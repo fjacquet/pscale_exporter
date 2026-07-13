@@ -52,7 +52,7 @@ PSCALE1_PASSWORD='your-monitor-password' docker compose up -d --build
 ```
 
 | Service | URL | Purpose |
-|---|---|---|
+| --- | --- | --- |
 | Exporter | <http://localhost:9444/metrics> (`/health`) | the `/metrics` pull endpoint |
 | Prometheus | <http://localhost:9090> | scrapes the exporter; alert rules in `deploy/prometheus/pscale.rules.yml` |
 | Grafana | <http://localhost:3000> (`admin`/`admin`) | Prometheus datasource + PowerScale dashboard auto-provisioned |

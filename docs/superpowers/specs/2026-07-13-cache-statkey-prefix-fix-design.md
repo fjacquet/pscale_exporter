@@ -45,7 +45,7 @@ whole call.
 Validated against every available source before designing:
 
 | Source | Cache keys? | Finding |
-|---|---|---|
+| --- | --- | --- |
 | Live cluster (`isi statistics list keys`) | yes | Authoritative. Keys are `node.ifs.cache.lN.data.read.{start,hit,miss,wait}`. |
 | swagger 9.14 spec (`docs/swagger/11035-9.14.0.json`) | no | Stat-key *names* are runtime data, not schema. Spec has zero cache keys. It **does** document `GET /platform/1/statistics/keys/{key}` → `v1StatisticsKey{units, type, scope, real_name, aggregation_type}` — the machine-readable way to resolve units. |
 | gopowerscale v1.22.0 (SDK) | no | Pure passthrough. `GetFloatStatistics(ctx, keys)` forwards key strings verbatim; no constants, no validation. It cannot catch a bad key — OneFS does. |
@@ -82,7 +82,7 @@ Two conclusions:
 In `internal/powerscale/statisticsKeys.json`, prefix the six cache keys with `node.ifs.`:
 
 | before | after |
-|---|---|
+| --- | --- |
 | `cache.l1.data.read.hit` | `node.ifs.cache.l1.data.read.hit` |
 | `cache.l1.data.read.miss` | `node.ifs.cache.l1.data.read.miss` |
 | `cache.l2.data.read.hit` | `node.ifs.cache.l2.data.read.hit` |
@@ -101,11 +101,13 @@ invalid key shipped green. Add coverage:
 - **`internal/powerscale/testdata/stat_current.json`** — add six node-scoped rows using the same
   shape as existing rows, with a `devid` that maps to a node in `nodes.json` (e.g. `devid: 1` →
   lnn 1):
+
   ```json
   {"devid": 1, "error": null, "key": "node.ifs.cache.l1.data.read.hit",  "time": 1700000000, "value": 1000},
   {"devid": 1, "error": null, "key": "node.ifs.cache.l1.data.read.miss", "time": 1700000000, "value": 100},
   ... l2, l3 ...
   ```
+
 - **Assertions** — mirror the `node_memory_used` pattern:
   - `internal/powerscale/e2e_test.go`: add the six `powerscale_node_cache_*` metric names to the
     presence map.

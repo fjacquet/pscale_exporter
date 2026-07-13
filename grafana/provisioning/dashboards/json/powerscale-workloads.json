@@ -1,0 +1,262 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "PowerScale / OneFS Overview",
+      "tooltip": "",
+      "type": "link",
+      "url": "/d/powerscale-overview"
+    }
+  ],
+  "liveNow": false,
+  "panels": [
+    {
+      "type": "row",
+      "id": 1,
+      "title": "Per-Workload Performance",
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "panels": []
+    },
+    {
+      "type": "text",
+      "id": 2,
+      "title": "",
+      "gridPos": { "h": 3, "w": 24, "x": 0, "y": 1 },
+      "options": {
+        "mode": "markdown",
+        "content": "**Requires a configured OneFS performance dataset** (`isi performance datasets`). Without one this board is empty. Cardinality is governed by your dataset definition — use the **zone / protocol / username** variables above to slice when a broad dataset produces many series."
+      },
+      "description": "Prerequisite and usage note for the workload metrics."
+    },
+    {
+      "type": "timeseries",
+      "id": 3,
+      "title": "Operations / sec per workload",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 1, "showPoints": "never", "stacking": { "mode": "none" } },
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull", "max"] },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_workload_operations_per_second{cluster=~\"$cluster\", zone=~\"$zone\", protocol=~\"$protocol\", username=~\"$username\"}", "legendFormat": "{{zone}}/{{protocol}}/{{username}}/{{job_type}} node{{node}}", "refId": "A" }
+      ],
+      "description": "Per-workload operations per second. A per-second gauge — aggregate with sum/avg, never rate(). Slice with the zone/protocol/username variables to bound the series count."
+    },
+    {
+      "type": "timeseries",
+      "id": 4,
+      "title": "Throughput per workload (in / out)",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 1, "showPoints": "never", "stacking": { "mode": "none" } },
+          "unit": "Bps"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull", "max"] },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_workload_in_bytes_per_second{cluster=~\"$cluster\", zone=~\"$zone\", protocol=~\"$protocol\", username=~\"$username\"}", "legendFormat": "in {{zone}}/{{protocol}}/{{username}}", "refId": "A" },
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_workload_out_bytes_per_second{cluster=~\"$cluster\", zone=~\"$zone\", protocol=~\"$protocol\", username=~\"$username\"}", "legendFormat": "out {{zone}}/{{protocol}}/{{username}}", "refId": "B" }
+      ],
+      "description": "Per-workload read (in) and write (out) throughput. Per-second gauges — aggregate with sum/avg, never rate()."
+    },
+    {
+      "type": "timeseries",
+      "id": 5,
+      "title": "CPU µs/sec per workload",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 12 },
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 1, "showPoints": "never", "stacking": { "mode": "none" } },
+          "unit": "µs"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull", "max"] },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_workload_cpu_microseconds_per_second{cluster=~\"$cluster\", zone=~\"$zone\", protocol=~\"$protocol\", username=~\"$username\"}", "legendFormat": "{{zone}}/{{protocol}}/{{username}}/{{job_type}} node{{node}}", "refId": "A" }
+      ],
+      "description": "Per-workload CPU consumed, in microseconds of CPU per second across all cores. A per-second busy-ness rate, not a cumulative counter — aggregate with sum/avg, never rate()."
+    },
+    {
+      "type": "table",
+      "id": 6,
+      "title": "Workload Snapshot",
+      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 20 },
+      "fieldConfig": {
+        "defaults": { "custom": { "align": "auto", "filterable": true }, "unit": "none" },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "in B/s" }, "properties": [ { "id": "unit", "value": "Bps" } ] },
+          { "matcher": { "id": "byName", "options": "out B/s" }, "properties": [ { "id": "unit", "value": "Bps" } ] },
+          { "matcher": { "id": "byName", "options": "cpu µs/s" }, "properties": [ { "id": "unit", "value": "µs" } ] }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "footer": { "show": false },
+        "sortBy": [{ "displayName": "ops/s", "desc": true }]
+      },
+      "targets": [
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_workload_operations_per_second{cluster=~\"$cluster\", zone=~\"$zone\", protocol=~\"$protocol\", username=~\"$username\"}", "format": "table", "instant": true, "legendFormat": "__auto", "refId": "A" },
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_workload_in_bytes_per_second{cluster=~\"$cluster\", zone=~\"$zone\", protocol=~\"$protocol\", username=~\"$username\"}", "format": "table", "instant": true, "legendFormat": "__auto", "refId": "B" },
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_workload_out_bytes_per_second{cluster=~\"$cluster\", zone=~\"$zone\", protocol=~\"$protocol\", username=~\"$username\"}", "format": "table", "instant": true, "legendFormat": "__auto", "refId": "C" },
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_workload_cpu_microseconds_per_second{cluster=~\"$cluster\", zone=~\"$zone\", protocol=~\"$protocol\", username=~\"$username\"}", "format": "table", "instant": true, "legendFormat": "__auto", "refId": "D" }
+      ],
+      "transformations": [
+        { "id": "merge", "options": {} },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": { "Time": true, "__name__": true, "cluster_id": true, "instance": true, "job": true, "system_name": true },
+            "indexByName": {},
+            "renameByName": {
+              "Value #A": "ops/s",
+              "Value #B": "in B/s",
+              "Value #C": "out B/s",
+              "Value #D": "cpu µs/s",
+              "cluster": "cluster",
+              "node": "node",
+              "zone": "zone",
+              "protocol": "protocol",
+              "username": "username",
+              "job_type": "job_type"
+            }
+          }
+        }
+      ],
+      "description": "Instant snapshot of every workload row (filtered by the variables), sorted by ops/s. Merges ops, throughput, and CPU per workload. Unpinned dimensions show as empty; system_name is hidden to keep the table readable."
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "style": null,
+  "tags": ["powerscale", "onefs", "dell", "workload", "performance"],
+  "templating": {
+    "list": [
+      {
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "label": "Data source",
+        "multi": false,
+        "name": "datasource",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "current": {},
+        "datasource": { "type": "prometheus", "uid": "${datasource}" },
+        "definition": "label_values(powerscale_up, cluster)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Cluster",
+        "multi": true,
+        "name": "cluster",
+        "options": [],
+        "query": { "qryType": 1, "query": "label_values(powerscale_up, cluster)", "refId": "PrometheusVariableQueryEditor-VariableQuery" },
+        "refresh": 2,
+        "regex": "",
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {},
+        "datasource": { "type": "prometheus", "uid": "${datasource}" },
+        "definition": "label_values(powerscale_workload_operations_per_second{cluster=~\"$cluster\"}, zone)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Zone",
+        "multi": true,
+        "name": "zone",
+        "options": [],
+        "query": { "qryType": 1, "query": "label_values(powerscale_workload_operations_per_second{cluster=~\"$cluster\"}, zone)", "refId": "PrometheusVariableQueryEditor-VariableQuery" },
+        "refresh": 2,
+        "regex": "",
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {},
+        "datasource": { "type": "prometheus", "uid": "${datasource}" },
+        "definition": "label_values(powerscale_workload_operations_per_second{cluster=~\"$cluster\"}, protocol)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Protocol",
+        "multi": true,
+        "name": "protocol",
+        "options": [],
+        "query": { "qryType": 1, "query": "label_values(powerscale_workload_operations_per_second{cluster=~\"$cluster\"}, protocol)", "refId": "PrometheusVariableQueryEditor-VariableQuery" },
+        "refresh": 2,
+        "regex": "",
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {},
+        "datasource": { "type": "prometheus", "uid": "${datasource}" },
+        "definition": "label_values(powerscale_workload_operations_per_second{cluster=~\"$cluster\"}, username)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Username",
+        "multi": true,
+        "name": "username",
+        "options": [],
+        "query": { "qryType": 1, "query": "label_values(powerscale_workload_operations_per_second{cluster=~\"$cluster\"}, username)", "refId": "PrometheusVariableQueryEditor-VariableQuery" },
+        "refresh": 2,
+        "regex": "",
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": { "from": "now-6h", "to": "now" },
+  "timezone": "",
+  "title": "PowerScale / OneFS Workloads",
+  "uid": "powerscale-workloads",
+  "version": 1,
+  "weekStart": ""
+}

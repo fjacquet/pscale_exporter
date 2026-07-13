@@ -21,7 +21,7 @@ opentelemetry:
 ```
 
 | Field | Meaning |
-|---|---|
+| --- | --- |
 | `metrics.enabled` | Turn on the OTLP metric push. |
 | `metrics.endpoint` | OTLP/gRPC collector address (`host:port`). |
 | `metrics.insecure` | `true` for plaintext gRPC (lab/in-cluster); use TLS otherwise. |

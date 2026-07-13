@@ -22,7 +22,7 @@ user.
 Two compose files are provided:
 
 | File | Use |
-|---|---|
+| --- | --- |
 | `docker-compose.yml` | Local end-to-end stack — **builds** the exporter image from source alongside Prometheus, an OTLP collector, and Grafana. |
 | `docker-compose.ghcr.yml` | Pull-based variant using the published GHCR image (no local build). |
 
@@ -33,7 +33,7 @@ PSCALE1_PASSWORD='your-monitor-password' docker compose up -d --build
 ```
 
 | Service | URL |
-|---|---|
+| --- | --- |
 | Exporter | <http://localhost:9444/metrics> (`/health`) |
 | Prometheus | <http://localhost:9090> |
 | Grafana | <http://localhost:3000> (`admin`/`admin`) |
@@ -50,7 +50,7 @@ directly) and `powerscale-otlp` (scrapes the collector's re-exposed series). Ale
 live in `deploy/prometheus/pscale.rules.yml`:
 
 | Alert | Condition |
-|---|---|
+| --- | --- |
 | `PowerScaleClusterDown` | `powerscale_up == 0` for 5m. |
 | `PowerScaleExporterDown` | `up{job="powerscale"} == 0` for 5m. |
 | `PowerScaleClusterCapacityHigh` | used/total capacity > 85% for 15m. |

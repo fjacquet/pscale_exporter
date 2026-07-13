@@ -17,7 +17,7 @@ Every metric carries the canonical leading labels `cluster` and `cluster_id`, wi
 scope-specific labels appended:
 
 | Scope | Labels |
-|---|---|
+| --- | --- |
 | Cluster | `cluster`, `cluster_id` |
 | Node | `cluster`, `cluster_id`, `node` (logical node number / LNN) |
 | Quota | `cluster`, `cluster_id`, `quota_id`, `quota_path`, `quota_type` |
@@ -27,7 +27,7 @@ scope-specific labels appended:
 ## Cluster metrics
 
 | Metric | Unit | Description |
-|---|---|---|
+| --- | --- | --- |
 | `powerscale_cluster_cpu_sys_percent` | percent | System CPU usage. |
 | `powerscale_cluster_cpu_user_percent` | percent | User CPU usage. |
 | `powerscale_cluster_cpu_idle_percent` | percent | Idle CPU. |
@@ -44,7 +44,7 @@ scope-specific labels appended:
 Per-node series; the `node` label is the logical node number (LNN).
 
 | Metric | Unit | Description |
-|---|---|---|
+| --- | --- | --- |
 | `powerscale_node_cpu_idle_percent` | percent | Per-node idle CPU. |
 | `powerscale_node_cpu_sys_percent` | percent | Per-node system CPU. |
 | `powerscale_node_cpu_user_percent` | percent | Per-node user CPU. |
@@ -66,7 +66,7 @@ per-second **rates** in bytes/second (fractional byte counts averaged over its s
 window), so aggregate with `sum`/`avg` — never `rate()`.
 
 | Metric | Unit |
-|---|---|
+| --- | --- |
 | `powerscale_node_cache_l1_read_hit_bytes_per_second` / `..._miss_...` | bytes/s |
 | `powerscale_node_cache_l2_read_hit_bytes_per_second` / `..._miss_...` | bytes/s |
 | `powerscale_node_cache_l3_read_hit_bytes_per_second` / `..._miss_...` | bytes/s |
@@ -74,7 +74,7 @@ window), so aggregate with `sum`/`avg` — never `rate()`.
 ### Node health
 
 | Metric | Unit | Description |
-|---|---|---|
+| --- | --- | --- |
 | `powerscale_node_readonly` | bool | `1` if the node is mounted read-only. |
 | `powerscale_node_smartfail` | bool | `1` if the node is smartfailing / smartfailed. |
 | `powerscale_node_drives_total` | count | Drive count per node, labelled by `state` (e.g. `HEALTHY`, `SMARTFAIL`, `DEAD`). |
@@ -86,7 +86,7 @@ Per-node power-supply health and temperature/fan sensors, from the node `status`
 release shapes these differently. Temperature/fan series carry a `sensor` label.
 
 | Metric | Unit | Description |
-|---|---|---|
+| --- | --- | --- |
 | `powerscale_node_power_supplies_total` | count | Power supplies present on the node. |
 | `powerscale_node_power_supply_failures` | count | Failed power supplies on the node. |
 | `powerscale_node_temperature_celsius` | °C | Temperature sensor reading. |
@@ -95,7 +95,7 @@ release shapes these differently. Temperature/fan series carry a `sensor` label.
 ## Quota metrics
 
 | Metric | Unit | Description |
-|---|---|---|
+| --- | --- | --- |
 | `powerscale_quota_usage_bytes` | bytes | Logical usage for the quota. |
 | `powerscale_quota_physical_usage_bytes` | bytes | Physical usage (post data-reduction). Emitted when > 0. |
 | `powerscale_quota_hard_threshold_bytes` | bytes | Hard limit. Emitted only when set (> 0). |
@@ -107,14 +107,14 @@ release shapes these differently. Temperature/fan series carry a `sensor` label.
 Per-node, per-protocol, per-operation, from the OneFS protocol summary.
 
 | Metric | Unit | Description |
-|---|---|---|
+| --- | --- | --- |
 | `powerscale_protocol_operations_per_second` | ops/s | Operation rate for `protocol`/`op`. |
 | `powerscale_protocol_latency_microseconds` | µs | Average latency for `protocol`/`op`. |
 
 ## Inventory counts
 
 | Metric | Unit | Description |
-|---|---|---|
+| --- | --- | --- |
 | `powerscale_nfs_exports_total` | count | Number of NFS exports. |
 | `powerscale_smb_shares_total` | count | Number of SMB shares. |
 | `powerscale_snapshots_total` | count | Number of snapshots. |
@@ -125,7 +125,7 @@ All best-effort: a cluster without SyncIQ (or where the account lacks privilege)
 emits no series.
 
 | Metric | Unit | Description | Labels |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `powerscale_snapshot_used_bytes` | bytes | Aggregate space held by snapshots. | `cluster`, `cluster_id` |
 | `powerscale_synciq_policy_enabled` | bool | `1` if the SyncIQ replication policy is enabled. | + `policy` |
 | `powerscale_synciq_last_run_failed` | bool | `1` if the policy's last run failed / needs attention. | + `policy` |
@@ -137,7 +137,7 @@ Cluster-wide deduplication, from `dedupe/dedupe-summary`. Best-effort; bytes are
 block counts × block size (validated against the OneFS 9.14.0 schema).
 
 | Metric | Unit | Description |
-|---|---|---|
+| --- | --- | --- |
 | `powerscale_dedupe_logical_saved_bytes` | bytes | Logical space saved by deduplication. |
 | `powerscale_dedupe_deduplicated_bytes` | bytes | Logical data that has been deduplicated. |
 
@@ -149,7 +149,7 @@ to an absolute Unix timestamp; perpetual/unlicensed features carry no expiration
 `0`.
 
 | Metric | Labels | Description |
-|---|---|---|
+| --- | --- | --- |
 | `powerscale_license_expiration_timestamp_seconds` | `name` | Unix timestamp when the feature's license expires; `0` for perpetual/unlicensed features. |
 | `powerscale_license_active` | `name`, `status` | `1` when the feature is licensed and usable (OneFS status `Licensed` / `Activated` / `Evaluation`), else `0`. The raw OneFS `status` is carried as a label. |
 
@@ -173,7 +173,7 @@ child node pools — so summing a metric across all rows double-counts. Filter
 pool; an all-HDD pool simply reports `ssd=0`.
 
 | Metric | Description |
-|---|---|
+| --- | --- |
 | `powerscale_storagepool_total_capacity_bytes` | Total capacity of the pool/tier. |
 | `powerscale_storagepool_used_capacity_bytes` | Used capacity. |
 | `powerscale_storagepool_available_capacity_bytes` | Available (user-writable) capacity. |
@@ -197,7 +197,7 @@ From `statistics/summary/drive`. Best-effort. Labels: `cluster`,
 `cluster_id`, `node`, `bay`, `type` (e.g. `SSD`, `HDD`).
 
 | Metric | Unit | Description |
-|---|---|---|
+| --- | --- | --- |
 | `powerscale_drive_operations_per_second` | ops/s | Per-drive operation rate. |
 | `powerscale_drive_busy_percent` | percent | Per-drive busy time. |
 
@@ -207,7 +207,7 @@ From `statistics/summary/client`, aggregated by `node` / `protocol` / `class` to
 cardinality (individual remote clients are intentionally not exported). Best-effort.
 
 | Metric | Unit | Description |
-|---|---|---|
+| --- | --- | --- |
 | `powerscale_client_operations_per_second` | ops/s | Operation rate per node/protocol/class. |
 | `powerscale_client_in_bytes_per_second` | bytes/s | Inbound throughput. |
 | `powerscale_client_out_bytes_per_second` | bytes/s | Outbound throughput. |
@@ -231,7 +231,7 @@ rows collapse to a single label tuple, so some rows are silently dropped — pin
 least one exported dimension.
 
 | Metric | Unit | Description |
-|---|---|---|
+| --- | --- | --- |
 | `powerscale_workload_operations_per_second` | ops/s | Operation rate for the workload. |
 | `powerscale_workload_in_bytes_per_second` | bytes/s | Inbound throughput. |
 | `powerscale_workload_out_bytes_per_second` | bytes/s | Outbound throughput. |
@@ -251,7 +251,7 @@ follow-ups — latency is held back until a live workload body confirms its unit
 These carry only the `cluster` label.
 
 | Metric | Unit | Description |
-|---|---|---|
+| --- | --- | --- |
 | `powerscale_up` | bool | `1` if the cluster was scraped successfully, `0` otherwise. |
 | `powerscale_last_scrape_timestamp_seconds` | unix seconds | Time of the last successful collection. |
 | `powerscale_cluster_api_version` | version | Detected OneFS platform API version. |

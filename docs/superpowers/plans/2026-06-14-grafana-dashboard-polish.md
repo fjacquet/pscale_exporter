@@ -11,11 +11,13 @@
 **Spec:** `docs/superpowers/specs/2026-06-14-grafana-dashboard-polish-design.md`
 
 **Invariants (must hold after every task):**
+
 - `powerscale-overview.json`: exactly **26** `expr` strings, set unchanged.
 - `powerscale-advanced.json`: exactly **37** `expr` strings, set unchanged.
 - Both files: valid JSON, 2-space indent, single trailing newline.
 
 **Key directories:**
+
 - Dashboards: `grafana/provisioning/dashboards/json/`
 - Throwaway tooling: `scripts/dashtools/` (created in Task 1, **deleted in Task 8** — must not ship).
 
@@ -24,6 +26,7 @@
 ## Task 1: Validation harness + baseline capture
 
 **Files:**
+
 - Create: `scripts/dashtools/lib.py` (shared helpers)
 - Create: `scripts/dashtools/check.py` (validator)
 - Create: `scripts/dashtools/baseline/` (captured expr-sets)
@@ -187,13 +190,16 @@ if __name__ == "__main__":
 - [ ] **Step 3: Capture the baseline expr-sets**
 
 Run:
+
 ```bash
 cd scripts/dashtools && \
 python3 check.py ../../grafana/provisioning/dashboards/json/powerscale-overview.json --capture && \
 python3 check.py ../../grafana/provisioning/dashboards/json/powerscale-advanced.json --capture && \
 cd ../..
 ```
+
 Expected:
+
 ```
 CAPTURED 26 exprs -> baseline/powerscale-overview.exprs.json
 CAPTURED 37 exprs -> baseline/powerscale-advanced.exprs.json
@@ -202,13 +208,16 @@ CAPTURED 37 exprs -> baseline/powerscale-advanced.exprs.json
 - [ ] **Step 4: Verify the validator passes on untouched files**
 
 Run:
+
 ```bash
 cd scripts/dashtools && \
 python3 check.py ../../grafana/provisioning/dashboards/json/powerscale-overview.json && \
 python3 check.py ../../grafana/provisioning/dashboards/json/powerscale-advanced.json && \
 cd ../..
 ```
+
 Expected:
+
 ```
 OK .../powerscale-overview.json: 26 exprs unchanged
 OK .../powerscale-advanced.json: 37 exprs unchanged
@@ -226,6 +235,7 @@ git commit -m "chore(dash): add throwaway validation harness + expr baseline"
 ## Task 2: Overview — per-panel metadata pass (descriptions, legends, thresholds)
 
 **Files:**
+
 - Create: `scripts/dashtools/apply_overview_meta.py`
 - Modify: `grafana/provisioning/dashboards/json/powerscale-overview.json`
 
@@ -315,14 +325,17 @@ print("overview metadata applied")
 - [ ] **Step 2: Run the transform**
 
 Run:
+
 ```bash
 cd scripts/dashtools && python3 apply_overview_meta.py && cd ../..
 ```
+
 Expected: `overview metadata applied`
 
 - [ ] **Step 3: Validate JSON + expr-set + description coverage**
 
 Run:
+
 ```bash
 jq empty grafana/provisioning/dashboards/json/powerscale-overview.json && \
 cd scripts/dashtools && \
@@ -330,7 +343,9 @@ python3 check.py ../../grafana/provisioning/dashboards/json/powerscale-overview.
 python3 -c "from lib import OVERVIEW, load, iter_panels; d=load(OVERVIEW); n=[p for p in iter_panels(d) if p.get('type')!='row']; miss=[p['title'] for p in n if not p.get('description')]; print('missing desc:', miss); assert not miss" && \
 cd ../..
 ```
+
 Expected:
+
 ```
 OK .../powerscale-overview.json: 26 exprs unchanged
 missing desc: []
@@ -348,6 +363,7 @@ git commit -m "feat(dash): add descriptions, legend calcs, thresholds to Overvie
 ## Task 3: Overview — RED/USE row restructure + collapse Per-Node
 
 **Files:**
+
 - Create: `scripts/dashtools/restructure_overview.py`
 - Modify: `grafana/provisioning/dashboards/json/powerscale-overview.json`
 
@@ -401,20 +417,24 @@ if __name__ == "__main__":
 - [ ] **Step 2: Run the restructure**
 
 Run:
+
 ```bash
 cd scripts/dashtools && python3 restructure_overview.py && cd ../..
 ```
+
 Expected: `overview restructured: 6 rows, 1 collapsed`
 
 - [ ] **Step 3: Validate structure + expr-set + no overlapping panels**
 
 Run:
+
 ```bash
 jq empty grafana/provisioning/dashboards/json/powerscale-overview.json && \
 jq -r '[.panels[] | select(.type=="row") | .title] | @json' grafana/provisioning/dashboards/json/powerscale-overview.json && \
 jq '[.panels[] | select(.type=="row" and .collapsed==true) | {title, nested:(.panels|length)}]' grafana/provisioning/dashboards/json/powerscale-overview.json && \
 cd scripts/dashtools && python3 check.py ../../grafana/provisioning/dashboards/json/powerscale-overview.json && cd ../..
 ```
+
 Expected: row titles in the new order; `Per-Node Detail` shows `nested: 4`; `OK ... 26 exprs unchanged`.
 
 - [ ] **Step 4: Import-check in Grafana (manual)**
@@ -433,6 +453,7 @@ git commit -m "feat(dash): restructure Overview into RED/USE order, collapse Per
 ## Task 4: Advanced — per-panel metadata pass
 
 **Files:**
+
 - Create: `scripts/dashtools/apply_advanced_meta.py`
 - Modify: `grafana/provisioning/dashboards/json/powerscale-advanced.json`
 
@@ -511,14 +532,17 @@ print("advanced metadata applied")
 - [ ] **Step 2: Run the transform**
 
 Run:
+
 ```bash
 cd scripts/dashtools && python3 apply_advanced_meta.py && cd ../..
 ```
+
 Expected: `advanced metadata applied`
 
 - [ ] **Step 3: Validate JSON + expr-set + description coverage**
 
 Run:
+
 ```bash
 jq empty grafana/provisioning/dashboards/json/powerscale-advanced.json && \
 cd scripts/dashtools && \
@@ -526,6 +550,7 @@ python3 check.py ../../grafana/provisioning/dashboards/json/powerscale-advanced.
 python3 -c "from lib import ADVANCED, load, iter_panels; d=load(ADVANCED); n=[p for p in iter_panels(d) if p.get('type')!='row']; miss=[p['title'] for p in n if not p.get('description')]; print('missing desc:', miss); assert not miss" && \
 cd ../..
 ```
+
 Expected: `OK ... 37 exprs unchanged` and `missing desc: []`.
 
 - [ ] **Step 4: Commit**
@@ -540,6 +565,7 @@ git commit -m "feat(dash): add descriptions, legend calcs, thresholds to Advance
 ## Task 5: Advanced — collapse provisional rows + clean titles
 
 **Files:**
+
 - Create: `scripts/dashtools/restructure_advanced.py`
 - Modify: `grafana/provisioning/dashboards/json/powerscale-advanced.json`
 
@@ -594,19 +620,23 @@ if __name__ == "__main__":
 - [ ] **Step 2: Run the restructure**
 
 Run:
+
 ```bash
 cd scripts/dashtools && python3 restructure_advanced.py && cd ../..
 ```
+
 Expected: `advanced restructured: 9 rows, 5 collapsed`
 
 - [ ] **Step 3: Validate structure + expr-set**
 
 Run:
+
 ```bash
 jq empty grafana/provisioning/dashboards/json/powerscale-advanced.json && \
 jq '[.panels[] | select(.type=="row") | {title, collapsed, nested:(.panels|length)}]' grafana/provisioning/dashboards/json/powerscale-advanced.json && \
 cd scripts/dashtools && python3 check.py ../../grafana/provisioning/dashboards/json/powerscale-advanced.json && cd ../..
 ```
+
 Expected: 9 rows; the 5 provisional rows show `collapsed: true` with `nested > 0`; `OK ... 37 exprs unchanged`.
 
 - [ ] **Step 4: Import-check in Grafana (manual)**
@@ -625,6 +655,7 @@ git commit -m "feat(dash): collapse provisional Advanced rows, clean titles"
 ## Task 6: Refresh dashboard docs
 
 **Files:**
+
 - Modify: `docs/dashboards.md`
 
 - [ ] **Step 1: Read the current doc**
@@ -635,6 +666,7 @@ Note the existing structure so the refresh matches the doc's voice and headings.
 - [ ] **Step 2: Update the row/panel descriptions to match the new layout**
 
 Edit `docs/dashboards.md` so that:
+
 - The Overview section lists the new RED/USE row order (SLI Summary; Capacity — Utilization & Saturation; Compute — Utilization; Network & Disk — Utilization; Protocol — Rate & Duration (RED); Per-Node Detail *(collapsed)*).
 - The Advanced section lists validated rows first (Cluster Health; Data Protection; Node CPU Detail; Quota Detail) then the 5 collapsed provisional rows (Cache Efficiency; Storage Efficiency; Per-Drive; Per-Client; Hardware), noting they are collapsed-by-default and provisional.
 - Add one sentence near the top: "Every panel carries a description (hover the ⓘ); provisional panels note that their stat keys are not yet live-validated against OneFS."
@@ -644,9 +676,11 @@ Do not invent metric names — reference only those already in `docs/metrics.md`
 - [ ] **Step 3: Build the docs strictly**
 
 Run:
+
 ```bash
 uvx --with mkdocs-material --with pymdown-extensions mkdocs build --strict
 ```
+
 Expected: build succeeds, no warnings (strict mode fails on broken links/refs).
 
 - [ ] **Step 4: Commit**
@@ -665,6 +699,7 @@ git commit -m "docs: align dashboard guide with RED/USE restructure"
 - [ ] **Step 1: Re-validate both dashboards end-to-end**
 
 Run:
+
 ```bash
 jq empty grafana/provisioning/dashboards/json/powerscale-overview.json && \
 jq empty grafana/provisioning/dashboards/json/powerscale-advanced.json && \
@@ -673,11 +708,13 @@ python3 check.py ../../grafana/provisioning/dashboards/json/powerscale-overview.
 python3 check.py ../../grafana/provisioning/dashboards/json/powerscale-advanced.json && \
 cd ../..
 ```
+
 Expected: both `OK ... exprs unchanged` (26 and 37).
 
 - [ ] **Step 2: Confirm every non-row panel has a description (both files)**
 
 Run:
+
 ```bash
 cd scripts/dashtools && python3 -c "
 from lib import OVERVIEW, ADVANCED, load, iter_panels
@@ -689,16 +726,19 @@ for f in (OVERVIEW, ADVANCED):
 print('ALL PANELS DESCRIBED')
 " && cd ../..
 ```
+
 Expected: `ALL PANELS DESCRIBED`.
 
 - [ ] **Step 3: Confirm collapsed-row counts**
 
 Run:
+
 ```bash
 for f in overview advanced; do echo -n "$f collapsed rows: "; \
 jq '[.panels[] | select(.type=="row" and .collapsed==true)] | length' \
 grafana/provisioning/dashboards/json/powerscale-$f.json; done
 ```
+
 Expected: `overview collapsed rows: 1`, `advanced collapsed rows: 5`.
 
 ---
@@ -706,6 +746,7 @@ Expected: `overview collapsed rows: 1`, `advanced collapsed rows: 5`.
 ## Task 8: Remove throwaway tooling
 
 **Files:**
+
 - Delete: `scripts/dashtools/`
 
 - [ ] **Step 1: Delete the tooling directory**
@@ -716,6 +757,7 @@ Run: `git rm -r scripts/dashtools`
 
 Run: `git diff --name-only main...HEAD`
 Expected (no `scripts/dashtools` entries):
+
 ```
 docs/dashboards.md
 docs/superpowers/plans/2026-06-14-grafana-dashboard-polish.md
@@ -737,4 +779,5 @@ git commit -m "chore(dash): remove throwaway validation tooling"
 - **Thresholds are applied only where a single direction is meaningful** (Capacity Used %, Last Scrape Age staleness, boolean health stats). CPU timeseries mix sys/user/idle series, where a single graph-wide threshold would mislead — so they get legend calcs but no thresholds. This is a deliberate refinement of the spec's "CPU % green<70" line, which only holds for utilization, not idle.
 - **All edits are title-keyed and idempotent**, so transforms can be re-run safely and a subagent executing tasks out of order still converges.
 - **The expr-set baseline is the safety net**: it mechanically proves the guardrail "no metric/query change" after every single transform.
+
 ```

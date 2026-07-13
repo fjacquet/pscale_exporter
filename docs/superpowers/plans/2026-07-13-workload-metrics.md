@@ -27,10 +27,12 @@
 ### Task 1: Workload model + `ParseWorkloadSummary`
 
 **Files:**
+
 - Modify: `internal/models/onefs.go` (add `Workload` type, `ParseWorkloadSummary`, `Statistics.Workloads` field)
 - Test: `internal/models/onefs_test.go`
 
 **Interfaces:**
+
 - Consumes: `encoding/json` (already imported in `onefs.go`).
 - Produces: `type Workload struct { Node int; Zone, Protocol, Username, SystemName, JobType string; Ops, BytesIn, BytesOut, CPUMicros float64 }`; `func ParseWorkloadSummary(b []byte) ([]Workload, error)`; `Statistics.Workloads []Workload`.
 
@@ -40,20 +42,20 @@ Add to `internal/models/onefs_test.go` (place after `TestParseClientSummary` or 
 
 ```go
 func TestParseWorkloadSummary(t *testing.T) {
-	data := []byte(`{"workload":[
-		{"node":1,"zone_name":"System","protocol":"nfs3","username":"alice","system_name":null,"job_type":null,"ops":120.5,"bytes_in":1024,"bytes_out":2048,"cpu":50000},
-		{"node":0,"zone_name":null,"protocol":null,"username":null,"system_name":null,"job_type":null,"ops":5,"bytes_in":10,"bytes_out":20,"cpu":100}
-	]}`)
-	ws, err := ParseWorkloadSummary(data)
-	if err != nil || len(ws) != 2 {
-		t.Fatalf("parse: %d err=%v", len(ws), err)
-	}
-	if ws[0] != (Workload{Node: 1, Zone: "System", Protocol: "nfs3", Username: "alice", Ops: 120.5, BytesIn: 1024, BytesOut: 2048, CPUMicros: 50000}) {
-		t.Fatalf("workload[0]: %+v", ws[0])
-	}
-	if ws[1].Node != 0 || ws[1].Zone != "" || ws[1].Protocol != "" {
-		t.Fatalf("workload[1] (aggregate, null dims -> empty string): %+v", ws[1])
-	}
+ data := []byte(`{"workload":[
+  {"node":1,"zone_name":"System","protocol":"nfs3","username":"alice","system_name":null,"job_type":null,"ops":120.5,"bytes_in":1024,"bytes_out":2048,"cpu":50000},
+  {"node":0,"zone_name":null,"protocol":null,"username":null,"system_name":null,"job_type":null,"ops":5,"bytes_in":10,"bytes_out":20,"cpu":100}
+ ]}`)
+ ws, err := ParseWorkloadSummary(data)
+ if err != nil || len(ws) != 2 {
+  t.Fatalf("parse: %d err=%v", len(ws), err)
+ }
+ if ws[0] != (Workload{Node: 1, Zone: "System", Protocol: "nfs3", Username: "alice", Ops: 120.5, BytesIn: 1024, BytesOut: 2048, CPUMicros: 50000}) {
+  t.Fatalf("workload[0]: %+v", ws[0])
+ }
+ if ws[1].Node != 0 || ws[1].Zone != "" || ws[1].Protocol != "" {
+  t.Fatalf("workload[1] (aggregate, null dims -> empty string): %+v", ws[1])
+ }
 }
 ```
 
@@ -67,7 +69,7 @@ Expected: FAIL — `undefined: ParseWorkloadSummary` / `undefined: Workload`.
 In `internal/models/onefs.go`, add the field to the `Statistics` struct (after `Clients []ClientStat`):
 
 ```go
-	Workloads []Workload
+ Workloads []Workload
 ```
 
 And add the type + parser (place near `ParseClientSummary`):
@@ -78,16 +80,16 @@ And add the type + parser (place near `ParseClientSummary`):
 // unpinned dimension is the empty string. All perf fields are per-second rates (CPUMicros is
 // microseconds of CPU per second across all cores).
 type Workload struct {
-	Node       int
-	Zone       string
-	Protocol   string
-	Username   string
-	SystemName string
-	JobType    string
-	Ops        float64
-	BytesIn    float64
-	BytesOut   float64
-	CPUMicros  float64
+ Node       int
+ Zone       string
+ Protocol   string
+ Username   string
+ SystemName string
+ JobType    string
+ Ops        float64
+ BytesIn    float64
+ BytesOut   float64
+ CPUMicros  float64
 }
 
 // ParseWorkloadSummary parses platform/N/statistics/summary/workload. Perf fields are JSON
@@ -95,39 +97,39 @@ type Workload struct {
 // unchanged on JSON null). node is a JSON number decoded via float64 then truncated to int,
 // so a "1.0"-style value cannot fail the parse.
 func ParseWorkloadSummary(b []byte) ([]Workload, error) {
-	var raw struct {
-		Workload []struct {
-			Node       float64 `json:"node"`
-			ZoneName   string  `json:"zone_name"`
-			Protocol   string  `json:"protocol"`
-			Username   string  `json:"username"`
-			SystemName string  `json:"system_name"`
-			JobType    string  `json:"job_type"`
-			Ops        float64 `json:"ops"`
-			BytesIn    float64 `json:"bytes_in"`
-			BytesOut   float64 `json:"bytes_out"`
-			CPU        float64 `json:"cpu"`
-		} `json:"workload"`
-	}
-	if err := json.Unmarshal(b, &raw); err != nil {
-		return nil, err
-	}
-	out := make([]Workload, 0, len(raw.Workload))
-	for _, w := range raw.Workload {
-		out = append(out, Workload{
-			Node:       int(w.Node),
-			Zone:       w.ZoneName,
-			Protocol:   w.Protocol,
-			Username:   w.Username,
-			SystemName: w.SystemName,
-			JobType:    w.JobType,
-			Ops:        w.Ops,
-			BytesIn:    w.BytesIn,
-			BytesOut:   w.BytesOut,
-			CPUMicros:  w.CPU,
-		})
-	}
-	return out, nil
+ var raw struct {
+  Workload []struct {
+   Node       float64 `json:"node"`
+   ZoneName   string  `json:"zone_name"`
+   Protocol   string  `json:"protocol"`
+   Username   string  `json:"username"`
+   SystemName string  `json:"system_name"`
+   JobType    string  `json:"job_type"`
+   Ops        float64 `json:"ops"`
+   BytesIn    float64 `json:"bytes_in"`
+   BytesOut   float64 `json:"bytes_out"`
+   CPU        float64 `json:"cpu"`
+  } `json:"workload"`
+ }
+ if err := json.Unmarshal(b, &raw); err != nil {
+  return nil, err
+ }
+ out := make([]Workload, 0, len(raw.Workload))
+ for _, w := range raw.Workload {
+  out = append(out, Workload{
+   Node:       int(w.Node),
+   Zone:       w.ZoneName,
+   Protocol:   w.Protocol,
+   Username:   w.Username,
+   SystemName: w.SystemName,
+   JobType:    w.JobType,
+   Ops:        w.Ops,
+   BytesIn:    w.BytesIn,
+   BytesOut:   w.BytesOut,
+   CPUMicros:  w.CPU,
+  })
+ }
+ return out, nil
 }
 ```
 
@@ -148,11 +150,13 @@ git commit -m "feat(models): Workload type and ParseWorkloadSummary"
 ### Task 2: `workloadSamples` builder + label helper
 
 **Files:**
+
 - Modify: `internal/powerscale/metrics.go` (add `workloadLabels`)
 - Modify: `internal/powerscale/derivations.go` (add `workloadSamples`, wire into `BuildSamples`)
 - Test: `internal/powerscale/derivations_test.go`
 
 **Interfaces:**
+
 - Consumes: `models.Workload`, `Statistics.Workloads` (Task 1); `baseLabels`, `Sample`, `Label`, `strconv` (existing).
 - Produces: `workloadLabels(clusterName, clusterID, node, zone, protocol, username, systemName, jobType string) []Label`; `workloadSamples(clusterName, clusterID string, st *models.Statistics) []Sample`; emits the 4 metric names `powerscale_workload_{operations_per_second,in_bytes_per_second,out_bytes_per_second,cpu_microseconds}`.
 
@@ -162,47 +166,47 @@ Add to `internal/powerscale/derivations_test.go` (place after `TestBuildSamplesS
 
 ```go
 func TestBuildSamplesWorkloads(t *testing.T) {
-	inv := &models.Inventory{Cluster: models.ClusterInfo{Name: "ignored", GUID: "GUID-1"}}
-	st := &models.Statistics{
-		Workloads: []models.Workload{
-			{Node: 1, Zone: "System", Protocol: "nfs3", Username: "alice", Ops: 120, BytesIn: 1024, BytesOut: 2048, CPUMicros: 50000},
-			{Node: 0, Ops: 5, BytesIn: 10, BytesOut: 20, CPUMicros: 100}, // aggregate: all dims empty
-		},
-	}
-	samples := BuildSamples("clu1", inv, st)
-	find := func(name, username string) (Sample, bool) {
-		for _, s := range samples {
-			if s.Name != name {
-				continue
-			}
-			for _, l := range s.Labels {
-				if l.Name == "username" && l.Value == username {
-					return s, true
-				}
-			}
-		}
-		return Sample{}, false
-	}
-	if s, ok := find("powerscale_workload_operations_per_second", "alice"); !ok || s.Value != 120 {
-		t.Fatalf("alice ops wrong: %+v ok=%v", s, ok)
-	}
-	if s, ok := find("powerscale_workload_cpu_microseconds", "alice"); !ok || s.Value != 50000 {
-		t.Fatalf("alice cpu wrong: %+v ok=%v", s, ok)
-	}
-	// aggregate row: username="" and zone="" but still emits values (empty-label path)
-	s, ok := find("powerscale_workload_in_bytes_per_second", "")
-	if !ok || s.Value != 10 {
-		t.Fatalf("aggregate in_bytes wrong: %+v ok=%v", s, ok)
-	}
-	hasEmptyZone := false
-	for _, l := range s.Labels {
-		if l.Name == "zone" && l.Value == "" {
-			hasEmptyZone = true
-		}
-	}
-	if !hasEmptyZone {
-		t.Fatalf("aggregate row should carry an empty zone label: %+v", s.Labels)
-	}
+ inv := &models.Inventory{Cluster: models.ClusterInfo{Name: "ignored", GUID: "GUID-1"}}
+ st := &models.Statistics{
+  Workloads: []models.Workload{
+   {Node: 1, Zone: "System", Protocol: "nfs3", Username: "alice", Ops: 120, BytesIn: 1024, BytesOut: 2048, CPUMicros: 50000},
+   {Node: 0, Ops: 5, BytesIn: 10, BytesOut: 20, CPUMicros: 100}, // aggregate: all dims empty
+  },
+ }
+ samples := BuildSamples("clu1", inv, st)
+ find := func(name, username string) (Sample, bool) {
+  for _, s := range samples {
+   if s.Name != name {
+    continue
+   }
+   for _, l := range s.Labels {
+    if l.Name == "username" && l.Value == username {
+     return s, true
+    }
+   }
+  }
+  return Sample{}, false
+ }
+ if s, ok := find("powerscale_workload_operations_per_second", "alice"); !ok || s.Value != 120 {
+  t.Fatalf("alice ops wrong: %+v ok=%v", s, ok)
+ }
+ if s, ok := find("powerscale_workload_cpu_microseconds", "alice"); !ok || s.Value != 50000 {
+  t.Fatalf("alice cpu wrong: %+v ok=%v", s, ok)
+ }
+ // aggregate row: username="" and zone="" but still emits values (empty-label path)
+ s, ok := find("powerscale_workload_in_bytes_per_second", "")
+ if !ok || s.Value != 10 {
+  t.Fatalf("aggregate in_bytes wrong: %+v ok=%v", s, ok)
+ }
+ hasEmptyZone := false
+ for _, l := range s.Labels {
+  if l.Name == "zone" && l.Value == "" {
+   hasEmptyZone = true
+  }
+ }
+ if !hasEmptyZone {
+  t.Fatalf("aggregate row should carry an empty zone label: %+v", s.Labels)
+ }
 }
 ```
 
@@ -220,14 +224,14 @@ In `internal/powerscale/metrics.go` (after `storagePoolLabels`):
 // pinned by the cluster's performance dataset is the empty string, keeping the label-name
 // set consistent across rows.
 func workloadLabels(clusterName, clusterID, node, zone, protocol, username, systemName, jobType string) []Label {
-	return append(baseLabels(clusterName, clusterID),
-		Label{Name: "node", Value: node},
-		Label{Name: "zone", Value: zone},
-		Label{Name: "protocol", Value: protocol},
-		Label{Name: "username", Value: username},
-		Label{Name: "system_name", Value: systemName},
-		Label{Name: "job_type", Value: jobType},
-	)
+ return append(baseLabels(clusterName, clusterID),
+  Label{Name: "node", Value: node},
+  Label{Name: "zone", Value: zone},
+  Label{Name: "protocol", Value: protocol},
+  Label{Name: "username", Value: username},
+  Label{Name: "system_name", Value: systemName},
+  Label{Name: "job_type", Value: jobType},
+ )
 }
 ```
 
@@ -240,27 +244,27 @@ In `internal/powerscale/derivations.go`, add the builder (place after `clientSam
 // performance datasets; the identity dimensions are labels (unpinned ones are ""). All four
 // gauges are per-second rates — aggregate with sum/avg, never rate().
 func workloadSamples(clusterName, clusterID string, st *models.Statistics) []Sample {
-	if st == nil {
-		return nil
-	}
-	var out []Sample
-	for _, w := range st.Workloads {
-		labels := workloadLabels(clusterName, clusterID, strconv.Itoa(w.Node), w.Zone, w.Protocol, w.Username, w.SystemName, w.JobType)
-		out = append(out,
-			Sample{Name: "powerscale_workload_operations_per_second", Labels: labels, Value: w.Ops},
-			Sample{Name: "powerscale_workload_in_bytes_per_second", Labels: labels, Value: w.BytesIn},
-			Sample{Name: "powerscale_workload_out_bytes_per_second", Labels: labels, Value: w.BytesOut},
-			Sample{Name: "powerscale_workload_cpu_microseconds", Labels: labels, Value: w.CPUMicros},
-		)
-	}
-	return out
+ if st == nil {
+  return nil
+ }
+ var out []Sample
+ for _, w := range st.Workloads {
+  labels := workloadLabels(clusterName, clusterID, strconv.Itoa(w.Node), w.Zone, w.Protocol, w.Username, w.SystemName, w.JobType)
+  out = append(out,
+   Sample{Name: "powerscale_workload_operations_per_second", Labels: labels, Value: w.Ops},
+   Sample{Name: "powerscale_workload_in_bytes_per_second", Labels: labels, Value: w.BytesIn},
+   Sample{Name: "powerscale_workload_out_bytes_per_second", Labels: labels, Value: w.BytesOut},
+   Sample{Name: "powerscale_workload_cpu_microseconds", Labels: labels, Value: w.CPUMicros},
+  )
+ }
+ return out
 }
 ```
 
 Wire it into `BuildSamples` (add immediately after the `clientSamples(...)` append line, which is currently the last append before `return samples`):
 
 ```go
-	samples = append(samples, workloadSamples(clusterName, clusterID, st)...)
+ samples = append(samples, workloadSamples(clusterName, clusterID, st)...)
 ```
 
 - [ ] **Step 5: Run test to verify it passes**
@@ -280,6 +284,7 @@ git commit -m "feat(powerscale): workloadSamples builder for per-workload metric
 ### Task 3: Best-effort fetch, fixture, schema guard, and e2e coverage
 
 **Files:**
+
 - Modify: `internal/powerscale/client.go` (add `workloadSummary` helper + `GetStatistics` wiring + debug log)
 - Create: `internal/powerscale/testdata/stat_workload.json`
 - Modify: `tools/extract-schemas/main.go` (targets map) — then regenerate via `make schemas`
@@ -287,6 +292,7 @@ git commit -m "feat(powerscale): workloadSamples builder for per-workload metric
 - Modify: `internal/powerscale/e2e_test.go` (presence map)
 
 **Interfaces:**
+
 - Consumes: `models.ParseWorkloadSummary`, `Statistics.Workloads` (Task 1); the emitted metric names (Task 2); `c.getRaw`, `snippet`, `log` (existing).
 - Produces: `func (c *ClusterClient) workloadSummary(ctx context.Context) []models.Workload`; the `stat_workload.json` fixture; end-to-end emission of the 4 workload metrics.
 
@@ -295,10 +301,10 @@ git commit -m "feat(powerscale): workloadSamples builder for per-workload metric
 In `internal/powerscale/e2e_test.go`, add to the `want := map[string]bool{ … }` block (after the last `powerscale_storagepool_*` line):
 
 ```go
-		"powerscale_workload_operations_per_second": false,
-		"powerscale_workload_in_bytes_per_second":   false,
-		"powerscale_workload_out_bytes_per_second":  false,
-		"powerscale_workload_cpu_microseconds":      false,
+  "powerscale_workload_operations_per_second": false,
+  "powerscale_workload_in_bytes_per_second":   false,
+  "powerscale_workload_out_bytes_per_second":  false,
+  "powerscale_workload_cpu_microseconds":      false,
 ```
 
 Then run `gofmt -w internal/powerscale/e2e_test.go` to fix column alignment.
@@ -324,8 +330,8 @@ Create `internal/powerscale/testdata/stat_workload.json`. Row 1 is a dataset-pin
 In `internal/powerscale/mockserver_test.go`, add a case to the path switch (before `default`), mirroring the existing statistics-summary cases:
 
 ```go
-		case strings.HasSuffix(p, "/statistics/summary/workload"):
-			writeBytes(w, fixture(t, "stat_workload.json"))
+  case strings.HasSuffix(p, "/statistics/summary/workload"):
+   writeBytes(w, fixture(t, "stat_workload.json"))
 ```
 
 - [ ] **Step 5: Add the best-effort fetch + wire into `GetStatistics`**
@@ -337,32 +343,32 @@ In `internal/powerscale/client.go`, add the helper (place after `clientSummary`)
 // performance datasets (isi performance datasets) to be configured; without one this yields
 // few or no rows.
 func (c *ClusterClient) workloadSummary(ctx context.Context) []models.Workload {
-	var b []byte
-	if err := c.getRaw(ctx, "platform/4/statistics/summary/workload", &b); err != nil {
-		log.Debugf("cluster %q: workload summary failed: %v", c.name, err)
-		return nil
-	}
-	w, err := models.ParseWorkloadSummary(b)
-	if err != nil {
-		log.Debugf("cluster %q: parse workload summary failed: %v; payload: %s", c.name, err, snippet(b))
-		return nil
-	}
-	return w
+ var b []byte
+ if err := c.getRaw(ctx, "platform/4/statistics/summary/workload", &b); err != nil {
+  log.Debugf("cluster %q: workload summary failed: %v", c.name, err)
+  return nil
+ }
+ w, err := models.ParseWorkloadSummary(b)
+ if err != nil {
+  log.Debugf("cluster %q: parse workload summary failed: %v; payload: %s", c.name, err, snippet(b))
+  return nil
+ }
+ return w
 }
 ```
 
 In `GetStatistics`, set `st.Workloads` alongside the existing `st.Drives`/`st.Clients` assignments (they read `st.Drives = c.driveSummary(ctx)` / `st.Clients = c.clientSummary(ctx)`); add:
 
 ```go
-	st.Workloads = c.workloadSummary(ctx)
+ st.Workloads = c.workloadSummary(ctx)
 ```
 
-Extend the `GetStatistics` debug summary log so its format string ends with ` workload_rows=%d` and its args end with `len(st.Workloads)`. The full statement becomes:
+Extend the `GetStatistics` debug summary log so its format string ends with `workload_rows=%d` and its args end with `len(st.Workloads)`. The full statement becomes:
 
 ```go
-		log.Debugf("cluster %q: statistics parsed: keys=%d/%d requested (missing: %v) "+
-			"proto_rows=%d drive_rows=%d client_rows=%d workload_rows=%d",
-			c.name, len(returned), len(keys), missing, len(st.Proto), len(st.Drives), len(st.Clients), len(st.Workloads))
+  log.Debugf("cluster %q: statistics parsed: keys=%d/%d requested (missing: %v) "+
+   "proto_rows=%d drive_rows=%d client_rows=%d workload_rows=%d",
+   c.name, len(returned), len(keys), missing, len(st.Proto), len(st.Drives), len(st.Clients), len(st.Workloads))
 ```
 
 - [ ] **Step 6: Run the e2e test to verify it passes**
@@ -375,7 +381,7 @@ Expected: PASS — the 4 `powerscale_workload_*` metrics are present.
 In `tools/extract-schemas/main.go`, add to the `targets` map (after the storagepool entry):
 
 ```go
-	"/platform/4/statistics/summary/workload":   "stat_workload.json",
+ "/platform/4/statistics/summary/workload":   "stat_workload.json",
 ```
 
 Then run `gofmt -w tools/extract-schemas/main.go` and regenerate:
@@ -402,6 +408,7 @@ git commit -m "feat(powerscale): best-effort workload collector + schema guard +
 ### Task 4: Documentation
 
 **Files:**
+
 - Modify: `docs/metrics.md` (new `## Workloads` section)
 
 **Interfaces:** none (documentation only). No privilege-doc change — `ISI_PRIV_STATISTICS` is already documented.
@@ -441,6 +448,7 @@ topk(5, sum by (cluster, zone, username, protocol) (powerscale_workload_operatio
 
 Per-workload disk/cache detail (`reads`, `writes`, `l2`, `l3`) and **latency** are planned
 follow-ups — latency is held back until a live workload body confirms its unit.
+
 ```
 
 - [ ] **Step 2: Verify the docs build**
@@ -473,6 +481,7 @@ Expected: gofmt clean, `go vet` clean, `golangci-lint` 0 issues, `go test -race`
 ## Self-Review
 
 **Spec coverage:**
+
 - Spec "Source" (`platform/4/statistics/summary/workload`, best-effort, on the `Statistics` struct, v4) → Task 1 (`Statistics.Workloads`) + Task 3 Step 5. ✅
 - Spec "Metrics" (4 gauges, per-second, `cpu` µs/s, always emitted) → Task 2 (`workloadSamples`) + Task 1 (4 float64 fields). ✅
 - Spec "Labels" (fixed 8-label set; unpinned → ""; `node` direct, no devid→LNN) → Task 2 (`workloadLabels` + `strconv.Itoa(w.Node)`) + Task 1 (null→"" via json). ✅

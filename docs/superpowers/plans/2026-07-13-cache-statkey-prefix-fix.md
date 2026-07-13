@@ -25,10 +25,12 @@ Copied verbatim from the spec and project conventions — every task implicitly 
 ### Task 1: Correct the six cache key strings
 
 **Files:**
+
 - Modify: `internal/powerscale/statisticsKeys.json:18-23`
 - Test: `internal/powerscale/derivations_test.go` (add one test function)
 
 **Interfaces:**
+
 - Consumes: `BuildSamples(clusterName string, inv *models.Inventory, st *models.Statistics) []Sample`, `models.Inventory`, `models.ClusterInfo`, `models.Node{ID,LNN}`, `models.Statistics{Current []models.StatPoint}`, `models.StatPoint{Key string, DevID int, Value float64}`, `Sample{Name string, Labels []Label, Value float64}` — all already defined in the `powerscale`/`models` packages.
 - Produces: nothing new; asserts existing behavior against corrected keys.
 
@@ -38,49 +40,49 @@ Add to `internal/powerscale/derivations_test.go` (after `TestBuildSamplesCluster
 
 ```go
 func TestBuildSamplesNodeIfsCacheKeys(t *testing.T) {
-	inv := &models.Inventory{
-		Cluster: models.ClusterInfo{Name: "ignored", GUID: "GUID-1"},
-		Nodes:   []models.Node{{ID: 1, LNN: 1}},
-	}
-	st := &models.Statistics{
-		Current: []models.StatPoint{
-			{Key: "node.ifs.cache.l1.data.read.hit", DevID: 1, Value: 1000},
-			{Key: "node.ifs.cache.l1.data.read.miss", DevID: 1, Value: 100},
-			{Key: "node.ifs.cache.l2.data.read.hit", DevID: 1, Value: 2000},
-			{Key: "node.ifs.cache.l2.data.read.miss", DevID: 1, Value: 200},
-			{Key: "node.ifs.cache.l3.data.read.hit", DevID: 1, Value: 3000},
-			{Key: "node.ifs.cache.l3.data.read.miss", DevID: 1, Value: 300},
-		},
-	}
-	samples := BuildSamples("clu1", inv, st)
-	get := func(name string) (Sample, bool) {
-		for _, s := range samples {
-			if s.Name == name {
-				return s, true
-			}
-		}
-		return Sample{}, false
-	}
-	cases := []struct {
-		metric string
-		value  float64
-	}{
-		{"powerscale_node_cache_l1_read_hit_bytes_per_second", 1000},
-		{"powerscale_node_cache_l1_read_miss_bytes_per_second", 100},
-		{"powerscale_node_cache_l2_read_hit_bytes_per_second", 2000},
-		{"powerscale_node_cache_l2_read_miss_bytes_per_second", 200},
-		{"powerscale_node_cache_l3_read_hit_bytes_per_second", 3000},
-		{"powerscale_node_cache_l3_read_miss_bytes_per_second", 300},
-	}
-	for _, c := range cases {
-		s, ok := get(c.metric)
-		if !ok || s.Value != c.value {
-			t.Fatalf("cache sample %s wrong: %+v ok=%v", c.metric, s, ok)
-		}
-		if s.Labels[2].Value != "1" { // nodeLabels = [cluster, cluster_id, node]
-			t.Fatalf("cache sample %s node label wrong: %+v", c.metric, s.Labels)
-		}
-	}
+ inv := &models.Inventory{
+  Cluster: models.ClusterInfo{Name: "ignored", GUID: "GUID-1"},
+  Nodes:   []models.Node{{ID: 1, LNN: 1}},
+ }
+ st := &models.Statistics{
+  Current: []models.StatPoint{
+   {Key: "node.ifs.cache.l1.data.read.hit", DevID: 1, Value: 1000},
+   {Key: "node.ifs.cache.l1.data.read.miss", DevID: 1, Value: 100},
+   {Key: "node.ifs.cache.l2.data.read.hit", DevID: 1, Value: 2000},
+   {Key: "node.ifs.cache.l2.data.read.miss", DevID: 1, Value: 200},
+   {Key: "node.ifs.cache.l3.data.read.hit", DevID: 1, Value: 3000},
+   {Key: "node.ifs.cache.l3.data.read.miss", DevID: 1, Value: 300},
+  },
+ }
+ samples := BuildSamples("clu1", inv, st)
+ get := func(name string) (Sample, bool) {
+  for _, s := range samples {
+   if s.Name == name {
+    return s, true
+   }
+  }
+  return Sample{}, false
+ }
+ cases := []struct {
+  metric string
+  value  float64
+ }{
+  {"powerscale_node_cache_l1_read_hit_bytes_per_second", 1000},
+  {"powerscale_node_cache_l1_read_miss_bytes_per_second", 100},
+  {"powerscale_node_cache_l2_read_hit_bytes_per_second", 2000},
+  {"powerscale_node_cache_l2_read_miss_bytes_per_second", 200},
+  {"powerscale_node_cache_l3_read_hit_bytes_per_second", 3000},
+  {"powerscale_node_cache_l3_read_miss_bytes_per_second", 300},
+ }
+ for _, c := range cases {
+  s, ok := get(c.metric)
+  if !ok || s.Value != c.value {
+   t.Fatalf("cache sample %s wrong: %+v ok=%v", c.metric, s, ok)
+  }
+  if s.Labels[2].Value != "1" { // nodeLabels = [cluster, cluster_id, node]
+   t.Fatalf("cache sample %s node label wrong: %+v", c.metric, s.Labels)
+  }
+ }
 }
 ```
 
@@ -124,10 +126,12 @@ git commit -m "fix(powerscale): restore node.ifs. prefix on cache stat keys"
 ### Task 2: End-to-end fixture coverage
 
 **Files:**
+
 - Modify: `internal/powerscale/testdata/stat_current.json`
 - Modify: `internal/powerscale/e2e_test.go:41-58` (the `want` presence map)
 
 **Interfaces:**
+
 - Consumes: the corrected keys from Task 1 (`statKeyByKey` now matches `node.ifs.cache.*`). The mock server serves the whole `stat_current.json` file for any `.../statistics/current` request (`mockserver_test.go:64-65`), so fixture rows are surfaced without key filtering. `nodes.json` maps `devid 1 → lnn 1`.
 - Produces: nothing new; end-to-end proof that cache metrics reach the Prometheus registry.
 
@@ -136,12 +140,12 @@ git commit -m "fix(powerscale): restore node.ifs. prefix on cache stat keys"
 In `internal/powerscale/e2e_test.go`, add these six entries inside the `want := map[string]bool{ … }` block (e.g. after `"powerscale_node_temperature_celsius": false,`):
 
 ```go
-		"powerscale_node_cache_l1_read_hit_bytes_per_second":  false,
-		"powerscale_node_cache_l1_read_miss_bytes_per_second": false,
-		"powerscale_node_cache_l2_read_hit_bytes_per_second":  false,
-		"powerscale_node_cache_l2_read_miss_bytes_per_second": false,
-		"powerscale_node_cache_l3_read_hit_bytes_per_second":  false,
-		"powerscale_node_cache_l3_read_miss_bytes_per_second": false,
+  "powerscale_node_cache_l1_read_hit_bytes_per_second":  false,
+  "powerscale_node_cache_l1_read_miss_bytes_per_second": false,
+  "powerscale_node_cache_l2_read_hit_bytes_per_second":  false,
+  "powerscale_node_cache_l2_read_miss_bytes_per_second": false,
+  "powerscale_node_cache_l3_read_hit_bytes_per_second":  false,
+  "powerscale_node_cache_l3_read_miss_bytes_per_second": false,
 ```
 
 - [ ] **Step 2: Run the e2e test to verify it fails**
@@ -201,6 +205,7 @@ git commit -m "test(powerscale): cover node.ifs.cache.* keys end-to-end"
 ### Task 3: Correct the docs caveat
 
 **Files:**
+
 - Modify: `docs/metrics.md:55-66` (the `### Cache (provisional)` section)
 
 **Interfaces:** none (documentation only).
@@ -247,6 +252,7 @@ git commit -m "docs(metrics): correct cache stat-key caveat (all-or-nothing batc
 ### Task 4: Correct the project-memory note
 
 **Files:**
+
 - Modify: `/Users/fjacquet/.claude/projects/-Users-fjacquet-Projects-pscale-exporter/memory/provisional-onefs-keys.md`
 
 **Interfaces:** none. This is Claude's auto-memory, **outside the repo — no git commit applies.** Included because the spec (§4) requires the wrong failure-mode claim be corrected so future sessions don't repeat it.
@@ -309,6 +315,7 @@ Not part of the code branch; run when a cluster is reachable (spec §3):
 ## Self-Review
 
 **Spec coverage:**
+
 - Spec §1 (key-string fix) → Task 1. ✅
 - Spec §2 (test coverage) → Task 1 (unit) + Task 2 (e2e fixture + presence map). ✅
 - Spec §3 (units, trace-gated) → names kept as-is in Tasks 1-2; procedure captured in "Deferred" + docs/memory notes. ✅

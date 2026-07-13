@@ -27,6 +27,7 @@
 ## Task 1: Fix the dedupe parser (block-based → bytes)
 
 **Files:**
+
 - Modify: `internal/models/onefs.go` (`ParseDedupeSummary`, `DedupeSummary` doc comment)
 - Modify: `internal/powerscale/testdata/dedupe_summary.json`
 - Test: `internal/models/onefs_test.go` (`TestParseDedupeSummary`)
@@ -47,14 +48,14 @@ In `internal/models/onefs_test.go`, replace `TestParseDedupeSummary` (currently 
 
 ```go
 func TestParseDedupeSummary(t *testing.T) {
-	d, err := ParseDedupeSummary(read(t, "dedupe_summary.json"))
-	if err != nil {
-		t.Fatalf("dedupe parse err: %v", err)
-	}
-	// bytes = blocks * block_size: saved 1000*8192, deduplicated 5000*8192
-	if d.LogicalSavedBytes != 8192000 || d.DeduplicatedBytes != 40960000 {
-		t.Fatalf("dedupe parse: %+v", d)
-	}
+ d, err := ParseDedupeSummary(read(t, "dedupe_summary.json"))
+ if err != nil {
+  t.Fatalf("dedupe parse err: %v", err)
+ }
+ // bytes = blocks * block_size: saved 1000*8192, deduplicated 5000*8192
+ if d.LogicalSavedBytes != 8192000 || d.DeduplicatedBytes != 40960000 {
+  t.Fatalf("dedupe parse: %+v", d)
+ }
 }
 ```
 
@@ -71,27 +72,27 @@ In `internal/models/onefs.go`, replace the whole `ParseDedupeSummary` function:
 // ParseDedupeSummary parses platform/N/dedupe/dedupe-summary. The OneFS schema reports
 // block counts, not bytes; bytes are derived as blocks * block_size.
 func ParseDedupeSummary(b []byte) (DedupeSummary, error) {
-	var raw struct {
-		Summary struct {
-			SavedLogicalBlocks *float64 `json:"saved_logical_blocks"`
-			LogicalBlocks      *float64 `json:"logical_blocks"`
-			BlockSize          *float64 `json:"block_size"`
-		} `json:"summary"`
-	}
-	if err := json.Unmarshal(b, &raw); err != nil {
-		return DedupeSummary{}, err
-	}
-	deref := func(p *float64) float64 {
-		if p != nil {
-			return *p
-		}
-		return 0
-	}
-	bs := deref(raw.Summary.BlockSize)
-	return DedupeSummary{
-		LogicalSavedBytes: deref(raw.Summary.SavedLogicalBlocks) * bs,
-		DeduplicatedBytes: deref(raw.Summary.LogicalBlocks) * bs,
-	}, nil
+ var raw struct {
+  Summary struct {
+   SavedLogicalBlocks *float64 `json:"saved_logical_blocks"`
+   LogicalBlocks      *float64 `json:"logical_blocks"`
+   BlockSize          *float64 `json:"block_size"`
+  } `json:"summary"`
+ }
+ if err := json.Unmarshal(b, &raw); err != nil {
+  return DedupeSummary{}, err
+ }
+ deref := func(p *float64) float64 {
+  if p != nil {
+   return *p
+  }
+  return 0
+ }
+ bs := deref(raw.Summary.BlockSize)
+ return DedupeSummary{
+  LogicalSavedBytes: deref(raw.Summary.SavedLogicalBlocks) * bs,
+  DeduplicatedBytes: deref(raw.Summary.LogicalBlocks) * bs,
+ }, nil
 }
 ```
 
@@ -101,8 +102,8 @@ Also update the `DedupeSummary` type doc comment (around line 135) to reflect bl
 // DedupeSummary is cluster-wide deduplication/efficiency (dedupe/dedupe-summary).
 // OneFS reports block counts; bytes are derived as blocks * block_size.
 type DedupeSummary struct {
-	LogicalSavedBytes float64 // saved_logical_blocks * block_size
-	DeduplicatedBytes float64 // logical_blocks * block_size
+ LogicalSavedBytes float64 // saved_logical_blocks * block_size
+ DeduplicatedBytes float64 // logical_blocks * block_size
 }
 ```
 
@@ -129,6 +130,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 ## Task 2: Fix the drive-summary parser (`drive`/`drive_id`/`xfers_*`)
 
 **Files:**
+
 - Modify: `internal/models/onefs.go` (`ParseDriveSummary`, add `splitDriveID`)
 - Modify: `internal/powerscale/testdata/stat_drive.json`
 - Test: `internal/models/onefs_test.go` (`TestParseDriveSummary` — assertions unchanged)
@@ -160,45 +162,45 @@ In `internal/models/onefs.go`, replace the whole `ParseDriveSummary` function an
 // a "drive" array whose items carry drive_id ("LNN:bay") and per-direction transfer rates;
 // ops/sec is the sum of read+write transfer rates.
 func ParseDriveSummary(b []byte) ([]DriveStat, error) {
-	var raw struct {
-		Drive []struct {
-			DriveID  string  `json:"drive_id"`
-			Type     string  `json:"type"`
-			Busy     float64 `json:"busy"`
-			XfersIn  float64 `json:"xfers_in"`
-			XfersOut float64 `json:"xfers_out"`
-		} `json:"drive"`
-	}
-	if err := json.Unmarshal(b, &raw); err != nil {
-		return nil, err
-	}
-	out := make([]DriveStat, 0, len(raw.Drive))
-	for _, d := range raw.Drive {
-		lnn, bay, ok := splitDriveID(d.DriveID)
-		if !ok {
-			log.Debugf("drive summary: unparseable drive_id %q skipped", d.DriveID)
-			continue
-		}
-		out = append(out, DriveStat{
-			Node: lnn, Bay: bay, Type: d.Type,
-			OpsPerSec:   d.XfersIn + d.XfersOut,
-			BusyPercent: d.Busy,
-		})
-	}
-	return out, nil
+ var raw struct {
+  Drive []struct {
+   DriveID  string  `json:"drive_id"`
+   Type     string  `json:"type"`
+   Busy     float64 `json:"busy"`
+   XfersIn  float64 `json:"xfers_in"`
+   XfersOut float64 `json:"xfers_out"`
+  } `json:"drive"`
+ }
+ if err := json.Unmarshal(b, &raw); err != nil {
+  return nil, err
+ }
+ out := make([]DriveStat, 0, len(raw.Drive))
+ for _, d := range raw.Drive {
+  lnn, bay, ok := splitDriveID(d.DriveID)
+  if !ok {
+   log.Debugf("drive summary: unparseable drive_id %q skipped", d.DriveID)
+   continue
+  }
+  out = append(out, DriveStat{
+   Node: lnn, Bay: bay, Type: d.Type,
+   OpsPerSec:   d.XfersIn + d.XfersOut,
+   BusyPercent: d.Busy,
+  })
+ }
+ return out, nil
 }
 
 // splitDriveID parses an OneFS drive_id "LNN:bay" into its node LNN and bay string.
 func splitDriveID(s string) (lnn int, bay string, ok bool) {
-	i := strings.IndexByte(s, ':')
-	if i <= 0 || i == len(s)-1 {
-		return 0, "", false
-	}
-	n, err := strconv.Atoi(s[:i])
-	if err != nil {
-		return 0, "", false
-	}
-	return n, s[i+1:], true
+ i := strings.IndexByte(s, ':')
+ if i <= 0 || i == len(s)-1 {
+  return 0, "", false
+ }
+ n, err := strconv.Atoi(s[:i])
+ if err != nil {
+  return 0, "", false
+ }
+ return n, s[i+1:], true
 }
 ```
 
@@ -207,11 +209,11 @@ func splitDriveID(s string) (lnn int, bay string, ok bool) {
 ```go
 // DriveStat is one per-drive performance row (statistics/summary/drive).
 type DriveStat struct {
-	Node        int     // LNN, parsed from drive_id "LNN:bay"
-	Bay         string  // bay, parsed from drive_id "LNN:bay"
-	Type        string  // e.g. "SSD", "HDD"
-	OpsPerSec   float64 // xfers_in + xfers_out
-	BusyPercent float64 // busy (0-100)
+ Node        int     // LNN, parsed from drive_id "LNN:bay"
+ Bay         string  // bay, parsed from drive_id "LNN:bay"
+ Type        string  // e.g. "SSD", "HDD"
+ OpsPerSec   float64 // xfers_in + xfers_out
+ BusyPercent float64 // busy (0-100)
 }
 ```
 
@@ -237,6 +239,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 ## Task 3: Fix the client-summary parser (`operation_rate`)
 
 **Files:**
+
 - Modify: `internal/models/onefs.go` (`ParseClientSummary`)
 - Modify: `internal/powerscale/testdata/stat_client.json`
 - Test: `internal/models/onefs_test.go` (`TestParseClientSummary` — assertions unchanged)
@@ -264,19 +267,19 @@ Expected: FAIL (parser reads `ops`, now absent → `cs[0].OpsPerSec` = 0, want 5
 In `internal/models/onefs.go`, in `ParseClientSummary`, change the `Ops` field to `OperationRate` and its mapping. The struct field becomes:
 
 ```go
-			Class         string  `json:"class"`
-			OperationRate float64 `json:"operation_rate"`
-			In            float64 `json:"in"`
-			Out           float64 `json:"out"`
+   Class         string  `json:"class"`
+   OperationRate float64 `json:"operation_rate"`
+   In            float64 `json:"in"`
+   Out           float64 `json:"out"`
 ```
 
 and the append becomes:
 
 ```go
-		out = append(out, ClientStat{
-			Node: c.Node, Protocol: c.Protocol, Class: c.Class,
-			OpsPerSec: c.OperationRate, InBps: c.In, OutBps: c.Out,
-		})
+  out = append(out, ClientStat{
+   Node: c.Node, Protocol: c.Protocol, Class: c.Class,
+   OpsPerSec: c.OperationRate, InBps: c.In, OutBps: c.Out,
+  })
 ```
 
 Update the `ClientStat.OpsPerSec` comment (around line 173) from `// ops` to `// operation_rate`.
@@ -303,6 +306,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 ## Task 4: Correct endpoint versions (protocol v3, sync v7, quota v8)
 
 **Files:**
+
 - Modify: `internal/powerscale/client.go` (three path literals)
 - Modify: `internal/powerscale/client_test.go` (`TestClientDumpResponses` filename list)
 
@@ -311,6 +315,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 - [ ] **Step 1: Bump the three path versions**
 
 In `internal/powerscale/client.go`:
+
 - In `inventoryCounts`/`GetInventory` area, change the quota fetch (around line 199) from `"platform/1/quota/quotas"` to `"platform/8/quota/quotas"`.
 - In `syncPolicies` (around line 265), change `"platform/11/sync/policies"` to `"platform/7/sync/policies"`.
 - In `GetStatistics` (around line 336), change `"platform/2/statistics/summary/protocol"` to `"platform/3/statistics/summary/protocol"`.
@@ -342,6 +347,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 ## Task 5: Align the nodes fixture/parser with 9.14.0; document cache.* keys
 
 **Files:**
+
 - Modify: `internal/models/onefs.go` (`ParseNodes` — remove dead `smartfail.state`)
 - Modify: `internal/powerscale/testdata/nodes.json` (node 2 → 9.14 shape)
 - Modify: `internal/models/onefs_test.go` (add `TestParseNodesLegacySensors`)
@@ -358,16 +364,16 @@ Append to `internal/models/onefs_test.go`:
 // array (not wrapped in an object). The dual-shape support in sensorGroups must keep
 // parsing it even though 9.14.0 fixtures use the wrapped shape.
 func TestParseNodesLegacySensors(t *testing.T) {
-	payload := []byte(`{"nodes":[{"id":1,"lnn":1,
-	  "state":{"readonly":{"enabled":false},"smartfail":{"smartfailed":false}},
-	  "sensors":[{"name":"Temps","values":[{"name":"CPU0","value":"40.0"}]}]}]}`)
-	nodes, err := ParseNodes(payload)
-	if err != nil {
-		t.Fatalf("parse legacy nodes: %v", err)
-	}
-	if len(nodes) != 1 || len(nodes[0].Temperatures) != 1 || nodes[0].Temperatures[0].Value != 40 {
-		t.Fatalf("flat sensors array not parsed: %+v", nodes)
-	}
+ payload := []byte(`{"nodes":[{"id":1,"lnn":1,
+   "state":{"readonly":{"enabled":false},"smartfail":{"smartfailed":false}},
+   "sensors":[{"name":"Temps","values":[{"name":"CPU0","value":"40.0"}]}]}]}`)
+ nodes, err := ParseNodes(payload)
+ if err != nil {
+  t.Fatalf("parse legacy nodes: %v", err)
+ }
+ if len(nodes) != 1 || len(nodes[0].Temperatures) != 1 || nodes[0].Temperatures[0].Value != 40 {
+  t.Fatalf("flat sensors array not parsed: %+v", nodes)
+ }
 }
 ```
 
@@ -381,24 +387,24 @@ Expected: PASS.
 In `internal/models/onefs.go`, `ParseNodes`: in the `Smartfail` struct (around line 231) remove the `State` field so it reads:
 
 ```go
-				Smartfail struct {
-					Smartfailed bool `json:"smartfailed"`
-				} `json:"smartfail"`
+    Smartfail struct {
+     Smartfailed bool `json:"smartfailed"`
+    } `json:"smartfail"`
 ```
 
 Then replace the smartfail assignment (around line 283-287). Remove the `sf := n.State.Smartfail` line and set:
 
 ```go
-		nodes = append(nodes, Node{
-			ID: n.ID, LNN: n.LNN,
-			Readonly:            n.State.Readonly.Enabled,
-			Smartfail:           n.State.Smartfail.Smartfailed,
-			DrivesByState:       drives,
-			PowerSupplies:       n.Status.Powersupplies.Count,
-			PowerSupplyFailures: n.Status.Powersupplies.Failures,
-			Temperatures:        temps,
-			Fans:                fans,
-		})
+  nodes = append(nodes, Node{
+   ID: n.ID, LNN: n.LNN,
+   Readonly:            n.State.Readonly.Enabled,
+   Smartfail:           n.State.Smartfail.Smartfailed,
+   DrivesByState:       drives,
+   PowerSupplies:       n.Status.Powersupplies.Count,
+   PowerSupplyFailures: n.Status.Powersupplies.Failures,
+   Temperatures:        temps,
+   Fans:                fans,
+  })
 ```
 
 - [ ] **Step 4: Convert node 2 in the fixture to the 9.14 shape**
@@ -449,6 +455,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 ## Task 6: Schema-drift guard (extraction tool + generated schema + CI test)
 
 **Files:**
+
 - Create: `tools/extract-schemas/main.go`
 - Create: `internal/powerscale/testdata/onefs_schemas.json` (generated)
 - Create: `internal/powerscale/schema_guard_test.go`
@@ -469,159 +476,159 @@ Create `tools/extract-schemas/main.go`:
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"os"
-	"sort"
-	"strings"
+ "encoding/json"
+ "fmt"
+ "os"
+ "sort"
+ "strings"
 )
 
 // endpoint path -> fixture filename consumed by that endpoint.
 var targets = map[string]string{
-	"/platform/3/cluster/config":               "cluster_config.json",
-	"/platform/3/cluster/nodes":                "nodes.json",
-	"/platform/8/quota/quotas":                 "quotas.json",
-	"/platform/1/snapshot/snapshots-summary":   "snapshots_summary.json",
-	"/platform/1/dedupe/dedupe-summary":        "dedupe_summary.json",
-	"/platform/3/event/eventgroup-occurrences": "events.json",
-	"/platform/1/statistics/current":           "stat_current.json",
-	"/platform/3/statistics/summary/protocol":  "stat_protocol.json",
-	"/platform/3/statistics/summary/drive":     "stat_drive.json",
-	"/platform/3/statistics/summary/client":    "stat_client.json",
-	"/platform/7/sync/policies":                "sync_policies.json",
+ "/platform/3/cluster/config":               "cluster_config.json",
+ "/platform/3/cluster/nodes":                "nodes.json",
+ "/platform/8/quota/quotas":                 "quotas.json",
+ "/platform/1/snapshot/snapshots-summary":   "snapshots_summary.json",
+ "/platform/1/dedupe/dedupe-summary":        "dedupe_summary.json",
+ "/platform/3/event/eventgroup-occurrences": "events.json",
+ "/platform/1/statistics/current":           "stat_current.json",
+ "/platform/3/statistics/summary/protocol":  "stat_protocol.json",
+ "/platform/3/statistics/summary/drive":     "stat_drive.json",
+ "/platform/3/statistics/summary/client":    "stat_client.json",
+ "/platform/7/sync/policies":                "sync_policies.json",
 }
 
 const (
-	defaultSpec = "docs/swagger/11035-9.14.0.json"
-	outPath     = "internal/powerscale/testdata/onefs_schemas.json"
-	maxDepth    = 8
+ defaultSpec = "docs/swagger/11035-9.14.0.json"
+ outPath     = "internal/powerscale/testdata/onefs_schemas.json"
+ maxDepth    = 8
 )
 
 func main() {
-	specPath := defaultSpec
-	if len(os.Args) > 1 {
-		specPath = os.Args[1]
-	}
-	raw, err := os.ReadFile(specPath)
-	if err != nil {
-		fail("read spec %s: %v", specPath, err)
-	}
-	var doc map[string]any
-	if err := json.Unmarshal(raw, &doc); err != nil {
-		fail("parse spec: %v", err)
-	}
-	comps := dig(doc, "components", "schemas")
-	out := map[string][]string{}
-	for path, fx := range targets {
-		sch := responseSchema(doc, path)
-		if sch == nil {
-			fail("no 200 schema for %s", path)
-		}
-		fields := map[string]struct{}{}
-		walk(sch, "", fields, comps, map[string]bool{}, 0)
-		list := make([]string, 0, len(fields))
-		for f := range fields {
-			list = append(list, f)
-		}
-		sort.Strings(list)
-		out[fx] = list
-	}
-	b, err := json.MarshalIndent(out, "", " ")
-	if err != nil {
-		fail("marshal: %v", err)
-	}
-	if err := os.WriteFile(outPath, append(b, '\n'), 0o600); err != nil {
-		fail("write %s: %v", outPath, err)
-	}
-	fmt.Printf("wrote %s (%d endpoints)\n", outPath, len(out))
+ specPath := defaultSpec
+ if len(os.Args) > 1 {
+  specPath = os.Args[1]
+ }
+ raw, err := os.ReadFile(specPath)
+ if err != nil {
+  fail("read spec %s: %v", specPath, err)
+ }
+ var doc map[string]any
+ if err := json.Unmarshal(raw, &doc); err != nil {
+  fail("parse spec: %v", err)
+ }
+ comps := dig(doc, "components", "schemas")
+ out := map[string][]string{}
+ for path, fx := range targets {
+  sch := responseSchema(doc, path)
+  if sch == nil {
+   fail("no 200 schema for %s", path)
+  }
+  fields := map[string]struct{}{}
+  walk(sch, "", fields, comps, map[string]bool{}, 0)
+  list := make([]string, 0, len(fields))
+  for f := range fields {
+   list = append(list, f)
+  }
+  sort.Strings(list)
+  out[fx] = list
+ }
+ b, err := json.MarshalIndent(out, "", " ")
+ if err != nil {
+  fail("marshal: %v", err)
+ }
+ if err := os.WriteFile(outPath, append(b, '\n'), 0o600); err != nil {
+  fail("write %s: %v", outPath, err)
+ }
+ fmt.Printf("wrote %s (%d endpoints)\n", outPath, len(out))
 }
 
 func fail(format string, a ...any) {
-	fmt.Fprintf(os.Stderr, "extract-schemas: "+format+"\n", a...)
-	os.Exit(1)
+ fmt.Fprintf(os.Stderr, "extract-schemas: "+format+"\n", a...)
+ os.Exit(1)
 }
 
 func dig(m map[string]any, keys ...string) map[string]any {
-	cur := m
-	for _, k := range keys {
-		next, ok := cur[k].(map[string]any)
-		if !ok {
-			return nil
-		}
-		cur = next
-	}
-	return cur
+ cur := m
+ for _, k := range keys {
+  next, ok := cur[k].(map[string]any)
+  if !ok {
+   return nil
+  }
+  cur = next
+ }
+ return cur
 }
 
 func responseSchema(doc map[string]any, path string) map[string]any {
-	content := dig(doc, "paths", path, "get", "responses", "200", "content")
-	for _, v := range content {
-		if m, ok := v.(map[string]any); ok {
-			if s, ok := m["schema"].(map[string]any); ok {
-				return s
-			}
-		}
-	}
-	return nil
+ content := dig(doc, "paths", path, "get", "responses", "200", "content")
+ for _, v := range content {
+  if m, ok := v.(map[string]any); ok {
+   if s, ok := m["schema"].(map[string]any); ok {
+    return s
+   }
+  }
+ }
+ return nil
 }
 
 func resolveRef(ref string, comps map[string]any) map[string]any {
-	parts := strings.Split(ref, "/")
-	if s, ok := comps[parts[len(parts)-1]].(map[string]any); ok {
-		return s
-	}
-	return nil
+ parts := strings.Split(ref, "/")
+ if s, ok := comps[parts[len(parts)-1]].(map[string]any); ok {
+  return s
+ }
+ return nil
 }
 
 // walk collects dotted property paths, following $ref/allOf/anyOf/oneOf and descending
 // into array items. seen guards against $ref cycles along a single path; a fresh copy is
 // taken per property so the same schema may legitimately appear under different paths.
 func walk(schema map[string]any, prefix string, out map[string]struct{}, comps map[string]any, seen map[string]bool, depth int) {
-	if schema == nil || depth > maxDepth {
-		return
-	}
-	if ref, ok := schema["$ref"].(string); ok {
-		if seen[ref] {
-			return
-		}
-		next := copySeen(seen)
-		next[ref] = true
-		walk(resolveRef(ref, comps), prefix, out, comps, next, depth)
-		return
-	}
-	if items, ok := schema["items"].(map[string]any); ok {
-		walk(items, prefix, out, comps, seen, depth)
-		return
-	}
-	for _, kw := range []string{"allOf", "anyOf", "oneOf"} {
-		if arr, ok := schema[kw].([]any); ok {
-			for _, sub := range arr {
-				if m, ok := sub.(map[string]any); ok {
-					walk(m, prefix, out, comps, seen, depth)
-				}
-			}
-		}
-	}
-	if props, ok := schema["properties"].(map[string]any); ok {
-		for name, sub := range props {
-			p := name
-			if prefix != "" {
-				p = prefix + "." + name
-			}
-			out[p] = struct{}{}
-			if m, ok := sub.(map[string]any); ok {
-				walk(m, p, out, comps, copySeen(seen), depth+1)
-			}
-		}
-	}
+ if schema == nil || depth > maxDepth {
+  return
+ }
+ if ref, ok := schema["$ref"].(string); ok {
+  if seen[ref] {
+   return
+  }
+  next := copySeen(seen)
+  next[ref] = true
+  walk(resolveRef(ref, comps), prefix, out, comps, next, depth)
+  return
+ }
+ if items, ok := schema["items"].(map[string]any); ok {
+  walk(items, prefix, out, comps, seen, depth)
+  return
+ }
+ for _, kw := range []string{"allOf", "anyOf", "oneOf"} {
+  if arr, ok := schema[kw].([]any); ok {
+   for _, sub := range arr {
+    if m, ok := sub.(map[string]any); ok {
+     walk(m, prefix, out, comps, seen, depth)
+    }
+   }
+  }
+ }
+ if props, ok := schema["properties"].(map[string]any); ok {
+  for name, sub := range props {
+   p := name
+   if prefix != "" {
+    p = prefix + "." + name
+   }
+   out[p] = struct{}{}
+   if m, ok := sub.(map[string]any); ok {
+    walk(m, p, out, comps, copySeen(seen), depth+1)
+   }
+  }
+ }
 }
 
 func copySeen(s map[string]bool) map[string]bool {
-	c := make(map[string]bool, len(s))
-	for k := range s {
-		c[k] = true
-	}
-	return c
+ c := make(map[string]bool, len(s))
+ for k := range s {
+  c[k] = true
+ }
+ return c
 }
 ```
 
@@ -639,11 +646,11 @@ Create `internal/powerscale/schema_guard_test.go`:
 package powerscale
 
 import (
-	"encoding/json"
-	"os"
-	"path/filepath"
-	"sort"
-	"testing"
+ "encoding/json"
+ "os"
+ "path/filepath"
+ "sort"
+ "testing"
 )
 
 // TestFixturesMatchDocumentedSchema fails if any testdata fixture contains a field that is
@@ -651,54 +658,54 @@ import (
 // is generated by `make schemas` (tools/extract-schemas). This guard is what catches a
 // fixture being hand-authored to match a parser instead of the real API.
 func TestFixturesMatchDocumentedSchema(t *testing.T) {
-	raw, err := os.ReadFile(filepath.Join("testdata", "onefs_schemas.json"))
-	if err != nil {
-		t.Fatalf("read onefs_schemas.json (run `make schemas`): %v", err)
-	}
-	var documented map[string][]string
-	if err := json.Unmarshal(raw, &documented); err != nil {
-		t.Fatalf("parse onefs_schemas.json: %v", err)
-	}
-	for fx, fields := range documented {
-		doc := make(map[string]struct{}, len(fields))
-		for _, f := range fields {
-			doc[f] = struct{}{}
-		}
-		var obj any
-		if err := json.Unmarshal(fixture(t, fx), &obj); err != nil {
-			t.Fatalf("%s: %v", fx, err)
-		}
-		used := map[string]struct{}{}
-		collectFields(obj, "", used)
-		var undocumented []string
-		for f := range used {
-			if _, ok := doc[f]; !ok {
-				undocumented = append(undocumented, f)
-			}
-		}
-		sort.Strings(undocumented)
-		if len(undocumented) > 0 {
-			t.Errorf("fixture %s has fields not in OneFS 9.14.0 schema: %v", fx, undocumented)
-		}
-	}
+ raw, err := os.ReadFile(filepath.Join("testdata", "onefs_schemas.json"))
+ if err != nil {
+  t.Fatalf("read onefs_schemas.json (run `make schemas`): %v", err)
+ }
+ var documented map[string][]string
+ if err := json.Unmarshal(raw, &documented); err != nil {
+  t.Fatalf("parse onefs_schemas.json: %v", err)
+ }
+ for fx, fields := range documented {
+  doc := make(map[string]struct{}, len(fields))
+  for _, f := range fields {
+   doc[f] = struct{}{}
+  }
+  var obj any
+  if err := json.Unmarshal(fixture(t, fx), &obj); err != nil {
+   t.Fatalf("%s: %v", fx, err)
+  }
+  used := map[string]struct{}{}
+  collectFields(obj, "", used)
+  var undocumented []string
+  for f := range used {
+   if _, ok := doc[f]; !ok {
+    undocumented = append(undocumented, f)
+   }
+  }
+  sort.Strings(undocumented)
+  if len(undocumented) > 0 {
+   t.Errorf("fixture %s has fields not in OneFS 9.14.0 schema: %v", fx, undocumented)
+  }
+ }
 }
 
 func collectFields(v any, prefix string, out map[string]struct{}) {
-	switch node := v.(type) {
-	case map[string]any:
-		for k, sub := range node {
-			p := k
-			if prefix != "" {
-				p = prefix + "." + k
-			}
-			out[p] = struct{}{}
-			collectFields(sub, p, out)
-		}
-	case []any:
-		for _, it := range node {
-			collectFields(it, prefix, out)
-		}
-	}
+ switch node := v.(type) {
+ case map[string]any:
+  for k, sub := range node {
+   p := k
+   if prefix != "" {
+    p = prefix + "." + k
+   }
+   out[p] = struct{}{}
+   collectFields(sub, p, out)
+  }
+ case []any:
+  for _, it := range node {
+   collectFields(it, prefix, out)
+  }
+ }
 }
 ```
 
@@ -721,7 +728,7 @@ In `Makefile`, add a target (place near other dev targets):
 ```make
 .PHONY: schemas
 schemas: ## Regenerate testdata/onefs_schemas.json from docs/swagger/<spec>.json
-	go run ./tools/extract-schemas
+ go run ./tools/extract-schemas
 ```
 
 In `.gitignore`, add:
