@@ -77,6 +77,14 @@ func licenseActiveLabels(clusterName, clusterID, name, status string) []Label {
 	)
 }
 
+// storagePoolLabels appends a storage-pool/tier name and its type (nodepool|tier).
+func storagePoolLabels(clusterName, clusterID, pool, poolType string) []Label {
+	return append(baseLabels(clusterName, clusterID),
+		Label{Name: "pool", Value: pool},
+		Label{Name: "type", Value: poolType},
+	)
+}
+
 // driveStatLabels builds the canonical per-drive label set.
 func driveStatLabels(clusterName, clusterID, nodeLNN, bay, driveType string) []Label {
 	return append(baseLabels(clusterName, clusterID),
