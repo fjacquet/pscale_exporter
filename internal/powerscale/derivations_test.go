@@ -199,3 +199,50 @@ func TestBuildSamplesNodeIfsCacheKeys(t *testing.T) {
 		}
 	}
 }
+
+func TestBuildSamplesLicenses(t *testing.T) {
+	inv := &models.Inventory{
+		Cluster: models.ClusterInfo{Name: "ignored", GUID: "GUID-1"},
+		Licenses: []models.License{
+			{Name: "SyncIQ", Status: "Licensed", DaysToExpiry: 214, HasExpiration: true, Expired: false},
+			{Name: "SmartQuotas", Status: "Expired", DaysToExpiry: 0, HasExpiration: true, Expired: true},
+			{Name: "SnapshotIQ", Status: "Licensed", DaysToExpiry: 0, HasExpiration: false, Expired: false},
+		},
+	}
+	samples := BuildSamples("clu1", inv, nil)
+	find := func(name, feature string) (Sample, bool) {
+		for _, s := range samples {
+			if s.Name != name {
+				continue
+			}
+			for _, l := range s.Labels {
+				if l.Name == "name" && l.Value == feature {
+					return s, true
+				}
+			}
+		}
+		return Sample{}, false
+	}
+	if s, ok := find("powerscale_license_days_to_expiry", "SyncIQ"); !ok || s.Value != 214 {
+		t.Fatalf("SyncIQ days_to_expiry wrong: %+v ok=%v", s, ok)
+	}
+	if _, ok := find("powerscale_license_days_to_expiry", "SnapshotIQ"); ok {
+		t.Fatal("perpetual license (SnapshotIQ) must not emit days_to_expiry")
+	}
+	if s, ok := find("powerscale_license_expired", "SmartQuotas"); !ok || s.Value != 1 {
+		t.Fatalf("SmartQuotas expired should be 1: %+v ok=%v", s, ok)
+	}
+	s, ok := find("powerscale_license_info", "SyncIQ")
+	if !ok || s.Value != 1 {
+		t.Fatalf("SyncIQ info missing: %+v ok=%v", s, ok)
+	}
+	hasStatus := false
+	for _, l := range s.Labels {
+		if l.Name == "status" && l.Value == "Licensed" {
+			hasStatus = true
+		}
+	}
+	if !hasStatus {
+		t.Fatalf("info sample missing status label: %+v", s.Labels)
+	}
+}

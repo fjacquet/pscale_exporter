@@ -63,6 +63,19 @@ func severityLabels(clusterName, clusterID, severity string) []Label {
 	return append(baseLabels(clusterName, clusterID), Label{Name: "severity", Value: severity})
 }
 
+// licenseLabels appends a licensed-feature name.
+func licenseLabels(clusterName, clusterID, name string) []Label {
+	return append(baseLabels(clusterName, clusterID), Label{Name: "name", Value: name})
+}
+
+// licenseInfoLabels appends a licensed-feature name and its OneFS status string.
+func licenseInfoLabels(clusterName, clusterID, name, status string) []Label {
+	return append(baseLabels(clusterName, clusterID),
+		Label{Name: "name", Value: name},
+		Label{Name: "status", Value: status},
+	)
+}
+
 // driveStatLabels builds the canonical per-drive label set.
 func driveStatLabels(clusterName, clusterID, nodeLNN, bay, driveType string) []Label {
 	return append(baseLabels(clusterName, clusterID),

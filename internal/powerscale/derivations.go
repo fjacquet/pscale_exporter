@@ -30,6 +30,7 @@ func BuildSamples(clusterName string, inv *models.Inventory, st *models.Statisti
 	samples = append(samples, syncSamples(clusterName, clusterID, inv.SyncPolicies)...)
 	samples = append(samples, eventSamples(clusterName, clusterID, inv.Events)...)
 	samples = append(samples, dedupeSamples(clusterName, clusterID, inv.Dedupe)...)
+	samples = append(samples, licenseSamples(clusterName, clusterID, inv.Licenses)...)
 	samples = append(samples, driveSamples(clusterName, clusterID, st)...)
 	samples = append(samples, clientSamples(clusterName, clusterID, st)...)
 	return samples
@@ -170,6 +171,27 @@ func syncSamples(clusterName, clusterID string, policies []models.SyncPolicy) []
 			Sample{Name: "powerscale_synciq_policy_enabled", Labels: labels, Value: b2f(p.Enabled)},
 			Sample{Name: "powerscale_synciq_last_run_failed", Labels: labels, Value: b2f(syncFailureStates[p.LastJobState])},
 		)
+	}
+	return out
+}
+
+// licenseSamples emits per-feature license status. days_to_expiry is emitted only for
+// licenses that carry an expiration (perpetual licenses omit it, so a 0 would false-fire a
+// "< 30 days" alert). expired and info are emitted for every license.
+func licenseSamples(clusterName, clusterID string, licenses []models.License) []Sample {
+	var out []Sample
+	for _, l := range licenses {
+		out = append(out,
+			Sample{Name: "powerscale_license_expired", Labels: licenseLabels(clusterName, clusterID, l.Name), Value: b2f(l.Expired)},
+			Sample{Name: "powerscale_license_info", Labels: licenseInfoLabels(clusterName, clusterID, l.Name, l.Status), Value: 1},
+		)
+		if l.HasExpiration {
+			out = append(out, Sample{
+				Name:   "powerscale_license_days_to_expiry",
+				Labels: licenseLabels(clusterName, clusterID, l.Name),
+				Value:  float64(l.DaysToExpiry),
+			})
+		}
 	}
 	return out
 }
