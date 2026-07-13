@@ -152,6 +152,7 @@ type Inventory struct {
 	Events       map[string]int // unresolved event-group count by severity
 	Dedupe       DedupeSummary
 	Licenses     []License
+	StoragePools []StoragePool
 }
 
 // DriveStat is one per-drive performance row (statistics/summary/drive).
@@ -409,6 +410,67 @@ func ParseLicenses(b []byte) ([]License, error) {
 			DaysToExpiry:  l.DaysToExpiry,
 			HasExpiration: strings.TrimSpace(l.Expiration) != "",
 			Expired:       l.ExpiredAlert,
+		})
+	}
+	return out, nil
+}
+
+// StoragePool is one OneFS storage pool or tier (storagepool/storagepools). Both node pools
+// and tiers appear in the list, distinguished by Type ("nodepool" | "tier"); a tier's
+// capacity is the sum of its child node pools. The SSD/HDD fields break the aggregate down
+// by media (an all-HDD pool reports zero SSD bytes).
+type StoragePool struct {
+	Name          string
+	Type          string
+	TotalBytes    float64
+	UsedBytes     float64
+	AvailBytes    float64
+	SSDTotalBytes float64
+	SSDUsedBytes  float64
+	SSDAvailBytes float64
+	HDDTotalBytes float64
+	HDDUsedBytes  float64
+	HDDAvailBytes float64
+}
+
+// ParseStoragePools parses storagepool/storagepools. The usage byte fields are JSON strings
+// in the OneFS schema, so they decode through flexFloat (quoted or bare number, unparseable
+// → 0).
+func ParseStoragePools(b []byte) ([]StoragePool, error) {
+	var raw struct {
+		StoragePools []struct {
+			Name  string `json:"name"`
+			Type  string `json:"type"`
+			Usage struct {
+				TotalBytes    flexFloat `json:"total_bytes"`
+				UsedBytes     flexFloat `json:"used_bytes"`
+				AvailBytes    flexFloat `json:"avail_bytes"`
+				TotalSSDBytes flexFloat `json:"total_ssd_bytes"`
+				UsedSSDBytes  flexFloat `json:"used_ssd_bytes"`
+				AvailSSDBytes flexFloat `json:"avail_ssd_bytes"`
+				TotalHDDBytes flexFloat `json:"total_hdd_bytes"`
+				UsedHDDBytes  flexFloat `json:"used_hdd_bytes"`
+				AvailHDDBytes flexFloat `json:"avail_hdd_bytes"`
+			} `json:"usage"`
+		} `json:"storagepools"`
+	}
+	if err := json.Unmarshal(b, &raw); err != nil {
+		return nil, err
+	}
+	out := make([]StoragePool, 0, len(raw.StoragePools))
+	for _, p := range raw.StoragePools {
+		out = append(out, StoragePool{
+			Name:          p.Name,
+			Type:          p.Type,
+			TotalBytes:    float64(p.Usage.TotalBytes),
+			UsedBytes:     float64(p.Usage.UsedBytes),
+			AvailBytes:    float64(p.Usage.AvailBytes),
+			SSDTotalBytes: float64(p.Usage.TotalSSDBytes),
+			SSDUsedBytes:  float64(p.Usage.UsedSSDBytes),
+			SSDAvailBytes: float64(p.Usage.AvailSSDBytes),
+			HDDTotalBytes: float64(p.Usage.TotalHDDBytes),
+			HDDUsedBytes:  float64(p.Usage.UsedHDDBytes),
+			HDDAvailBytes: float64(p.Usage.AvailHDDBytes),
 		})
 	}
 	return out, nil

@@ -143,6 +143,23 @@ func TestParseLicenses(t *testing.T) {
 	}
 }
 
+func TestParseStoragePools(t *testing.T) {
+	data := []byte(`{"storagepools":[
+		{"name":"tier1","type":"tier","usage":{"total_bytes":"3000","used_bytes":"1000","avail_bytes":"2000","total_ssd_bytes":"1000","used_ssd_bytes":"400","avail_ssd_bytes":"600","total_hdd_bytes":"2000","used_hdd_bytes":"600","avail_hdd_bytes":"1400"}},
+		{"name":"h500_nodepool","type":"nodepool","usage":{"total_bytes":"2000","used_bytes":"600","avail_bytes":"1400","total_ssd_bytes":"0","used_ssd_bytes":"0","avail_ssd_bytes":"0","total_hdd_bytes":"2000","used_hdd_bytes":"600","avail_hdd_bytes":"1400"}}
+	]}`)
+	ps, err := ParseStoragePools(data)
+	if err != nil || len(ps) != 2 {
+		t.Fatalf("parse: %d err=%v", len(ps), err)
+	}
+	if ps[0].Name != "tier1" || ps[0].Type != "tier" || ps[0].TotalBytes != 3000 || ps[0].SSDUsedBytes != 400 {
+		t.Fatalf("pool[0] (string bytes must parse): %+v", ps[0])
+	}
+	if ps[1].Type != "nodepool" || ps[1].SSDTotalBytes != 0 || ps[1].HDDTotalBytes != 2000 {
+		t.Fatalf("pool[1] (all-HDD): %+v", ps[1])
+	}
+}
+
 func TestParseEventOccurrences(t *testing.T) {
 	ev, err := ParseEventOccurrences(read(t, "events.json"))
 	if err != nil {
