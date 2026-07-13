@@ -85,6 +85,20 @@ func storagePoolLabels(clusterName, clusterID, pool, poolType string) []Label {
 	)
 }
 
+// workloadLabels appends the curated per-workload identity dimensions. Any dimension not
+// pinned by the cluster's performance dataset is the empty string, keeping the label-name
+// set consistent across rows.
+func workloadLabels(clusterName, clusterID, node, zone, protocol, username, systemName, jobType string) []Label {
+	return append(baseLabels(clusterName, clusterID),
+		Label{Name: "node", Value: node},
+		Label{Name: "zone", Value: zone},
+		Label{Name: "protocol", Value: protocol},
+		Label{Name: "username", Value: username},
+		Label{Name: "system_name", Value: systemName},
+		Label{Name: "job_type", Value: jobType},
+	)
+}
+
 // driveStatLabels builds the canonical per-drive label set.
 func driveStatLabels(clusterName, clusterID, nodeLNN, bay, driveType string) []Label {
 	return append(baseLabels(clusterName, clusterID),

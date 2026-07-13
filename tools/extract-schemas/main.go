@@ -29,6 +29,7 @@ var targets = map[string]string{
 	"/platform/7/sync/policies":                "sync_policies.json",
 	"/platform/5/license/licenses":             "licenses.json",
 	"/platform/1/storagepool/storagepools":     "storagepools.json",
+	"/platform/4/statistics/summary/workload":  "stat_workload.json",
 }
 
 const (

@@ -297,3 +297,47 @@ func TestBuildSamplesStoragePools(t *testing.T) {
 		t.Fatalf("nodepool1 missing type label: %+v", s.Labels)
 	}
 }
+
+func TestBuildSamplesWorkloads(t *testing.T) {
+	inv := &models.Inventory{Cluster: models.ClusterInfo{Name: "ignored", GUID: "GUID-1"}}
+	st := &models.Statistics{
+		Workloads: []models.Workload{
+			{Node: 1, Zone: "System", Protocol: "nfs3", Username: "alice", Ops: 120, BytesIn: 1024, BytesOut: 2048, CPUMicros: 50000},
+			{Node: 0, Ops: 5, BytesIn: 10, BytesOut: 20, CPUMicros: 100}, // aggregate: all dims empty
+		},
+	}
+	samples := BuildSamples("clu1", inv, st)
+	find := func(name, username string) (Sample, bool) {
+		for _, s := range samples {
+			if s.Name != name {
+				continue
+			}
+			for _, l := range s.Labels {
+				if l.Name == "username" && l.Value == username {
+					return s, true
+				}
+			}
+		}
+		return Sample{}, false
+	}
+	if s, ok := find("powerscale_workload_operations_per_second", "alice"); !ok || s.Value != 120 {
+		t.Fatalf("alice ops wrong: %+v ok=%v", s, ok)
+	}
+	if s, ok := find("powerscale_workload_cpu_microseconds_per_second", "alice"); !ok || s.Value != 50000 {
+		t.Fatalf("alice cpu wrong: %+v ok=%v", s, ok)
+	}
+	// aggregate row: username="" and zone="" but still emits values (empty-label path)
+	s, ok := find("powerscale_workload_in_bytes_per_second", "")
+	if !ok || s.Value != 10 {
+		t.Fatalf("aggregate in_bytes wrong: %+v ok=%v", s, ok)
+	}
+	hasEmptyZone := false
+	for _, l := range s.Labels {
+		if l.Name == "zone" && l.Value == "" {
+			hasEmptyZone = true
+		}
+	}
+	if !hasEmptyZone {
+		t.Fatalf("aggregate row should carry an empty zone label: %+v", s.Labels)
+	}
+}

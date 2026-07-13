@@ -72,6 +72,10 @@ func TestEndToEndCollectionThroughPrometheus(t *testing.T) {
 		"powerscale_storagepool_hdd_total_capacity_bytes":     false,
 		"powerscale_storagepool_hdd_used_capacity_bytes":      false,
 		"powerscale_storagepool_hdd_available_capacity_bytes": false,
+		"powerscale_workload_operations_per_second":           false,
+		"powerscale_workload_in_bytes_per_second":             false,
+		"powerscale_workload_out_bytes_per_second":            false,
+		"powerscale_workload_cpu_microseconds_per_second":     false,
 	}
 	for _, mf := range mfs {
 		if _, ok := want[mf.GetName()]; ok {
