@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-07-13
+
+### Added
+
+- **Env-driven TLS verification skip (`PSCALE1_SKIP_CERTIFICATE`)** — the per-cluster
+  `insecureSkipVerify` setting now accepts either a native YAML boolean or a `${VAR}`
+  environment reference (e.g. `${PSCALE1_SKIP_CERTIFICATE}`), resolved at startup, matching the
+  existing `${PSCALE1_*}` pattern. Wired into `config.yaml`, `docker-compose.yml`, and
+  `.env.example`. (#30)
+
+### Fixed
+
+- **OneFS cache stat keys** — restored the `node.ifs.` namespace prefix on the six
+  `node.ifs.cache.l{1,2,3}.data.read.{hit,miss}` keys. Because `platform/1/statistics/current`
+  is an all-or-nothing batch, the previously invalid keys had been failing the entire request
+  and dropping **all** current-statistics metrics (CPU, capacity, memory, disk) — not just the
+  cache series. Added unit and end-to-end test coverage so a dropped prefix cannot silently
+  regress. (#30)
+
+### Changed
+
+- Documented the full read-only OneFS privilege set the collectors require: `ISI_PRIV_STATISTICS`,
+  `ISI_PRIV_QUOTA`, `ISI_PRIV_DEVICES`, `ISI_PRIV_EVENT`, `ISI_PRIV_SNAPSHOT`, `ISI_PRIV_SYNCIQ`,
+  `ISI_PRIV_SMB`, `ISI_PRIV_NFS`. (#30)
+- Corrected the metrics and dashboard docs' cache failure-mode description (one invalid key fails
+  the whole `statistics/current` batch — not a silent per-key skip) and fixed a broken docs anchor.
+
+## [0.12.5] - 2026-07-12
+
+### Changed
+
+- Update dependencies and the Go toolchain to 1.26.5 (builder image bumped to `golang:1.26.5`).
+
 ## [0.12.4] - 2026-07-03
 
 ### Added
@@ -203,7 +236,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Baseline prior to the release-pipeline rework. See the
   [GitHub releases](https://github.com/fjacquet/pscale_exporter/releases) for earlier history.
 
-[Unreleased]: https://github.com/fjacquet/pscale_exporter/compare/v0.12.4...HEAD
+[Unreleased]: https://github.com/fjacquet/pscale_exporter/compare/v0.13.0...HEAD
+[0.13.0]: https://github.com/fjacquet/pscale_exporter/compare/v0.12.5...v0.13.0
+[0.12.5]: https://github.com/fjacquet/pscale_exporter/compare/v0.12.4...v0.12.5
 [0.12.4]: https://github.com/fjacquet/pscale_exporter/compare/v0.12.3...v0.12.4
 [0.12.3]: https://github.com/fjacquet/pscale_exporter/compare/v0.12.2...v0.12.3
 [0.12.2]: https://github.com/fjacquet/pscale_exporter/compare/v0.12.1...v0.12.2

@@ -42,6 +42,7 @@ services:
       - PSCALE1_HOSTNAME=${PSCALE1_HOSTNAME:-pscale-clu1.example.com}
       - PSCALE1_USERNAME=${PSCALE1_USERNAME:-pscale-monitor}
       - PSCALE1_PASSWORD=${PSCALE1_PASSWORD:-}
+      - PSCALE1_SKIP_CERTIFICATE=${PSCALE1_SKIP_CERTIFICATE:-false}
     restart: unless-stopped
 
   prometheus:

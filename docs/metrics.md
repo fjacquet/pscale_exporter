@@ -52,18 +52,24 @@ Per-node series; the `node` label is the logical node number (LNN).
 | `powerscale_node_disk_operations_per_second` | ops/s | Per-node disk transfer rate. |
 | `powerscale_node_used_capacity_bytes` | bytes | Per-node used `/ifs` capacity. |
 
-### Cache (provisional)
+### Cache
 
-Per-node read-cache byte rates. The exact OneFS `cache.*` stat-key strings vary by release
-and are **runtime-discoverable** (`GET /platform/1/statistics/keys`); these rows are
-best-known names and emit nothing if your cluster uses different keys. Compute hit ratio in
-PromQL as `hit / (hit + miss)`.
+Per-node read-cache metrics for the L1/L2/L3 data-read path. Keys are node-scoped under the
+OneFS `node.ifs.cache.*` namespace, confirmed against a live cluster via
+`isi statistics list keys` (equivalently `GET /platform/1/statistics/keys`). Note that
+`statistics/current` is **all-or-nothing**: a single invalid key fails the entire batch and
+drops *all* current-statistics metrics — so any new key here must be validated against a live
+cluster first. Compute hit ratio in PromQL as `hit / (hit + miss)`.
+
+> Unit semantics (per-second **rate** vs cumulative **counter**) are pending live `--trace`
+> validation; the `_bytes_per_second` suffix is provisional until confirmed (see the design
+> spec, §3).
 
 | Metric | Unit |
 |---|---|
-| `powerscale_node_cache_l1_read_hit_bytes_per_second` / `..._miss_...` | bytes/s |
-| `powerscale_node_cache_l2_read_hit_bytes_per_second` / `..._miss_...` | bytes/s |
-| `powerscale_node_cache_l3_read_hit_bytes_per_second` / `..._miss_...` | bytes/s |
+| `powerscale_node_cache_l1_read_hit_bytes_per_second` / `..._miss_...` | bytes/s (provisional) |
+| `powerscale_node_cache_l2_read_hit_bytes_per_second` / `..._miss_...` | bytes/s (provisional) |
+| `powerscale_node_cache_l3_read_hit_bytes_per_second` / `..._miss_...` | bytes/s (provisional) |
 
 ### Node health
 

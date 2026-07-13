@@ -43,11 +43,11 @@ type ClusterClient struct {
 // be a full base URL (scheme + host + port). It also has no Port field in ClientOptions;
 // the port is therefore carried inside the base URL via models.ClusterConfig.BaseURL().
 func NewClusterClient(ctx context.Context, cfg models.ClusterConfig, dumpDir string, trace bool) (*ClusterClient, error) {
-	if cfg.InsecureSkipVerify {
+	if cfg.InsecureSkipVerify.Bool() {
 		log.Warnf("cluster %q: TLS verification disabled (insecureSkipVerify=true)", cfg.Name)
 	}
 	opts := &api.ClientOptions{
-		Insecure: cfg.InsecureSkipVerify,
+		Insecure: cfg.InsecureSkipVerify.Bool(),
 	}
 	cli, err := api.New(ctx, cfg.BaseURL(), cfg.Username, cfg.Password, "", 0, sessionAuthType, opts)
 	if err != nil {

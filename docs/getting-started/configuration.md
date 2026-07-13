@@ -41,15 +41,25 @@ opentelemetry:
     insecure: true
     samplingRate: 0.1
 
-# A read-only account (role with read access to ISI_PRIV_STATISTICS,
-# ISI_PRIV_QUOTA and ISI_PRIV_DEVICES) is sufficient.
+# A read-only account is sufficient. Grant its role read access to:
+#   ISI_PRIV_STATISTICS  (CPU, capacity, cache, drive, client & protocol stats)
+#   ISI_PRIV_QUOTA       (quota usage / thresholds)
+#   ISI_PRIV_DEVICES     (node inventory, hardware, node health)
+#   ISI_PRIV_EVENT       (active event groups)
+#   ISI_PRIV_SNAPSHOT    (snapshot count & used space)
+#   ISI_PRIV_SYNCIQ      (SyncIQ replication policy health)
+#   ISI_PRIV_SMB         (SMB share count)
+#   ISI_PRIV_NFS         (NFS export count)
 clusters:
   - name: pscale-cluster1
     endpoint: pscale-clu1.example.com
     port: 8080
     username: pscale-monitor
     password: "${PSCALE1_PASSWORD}"
-    # Enable ONLY for clusters with self-signed certs (common in test/lab); keep false in production.
+    # Skip TLS certificate verification for this cluster (INSECURE — use only with a
+    # self-signed cert on a trusted network). Accepts a literal bool or a ${VAR} reference:
+    #   insecureSkipVerify: true
+    #   insecureSkipVerify: "${PSCALE1_SKIP_CERTIFICATE}"
     insecureSkipVerify: false
 ```
 
@@ -79,7 +89,11 @@ Optional OTLP push for metrics and/or tracing. Disabled by default. See
 
 A list — one entry per OneFS cluster. Every metric carries a `cluster` label set to
 `name`. `insecureSkipVerify` should stay `false` in production; enable it only for lab
-clusters with self-signed certificates.
+clusters with self-signed certificates. It accepts either a literal bool
+(`insecureSkipVerify: true`) or a `${VAR}` environment reference resolved at startup
+(`insecureSkipVerify: "${PSCALE1_SKIP_CERTIFICATE}"`), the same pattern used for
+`endpoint`/`username`/`password` — disabling TLS verification should still be used only
+with self-signed certs on a trusted network.
 
 ## Secrets
 

@@ -6,19 +6,76 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 )
 
 // ClusterConfig holds the connection details for a single PowerScale (OneFS) cluster.
 // One exporter process monitors many clusters; Name becomes the `cluster` label.
 type ClusterConfig struct {
-	Name               string `yaml:"name"`
-	Endpoint           string `yaml:"endpoint"` // hostname or IP of any node / SmartConnect name
-	Port               int    `yaml:"port"`     // OneFS platform API port (default 8080)
-	Username           string `yaml:"username"`
-	Password           string `yaml:"password"`
-	PasswordFile       string `yaml:"passwordFile"`
-	InsecureSkipVerify bool   `yaml:"insecureSkipVerify"`
+	Name               string  `yaml:"name"`
+	Endpoint           string  `yaml:"endpoint"` // hostname or IP of any node / SmartConnect name
+	Port               int     `yaml:"port"`     // OneFS platform API port (default 8080)
+	Username           string  `yaml:"username"`
+	Password           string  `yaml:"password"`
+	PasswordFile       string  `yaml:"passwordFile"`
+	InsecureSkipVerify EnvBool `yaml:"insecureSkipVerify"`
+}
+
+// EnvBool is a boolean config value that may be written in YAML either as a native
+// boolean (insecureSkipVerify: true) or as a ${VAR} environment reference resolved at
+// secret-resolution time (insecureSkipVerify: ${PSCALE1_SKIP_CERTIFICATE}). This keeps
+// backward compatibility with existing native-bool configs while allowing env-driven
+// control that matches the ${PSCALE1_*} pattern used for endpoint/username/password.
+type EnvBool struct {
+	raw string // ${...} reference or literal string form, when written as a string
+	val bool   // resolved value
+}
+
+// NewEnvBool returns an already-resolved EnvBool (for tests / programmatic config).
+func NewEnvBool(v bool) EnvBool { return EnvBool{val: v} }
+
+// Bool returns the resolved boolean value.
+func (b EnvBool) Bool() bool { return b.val }
+
+// UnmarshalYAML accepts either a native YAML boolean or a string (which may be a ${VAR}
+// reference resolved later by Resolve). yaml.v2 signature.
+func (b *EnvBool) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var bv bool
+	if err := unmarshal(&bv); err == nil {
+		b.val = bv
+		return nil
+	}
+	var s string
+	if err := unmarshal(&s); err != nil {
+		return fmt.Errorf("insecureSkipVerify must be a boolean or ${ENV} reference: %w", err)
+	}
+	b.raw = s
+	return nil
+}
+
+// Resolve expands any ${VAR} reference (via expand) and parses the result to a bool.
+// It is a no-op when the value was a native boolean or the field was omitted. An empty
+// expansion resolves to false; a non-boolean expansion is an error.
+func (b *EnvBool) Resolve(expand func(string) (string, error)) error {
+	if b.raw == "" {
+		return nil
+	}
+	s, err := expand(b.raw)
+	if err != nil {
+		return err
+	}
+	s = strings.TrimSpace(s)
+	if s == "" {
+		b.val = false
+		return nil
+	}
+	v, err := strconv.ParseBool(s)
+	if err != nil {
+		return fmt.Errorf("insecureSkipVerify: cannot parse %q as boolean", s)
+	}
+	b.val = v
+	return nil
 }
 
 // BaseURL returns the HTTPS base URL for the cluster's OneFS platform API.

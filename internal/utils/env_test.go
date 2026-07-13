@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/fjacquet/pscale_exporter/internal/models"
+	"gopkg.in/yaml.v2"
 )
 
 func TestExpandEnvSuccess(t *testing.T) {
@@ -74,5 +75,24 @@ func TestResolveSecretsUnsetUsernameVarFails(t *testing.T) {
 
 	if err := ResolveSecrets(cfg); err == nil {
 		t.Error("expected error for unset username variable, got nil")
+	}
+}
+
+func TestResolveSecretsSkipCertificate(t *testing.T) {
+	t.Setenv("PSCALE1_SKIP_CERTIFICATE", "true")
+	cfg := &models.Config{Clusters: []models.ClusterConfig{{
+		Name: "c1", Endpoint: "h", Username: "u", Password: "p",
+	}}}
+	// Simulate YAML having set a ${VAR} reference on the field.
+	if err := yaml.Unmarshal([]byte("insecureSkipVerify: ${PSCALE1_SKIP_CERTIFICATE}\n"), &cfg.Clusters[0]); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	cfg.Clusters[0].Name, cfg.Clusters[0].Endpoint = "c1", "h"
+	cfg.Clusters[0].Username, cfg.Clusters[0].Password = "u", "p"
+	if err := ResolveSecrets(cfg); err != nil {
+		t.Fatalf("ResolveSecrets: %v", err)
+	}
+	if !cfg.Clusters[0].InsecureSkipVerify.Bool() {
+		t.Fatal("PSCALE1_SKIP_CERTIFICATE=true did not resolve to skip-verify")
 	}
 }

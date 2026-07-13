@@ -37,6 +37,10 @@ func ResolveSecrets(cfg *models.Config) error {
 	for i := range cfg.Clusters {
 		cl := &cfg.Clusters[i]
 
+		if err := cl.InsecureSkipVerify.Resolve(ExpandEnv); err != nil {
+			return fmt.Errorf("cluster %q insecureSkipVerify: %w", cl.Name, err)
+		}
+
 		endpoint, err := ExpandEnv(cl.Endpoint)
 		if err != nil {
 			return fmt.Errorf("cluster %q endpoint: %w", cl.Name, err)

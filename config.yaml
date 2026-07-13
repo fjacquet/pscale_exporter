@@ -42,5 +42,8 @@ clusters:
     port: 8080
     username: "${PSCALE1_USERNAME}"
     password: "${PSCALE1_PASSWORD}"
-    # Enable ONLY for clusters with self-signed certs (common in test/lab); keep false in production.
+    # Skip TLS certificate verification for this cluster (INSECURE — use only with a
+    # self-signed cert on a trusted network). Accepts a literal bool or a ${VAR} reference:
+    #   insecureSkipVerify: true
+    #   insecureSkipVerify: "${PSCALE1_SKIP_CERTIFICATE}"
     insecureSkipVerify: false

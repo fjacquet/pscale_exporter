@@ -36,7 +36,7 @@ func newTestClientOpts(t *testing.T, dumpDir string, trace bool) *ClusterClient 
 		Port:               port,
 		Username:           "u",
 		Password:           "p",
-		InsecureSkipVerify: true,
+		InsecureSkipVerify: models.NewEnvBool(true),
 	}
 	c, err := NewClusterClient(context.Background(), cfg, dumpDir, trace)
 	if err != nil {
@@ -160,7 +160,7 @@ func TestClientGetStatistics(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetStatistics: %v", err)
 	}
-	if len(st.Current) != 4 {
+	if len(st.Current) != 10 {
 		t.Fatalf("current stats: %d", len(st.Current))
 	}
 	if len(st.Proto) != 1 || st.Proto[0].OperationRate != 12 {

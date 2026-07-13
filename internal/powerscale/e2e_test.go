@@ -17,7 +17,7 @@ func TestEndToEndCollectionThroughPrometheus(t *testing.T) {
 	port, _ := strconv.Atoi(u.Port())
 	cfg := models.ClusterConfig{
 		Name: "clu1", Endpoint: u.Hostname(), Port: port,
-		Username: "u", Password: "p", InsecureSkipVerify: true,
+		Username: "u", Password: "p", InsecureSkipVerify: models.NewEnvBool(true),
 	}
 	client, err := NewClusterClient(context.Background(), cfg, "", false)
 	if err != nil {
@@ -40,21 +40,27 @@ func TestEndToEndCollectionThroughPrometheus(t *testing.T) {
 
 	want := map[string]bool{
 		"powerscale_up": false,
-		"powerscale_cluster_total_capacity_bytes":   false,
-		"powerscale_node_memory_used_bytes":         false,
-		"powerscale_quota_usage_bytes":              false,
-		"powerscale_quota_soft_threshold_bytes":     false,
-		"powerscale_protocol_operations_per_second": false,
-		"powerscale_node_readonly":                  false,
-		"powerscale_node_drives_total":              false,
-		"powerscale_snapshot_used_bytes":            false,
-		"powerscale_synciq_policy_enabled":          false,
-		"powerscale_active_events":                  false,
-		"powerscale_dedupe_logical_saved_bytes":     false,
-		"powerscale_drive_operations_per_second":    false,
-		"powerscale_client_operations_per_second":   false,
-		"powerscale_node_power_supplies_total":      false,
-		"powerscale_node_temperature_celsius":       false,
+		"powerscale_cluster_total_capacity_bytes":             false,
+		"powerscale_node_memory_used_bytes":                   false,
+		"powerscale_quota_usage_bytes":                        false,
+		"powerscale_quota_soft_threshold_bytes":               false,
+		"powerscale_protocol_operations_per_second":           false,
+		"powerscale_node_readonly":                            false,
+		"powerscale_node_drives_total":                        false,
+		"powerscale_snapshot_used_bytes":                      false,
+		"powerscale_synciq_policy_enabled":                    false,
+		"powerscale_active_events":                            false,
+		"powerscale_dedupe_logical_saved_bytes":               false,
+		"powerscale_drive_operations_per_second":              false,
+		"powerscale_client_operations_per_second":             false,
+		"powerscale_node_power_supplies_total":                false,
+		"powerscale_node_temperature_celsius":                 false,
+		"powerscale_node_cache_l1_read_hit_bytes_per_second":  false,
+		"powerscale_node_cache_l1_read_miss_bytes_per_second": false,
+		"powerscale_node_cache_l2_read_hit_bytes_per_second":  false,
+		"powerscale_node_cache_l2_read_miss_bytes_per_second": false,
+		"powerscale_node_cache_l3_read_hit_bytes_per_second":  false,
+		"powerscale_node_cache_l3_read_miss_bytes_per_second": false,
 	}
 	for _, mf := range mfs {
 		if _, ok := want[mf.GetName()]; ok {
