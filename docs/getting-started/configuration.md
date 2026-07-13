@@ -56,7 +56,10 @@ clusters:
     port: 8080
     username: pscale-monitor
     password: "${PSCALE1_PASSWORD}"
-    # Enable ONLY for clusters with self-signed certs (common in test/lab); keep false in production.
+    # Skip TLS certificate verification for this cluster (INSECURE — use only with a
+    # self-signed cert on a trusted network). Accepts a literal bool or a ${VAR} reference:
+    #   insecureSkipVerify: true
+    #   insecureSkipVerify: "${PSCALE1_SKIP_CERTIFICATE}"
     insecureSkipVerify: false
 ```
 
@@ -86,7 +89,11 @@ Optional OTLP push for metrics and/or tracing. Disabled by default. See
 
 A list — one entry per OneFS cluster. Every metric carries a `cluster` label set to
 `name`. `insecureSkipVerify` should stay `false` in production; enable it only for lab
-clusters with self-signed certificates.
+clusters with self-signed certificates. It accepts either a literal bool
+(`insecureSkipVerify: true`) or a `${VAR}` environment reference resolved at startup
+(`insecureSkipVerify: "${PSCALE1_SKIP_CERTIFICATE}"`), the same pattern used for
+`endpoint`/`username`/`password` — disabling TLS verification should still be used only
+with self-signed certs on a trusted network.
 
 ## Secrets
 
