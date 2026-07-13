@@ -61,15 +61,15 @@ OneFS `node.ifs.cache.*` namespace, confirmed against a live cluster via
 drops *all* current-statistics metrics — so any new key here must be validated against a live
 cluster first. Compute hit ratio in PromQL as `hit / (hit + miss)`.
 
-> Unit semantics (per-second **rate** vs cumulative **counter**) are pending live `--trace`
-> validation; the `_bytes_per_second` suffix is provisional until confirmed (see the design
-> spec, §3).
+Unit semantics are confirmed against a live cluster via `--trace`: OneFS reports these as
+per-second **rates** in bytes/second (fractional byte counts averaged over its sample
+window), so aggregate with `sum`/`avg` — never `rate()`.
 
 | Metric | Unit |
 |---|---|
-| `powerscale_node_cache_l1_read_hit_bytes_per_second` / `..._miss_...` | bytes/s (provisional) |
-| `powerscale_node_cache_l2_read_hit_bytes_per_second` / `..._miss_...` | bytes/s (provisional) |
-| `powerscale_node_cache_l3_read_hit_bytes_per_second` / `..._miss_...` | bytes/s (provisional) |
+| `powerscale_node_cache_l1_read_hit_bytes_per_second` / `..._miss_...` | bytes/s |
+| `powerscale_node_cache_l2_read_hit_bytes_per_second` / `..._miss_...` | bytes/s |
+| `powerscale_node_cache_l3_read_hit_bytes_per_second` / `..._miss_...` | bytes/s |
 
 ### Node health
 
