@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"strconv"
 	"strings"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -377,26 +378,27 @@ func ParseSyncPolicies(b []byte) ([]SyncPolicy, error) {
 	return out, nil
 }
 
-// License is one OneFS licensed feature (license/licenses). HasExpiration is false for
-// perpetual licenses (they omit the expiration field), so callers can skip emitting a
-// meaningless days-to-expiry for them.
+// License is one OneFS licensed feature (license/licenses). ExpirationUnix is 0 for
+// perpetual/unlicensed features (they omit the expiration field), which callers surface as
+// a 0 expiration timestamp.
 type License struct {
-	Name          string
-	Status        string
-	DaysToExpiry  int
-	HasExpiration bool
-	Expired       bool
+	Name   string
+	Status string
+	// ExpirationUnix is the Unix-seconds timestamp when the feature's license expires,
+	// parsed from the OneFS "YYYY-MM-DD" expiration date. It is 0 for perpetual or
+	// unlicensed features, which carry no expiration.
+	ExpirationUnix int64
 }
 
 // ParseLicenses parses the license/licenses response into per-feature license state.
+// The OneFS "expiration" field is a "YYYY-MM-DD" date string (absent for perpetual
+// licenses); it is parsed to a Unix-seconds timestamp, or 0 when absent/unparseable.
 func ParseLicenses(b []byte) ([]License, error) {
 	var raw struct {
 		Licenses []struct {
-			Name         string `json:"name"`
-			Status       string `json:"status"`
-			Expiration   string `json:"expiration"`
-			DaysToExpiry int    `json:"days_to_expiry"`
-			ExpiredAlert bool   `json:"expired_alert"`
+			Name       string `json:"name"`
+			Status     string `json:"status"`
+			Expiration string `json:"expiration"`
 		} `json:"licenses"`
 	}
 	if err := json.Unmarshal(b, &raw); err != nil {
@@ -404,13 +406,13 @@ func ParseLicenses(b []byte) ([]License, error) {
 	}
 	out := make([]License, 0, len(raw.Licenses))
 	for _, l := range raw.Licenses {
-		out = append(out, License{
-			Name:          l.Name,
-			Status:        l.Status,
-			DaysToExpiry:  l.DaysToExpiry,
-			HasExpiration: strings.TrimSpace(l.Expiration) != "",
-			Expired:       l.ExpiredAlert,
-		})
+		var exp int64
+		if s := strings.TrimSpace(l.Expiration); s != "" {
+			if t, err := time.Parse("2006-01-02", s); err == nil {
+				exp = t.Unix()
+			}
+		}
+		out = append(out, License{Name: l.Name, Status: l.Status, ExpirationUnix: exp})
 	}
 	return out, nil
 }

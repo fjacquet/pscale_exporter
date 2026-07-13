@@ -2,6 +2,7 @@ package powerscale
 
 import (
 	"strconv"
+	"strings"
 
 	"github.com/fjacquet/pscale_exporter/internal/models"
 )
@@ -176,23 +177,17 @@ func syncSamples(clusterName, clusterID string, policies []models.SyncPolicy) []
 	return out
 }
 
-// licenseSamples emits per-feature license status. days_to_expiry is emitted only for
-// licenses that carry an expiration (perpetual licenses omit it, so a 0 would false-fire a
-// "< 30 days" alert). expired and info are emitted for every license.
+// licenseSamples emits per-feature license state, aligned with issue #34: an absolute
+// expiration timestamp (0 for perpetual/unlicensed features, which carry no expiration) and
+// an active gauge (1 when the feature is currently licensed/usable) that carries the raw
+// OneFS status as a label. Both are emitted for every license.
 func licenseSamples(clusterName, clusterID string, licenses []models.License) []Sample {
 	var out []Sample
 	for _, l := range licenses {
 		out = append(out,
-			Sample{Name: "powerscale_license_expired", Labels: licenseLabels(clusterName, clusterID, l.Name), Value: b2f(l.Expired)},
-			Sample{Name: "powerscale_license_info", Labels: licenseInfoLabels(clusterName, clusterID, l.Name, l.Status), Value: 1},
+			Sample{Name: "powerscale_license_expiration_timestamp_seconds", Labels: licenseLabels(clusterName, clusterID, l.Name), Value: float64(l.ExpirationUnix)},
+			Sample{Name: "powerscale_license_active", Labels: licenseActiveLabels(clusterName, clusterID, l.Name, l.Status), Value: b2f(licenseActive(l.Status))},
 		)
-		if l.HasExpiration {
-			out = append(out, Sample{
-				Name:   "powerscale_license_days_to_expiry",
-				Labels: licenseLabels(clusterName, clusterID, l.Name),
-				Value:  float64(l.DaysToExpiry),
-			})
-		}
 	}
 	return out
 }
@@ -219,6 +214,18 @@ func storagePoolSamples(clusterName, clusterID string, pools []models.StoragePoo
 		)
 	}
 	return out
+}
+
+// licenseActive reports whether a OneFS license status means the feature is currently
+// usable. OneFS reports Licensed/Activated for a paid license and Evaluation during a trial;
+// any other status (Expired, Unlicensed, Unknown) means the feature is not active.
+func licenseActive(status string) bool {
+	switch strings.ToLower(strings.TrimSpace(status)) {
+	case "licensed", "activated", "evaluation":
+		return true
+	default:
+		return false
+	}
 }
 
 // eventSamples emits the count of unresolved event groups per severity.
