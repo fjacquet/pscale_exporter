@@ -64,6 +64,15 @@ func TestEndToEndCollectionThroughPrometheus(t *testing.T) {
 		"powerscale_license_days_to_expiry":                   false,
 		"powerscale_license_expired":                          false,
 		"powerscale_license_info":                             false,
+		"powerscale_storagepool_total_capacity_bytes":         false,
+		"powerscale_storagepool_used_capacity_bytes":          false,
+		"powerscale_storagepool_available_capacity_bytes":     false,
+		"powerscale_storagepool_ssd_total_capacity_bytes":     false,
+		"powerscale_storagepool_ssd_used_capacity_bytes":      false,
+		"powerscale_storagepool_ssd_available_capacity_bytes": false,
+		"powerscale_storagepool_hdd_total_capacity_bytes":     false,
+		"powerscale_storagepool_hdd_used_capacity_bytes":      false,
+		"powerscale_storagepool_hdd_available_capacity_bytes": false,
 	}
 	for _, mf := range mfs {
 		if _, ok := want[mf.GetName()]; ok {

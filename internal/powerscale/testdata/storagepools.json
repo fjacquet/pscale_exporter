@@ -1,0 +1,5 @@
+{"storagepools": [
+  {"name": "tier1", "type": "tier", "usage": {"total_bytes": "3000", "used_bytes": "1000", "avail_bytes": "2000", "total_ssd_bytes": "1000", "used_ssd_bytes": "400", "avail_ssd_bytes": "600", "total_hdd_bytes": "2000", "used_hdd_bytes": "600", "avail_hdd_bytes": "1400"}},
+  {"name": "h500_nodepool", "type": "nodepool", "usage": {"total_bytes": "2000", "used_bytes": "600", "avail_bytes": "1400", "total_ssd_bytes": "0", "used_ssd_bytes": "0", "avail_ssd_bytes": "0", "total_hdd_bytes": "2000", "used_hdd_bytes": "600", "avail_hdd_bytes": "1400"}},
+  {"name": "f200_nodepool", "type": "nodepool", "usage": {"total_bytes": "1000", "used_bytes": "400", "avail_bytes": "600", "total_ssd_bytes": "1000", "used_ssd_bytes": "400", "avail_ssd_bytes": "600", "total_hdd_bytes": "0", "used_hdd_bytes": "0", "avail_hdd_bytes": "0"}}
+]}
