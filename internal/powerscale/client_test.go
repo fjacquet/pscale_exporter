@@ -36,7 +36,7 @@ func newTestClientOpts(t *testing.T, dumpDir string, trace bool) *ClusterClient 
 		Port:               port,
 		Username:           "u",
 		Password:           "p",
-		InsecureSkipVerify: true,
+		InsecureSkipVerify: models.NewEnvBool(true),
 	}
 	c, err := NewClusterClient(context.Background(), cfg, dumpDir, trace)
 	if err != nil {

@@ -17,7 +17,7 @@ func TestEndToEndCollectionThroughPrometheus(t *testing.T) {
 	port, _ := strconv.Atoi(u.Port())
 	cfg := models.ClusterConfig{
 		Name: "clu1", Endpoint: u.Hostname(), Port: port,
-		Username: "u", Password: "p", InsecureSkipVerify: true,
+		Username: "u", Password: "p", InsecureSkipVerify: models.NewEnvBool(true),
 	}
 	client, err := NewClusterClient(context.Background(), cfg, "", false)
 	if err != nil {
