@@ -1,6 +1,6 @@
 # Dashboards
 
-Three ready-made Grafana dashboards ship in the repo under
+Four ready-made Grafana dashboards ship in the repo under
 `grafana/provisioning/dashboards/json/`:
 
 | Dashboard | uid | Focus |
@@ -8,6 +8,7 @@ Three ready-made Grafana dashboards ship in the repo under
 | **PowerScale / OneFS Overview** | `powerscale-overview` | Capacity, performance, protocols — day-to-day health. |
 | **PowerScale / OneFS Advanced** | `powerscale-advanced` | Node/drive health, data protection, cache efficiency, quota & CPU detail. |
 | **PowerScale / OneFS Capacity & SLA** | `powerscale-capacity-sla` | Availability/latency SLIs and capacity headroom with a days-to-full forecast. |
+| **PowerScale / OneFS Workloads** | `powerscale-workloads` | Per-workload operations, throughput and CPU. Requires a configured OneFS performance dataset. |
 
 Because the `powerscale_` prefix matches
 [`dell/csm-metrics-powerscale`](https://github.com/dell/csm-metrics-powerscale), existing
@@ -29,6 +30,7 @@ One comprehensive board with these rows (in display order):
   `protocol` and `op`.
 - **Per-Node Detail** *(collapsed by default)* — node CPU idle, memory used, disk IOPS, and
   used capacity.
+- **Licensing** — per-feature license status (colored) and a days-to-expiry table (soonest first; red under 30 days).
 
 ### Template variables
 
@@ -85,11 +87,31 @@ in two sections:
   **7-day forecast** line (both from `predict_linear`/`deriv` over the trailing 24h trend),
   per-node capacity balance, snapshot space, and a quota table ranked by closeness to the
   hard limit.
+- **Storage Pools — Capacity** — per node-pool/tier table (used %, used/total/available, and the SSD vs HDD media split), a node-pool used-% trend, and SSD-vs-HDD available capacity. The list holds both node pools and tiers; filter `type="nodepool"` for a non-overlapping cluster total.
+- **Licensing** — min days to license expiry and a count of expired licenses.
 
 !!! note "Forecast is a trend projection"
     Days-to-full and the +7d line extrapolate the trailing 24h growth rate; a flat or
     shrinking trend reads as effectively "never". Use a longer dashboard time range
     (default `now-7d`) so the projection has history to draw from.
+
+## Workloads dashboard
+
+Per-workload performance from OneFS statistics summaries (`uid` `powerscale-workloads`):
+
+- **Operations/sec, Throughput (in/out), and CPU µs/sec** timeseries, one series per workload, plus a **Workload Snapshot** table (instant, sorted by ops/sec).
+- Template variables **cluster / zone / protocol / username** slice the view — use them to bound the series count on a broad dataset.
+
+!!! warning "Requires a performance dataset"
+    Workload rows are produced only when a OneFS **performance dataset** is configured
+    (`isi performance datasets`). Without one, this board is empty — every other dashboard is
+    unaffected. Cardinality is governed by your dataset definition; the exporter exposes a
+    fixed label set (`node`, `zone`, `protocol`, `username`, `system_name`, `job_type`) and
+    omits the unbounded dimensions (`path`, IPs, SIDs).
+
+!!! note "Per-second gauges"
+    Operations, throughput and CPU are per-second gauges — aggregate with `sum`/`avg`, never
+    `rate()`.
 
 ## Auto-provisioned (compose stack)
 
