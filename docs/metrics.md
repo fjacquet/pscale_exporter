@@ -141,6 +141,24 @@ block counts × block size (validated against the OneFS 9.14.0 schema).
 | `powerscale_dedupe_logical_saved_bytes` | bytes | Logical space saved by deduplication. |
 | `powerscale_dedupe_deduplicated_bytes` | bytes | Logical data that has been deduplicated. |
 
+## Licenses
+
+Per-feature OneFS license status, fetched best-effort from `license/licenses` (requires
+`ISI_PRIV_LICENSE`; absent if the account lacks it). `days_to_expiry` is emitted **only for
+licenses that carry an expiration** — perpetual licenses omit it.
+
+| Metric | Labels | Description |
+|---|---|---|
+| `powerscale_license_days_to_expiry` | `name` | Days until the feature's license expires (omitted for perpetual licenses). |
+| `powerscale_license_expired` | `name` | `1` when OneFS flags the feature's license as expired, else `0`. |
+| `powerscale_license_info` | `name`, `status` | Constant `1`; the raw OneFS license `status` is carried as a label. |
+
+Alert on a feature expiring within 30 days:
+
+```promql
+powerscale_license_days_to_expiry < 30
+```
+
 ## Per-drive
 
 From `statistics/summary/drive`. Best-effort. Labels: `cluster`,

@@ -8,7 +8,7 @@ whichever fits your environment.
 Collection only needs a **read-only** OneFS account. Grant its role read access to
 `ISI_PRIV_STATISTICS`, `ISI_PRIV_QUOTA`, `ISI_PRIV_DEVICES` (the node inventory endpoint
 refuses without it), `ISI_PRIV_EVENT`, `ISI_PRIV_SNAPSHOT`, `ISI_PRIV_SYNCIQ`,
-`ISI_PRIV_SMB`, and `ISI_PRIV_NFS`. Create a dedicated monitoring user rather than reusing
+`ISI_PRIV_SMB`, `ISI_PRIV_NFS`, and `ISI_PRIV_LICENSE`. Create a dedicated monitoring user rather than reusing
 an admin account.
 
 ## Container image (recommended)
