@@ -1,0 +1,6 @@
+{"licenses": [
+  {"name": "SyncIQ", "status": "Licensed", "expiration": "2027-01-01", "days_to_expiry": 214, "expired_alert": false},
+  {"name": "SmartQuotas", "status": "Expired", "expiration": "2026-01-01", "days_to_expiry": 0, "expired_alert": true},
+  {"name": "SnapshotIQ", "status": "Licensed", "days_to_expiry": 0, "expired_alert": false},
+  {"name": "CloudPools", "status": "Evaluation", "expiration": "2026-08-01", "days_to_expiry": 19, "expired_alert": false}
+]}

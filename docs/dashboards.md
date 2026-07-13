@@ -63,9 +63,10 @@ were validated against the OneFS 9.14.0 API specification but (except where note
 confirmed against a live cluster.
 
 - **Cache Efficiency** — L1/L2/L3 read hit-vs-miss and a computed hit-ratio, from the
-  node-scoped `node.ifs.cache.*` keys. The key names are confirmed against a live cluster;
-  only the unit semantics (per-second rate vs cumulative counter) remain provisional pending
-  `--trace` validation (see [Metrics Reference](metrics.md#cache)).
+  node-scoped `node.ifs.cache.*` keys. Both the key names and their unit semantics
+  (per-second bytes/second rates) are now confirmed against a live cluster via `--trace`
+  (see [Metrics Reference](metrics.md#cache)); the row stays collapsed by default alongside
+  the other advanced rows.
 - **Storage Efficiency** — deduplication logical saved / deduplicated bytes *(provisional)*.
 - **Per-Drive** — top drive IOPS and busy % *(provisional)*.
 - **Per-Client** — operations by protocol/class and throughput in/out *(provisional)*.

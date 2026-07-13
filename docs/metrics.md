@@ -61,15 +61,15 @@ OneFS `node.ifs.cache.*` namespace, confirmed against a live cluster via
 drops *all* current-statistics metrics — so any new key here must be validated against a live
 cluster first. Compute hit ratio in PromQL as `hit / (hit + miss)`.
 
-> Unit semantics (per-second **rate** vs cumulative **counter**) are pending live `--trace`
-> validation; the `_bytes_per_second` suffix is provisional until confirmed (see the design
-> spec, §3).
+Unit semantics are confirmed against a live cluster via `--trace`: OneFS reports these as
+per-second **rates** in bytes/second (fractional byte counts averaged over its sample
+window), so aggregate with `sum`/`avg` — never `rate()`.
 
 | Metric | Unit |
 |---|---|
-| `powerscale_node_cache_l1_read_hit_bytes_per_second` / `..._miss_...` | bytes/s (provisional) |
-| `powerscale_node_cache_l2_read_hit_bytes_per_second` / `..._miss_...` | bytes/s (provisional) |
-| `powerscale_node_cache_l3_read_hit_bytes_per_second` / `..._miss_...` | bytes/s (provisional) |
+| `powerscale_node_cache_l1_read_hit_bytes_per_second` / `..._miss_...` | bytes/s |
+| `powerscale_node_cache_l2_read_hit_bytes_per_second` / `..._miss_...` | bytes/s |
+| `powerscale_node_cache_l3_read_hit_bytes_per_second` / `..._miss_...` | bytes/s |
 
 ### Node health
 
@@ -140,6 +140,26 @@ block counts × block size (validated against the OneFS 9.14.0 schema).
 |---|---|---|
 | `powerscale_dedupe_logical_saved_bytes` | bytes | Logical space saved by deduplication. |
 | `powerscale_dedupe_deduplicated_bytes` | bytes | Logical data that has been deduplicated. |
+
+## Licenses
+
+Per-feature OneFS license state, fetched best-effort from `license/licenses` (requires
+`ISI_PRIV_LICENSE`; absent if the account lacks it). The OneFS `expiration` date is parsed
+to an absolute Unix timestamp; perpetual/unlicensed features carry no expiration and report
+`0`.
+
+| Metric | Labels | Description |
+|---|---|---|
+| `powerscale_license_expiration_timestamp_seconds` | `name` | Unix timestamp when the feature's license expires; `0` for perpetual/unlicensed features. |
+| `powerscale_license_active` | `name`, `status` | `1` when the feature is licensed and usable (OneFS status `Licensed` / `Activated` / `Evaluation`), else `0`. The raw OneFS `status` is carried as a label. |
+
+Alert on a feature expiring within 30 days (perpetual features report `0` and are excluded
+by the `> 0` guard):
+
+```promql
+powerscale_license_expiration_timestamp_seconds > 0
+  and (powerscale_license_expiration_timestamp_seconds - time()) < 30 * 86400
+```
 
 ## Per-drive
 

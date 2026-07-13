@@ -61,6 +61,8 @@ func TestEndToEndCollectionThroughPrometheus(t *testing.T) {
 		"powerscale_node_cache_l2_read_miss_bytes_per_second": false,
 		"powerscale_node_cache_l3_read_hit_bytes_per_second":  false,
 		"powerscale_node_cache_l3_read_miss_bytes_per_second": false,
+		"powerscale_license_expiration_timestamp_seconds":     false,
+		"powerscale_license_active":                           false,
 	}
 	for _, mf := range mfs {
 		if _, ok := want[mf.GetName()]; ok {

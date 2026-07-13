@@ -2,6 +2,7 @@ package powerscale
 
 import (
 	"strconv"
+	"strings"
 
 	"github.com/fjacquet/pscale_exporter/internal/models"
 )
@@ -30,6 +31,7 @@ func BuildSamples(clusterName string, inv *models.Inventory, st *models.Statisti
 	samples = append(samples, syncSamples(clusterName, clusterID, inv.SyncPolicies)...)
 	samples = append(samples, eventSamples(clusterName, clusterID, inv.Events)...)
 	samples = append(samples, dedupeSamples(clusterName, clusterID, inv.Dedupe)...)
+	samples = append(samples, licenseSamples(clusterName, clusterID, inv.Licenses)...)
 	samples = append(samples, driveSamples(clusterName, clusterID, st)...)
 	samples = append(samples, clientSamples(clusterName, clusterID, st)...)
 	return samples
@@ -172,6 +174,33 @@ func syncSamples(clusterName, clusterID string, policies []models.SyncPolicy) []
 		)
 	}
 	return out
+}
+
+// licenseSamples emits per-feature license state, aligned with issue #34: an absolute
+// expiration timestamp (0 for perpetual/unlicensed features, which carry no expiration) and
+// an active gauge (1 when the feature is currently licensed/usable) that carries the raw
+// OneFS status as a label. Both are emitted for every license.
+func licenseSamples(clusterName, clusterID string, licenses []models.License) []Sample {
+	var out []Sample
+	for _, l := range licenses {
+		out = append(out,
+			Sample{Name: "powerscale_license_expiration_timestamp_seconds", Labels: licenseLabels(clusterName, clusterID, l.Name), Value: float64(l.ExpirationUnix)},
+			Sample{Name: "powerscale_license_active", Labels: licenseActiveLabels(clusterName, clusterID, l.Name, l.Status), Value: b2f(licenseActive(l.Status))},
+		)
+	}
+	return out
+}
+
+// licenseActive reports whether a OneFS license status means the feature is currently
+// usable. OneFS reports Licensed/Activated for a paid license and Evaluation during a trial;
+// any other status (Expired, Unlicensed, Unknown) means the feature is not active.
+func licenseActive(status string) bool {
+	switch strings.ToLower(strings.TrimSpace(status)) {
+	case "licensed", "activated", "evaluation":
+		return true
+	default:
+		return false
+	}
 }
 
 // eventSamples emits the count of unresolved event groups per severity.

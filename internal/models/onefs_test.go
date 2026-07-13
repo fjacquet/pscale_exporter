@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 )
 
 func read(t *testing.T, name string) []byte {
@@ -118,6 +119,29 @@ func TestParseSyncPolicies(t *testing.T) {
 	}
 	if ps[1].Enabled || ps[1].LastJobState != "failed" {
 		t.Fatalf("policy[1]: %+v", ps[1])
+	}
+}
+
+func TestParseLicenses(t *testing.T) {
+	data := []byte(`{"licenses":[
+		{"name":"SyncIQ","status":"Licensed","expiration":"2027-01-01","days_to_expiry":214,"expired_alert":false},
+		{"name":"SmartQuotas","status":"Expired","expiration":"2026-01-01","days_to_expiry":0,"expired_alert":true},
+		{"name":"SnapshotIQ","status":"Licensed","days_to_expiry":0,"expired_alert":false},
+		{"name":"CloudPools","status":"Evaluation","expiration":"2026-08-01","days_to_expiry":19,"expired_alert":false}
+	]}`)
+	ls, err := ParseLicenses(data)
+	if err != nil || len(ls) != 4 {
+		t.Fatalf("parse: %d err=%v", len(ls), err)
+	}
+	wantExp := time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC).Unix()
+	if ls[0] != (License{Name: "SyncIQ", Status: "Licensed", ExpirationUnix: wantExp}) {
+		t.Fatalf("license[0]: %+v (want ExpirationUnix=%d)", ls[0], wantExp)
+	}
+	if ls[1].Status != "Expired" || ls[1].ExpirationUnix == 0 {
+		t.Fatalf("license[1] should be Expired with a parsed expiration: %+v", ls[1])
+	}
+	if ls[2].ExpirationUnix != 0 {
+		t.Fatalf("license[2] (perpetual, no expiration) should have ExpirationUnix=0: %+v", ls[2])
 	}
 }
 

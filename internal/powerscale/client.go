@@ -213,6 +213,7 @@ func (c *ClusterClient) GetInventory(ctx context.Context) (*models.Inventory, er
 		SyncPolicies: c.syncPolicies(ctx),
 		Events:       c.activeEvents(ctx),
 		Dedupe:       c.dedupeSummary(ctx),
+		Licenses:     c.licenses(ctx),
 	}
 	if log.IsLevelEnabled(log.DebugLevel) {
 		var sensors int
@@ -220,10 +221,10 @@ func (c *ClusterClient) GetInventory(ctx context.Context) (*models.Inventory, er
 			sensors += len(n.Temperatures) + len(n.Fans)
 		}
 		log.Debugf("cluster %q: inventory parsed: release=%s nodes=%d (sensor values=%d) quotas=%d "+
-			"nfs_exports=%d smb_shares=%d snapshots=%d sync_policies=%d events=%v",
+			"nfs_exports=%d smb_shares=%d snapshots=%d sync_policies=%d events=%v licenses=%d",
 			c.name, inv.Cluster.Release, len(inv.Nodes), sensors, len(inv.Quotas),
 			inv.Counts.NFSExports, inv.Counts.SMBShares, inv.Counts.Snapshots,
-			len(inv.SyncPolicies), inv.Events)
+			len(inv.SyncPolicies), inv.Events, len(inv.Licenses))
 	}
 	return inv, nil
 }
@@ -272,6 +273,22 @@ func (c *ClusterClient) syncPolicies(ctx context.Context) []models.SyncPolicy {
 		return nil
 	}
 	return p
+}
+
+// licenses fetches OneFS license status best-effort (a missing ISI_PRIV_LICENSE privilege
+// or an older release simply yields no license metrics).
+func (c *ClusterClient) licenses(ctx context.Context) []models.License {
+	var b []byte
+	if err := c.getRaw(ctx, "platform/5/license/licenses", &b); err != nil {
+		log.Debugf("cluster %q: licenses failed: %v", c.name, err)
+		return nil
+	}
+	l, err := models.ParseLicenses(b)
+	if err != nil {
+		log.Debugf("cluster %q: parse licenses failed: %v; payload: %s", c.name, err, snippet(b))
+		return nil
+	}
+	return l
 }
 
 // activeEvents fetches unresolved event-group occurrences best-effort, counted by severity.

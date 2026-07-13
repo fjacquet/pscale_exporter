@@ -2,6 +2,7 @@ package powerscale
 
 import (
 	"testing"
+	"time"
 
 	"github.com/fjacquet/pscale_exporter/internal/models"
 )
@@ -197,5 +198,53 @@ func TestBuildSamplesNodeIfsCacheKeys(t *testing.T) {
 		if s.Labels[2].Value != "1" { // nodeLabels = [cluster, cluster_id, node]
 			t.Fatalf("cache sample %s node label wrong: %+v", c.metric, s.Labels)
 		}
+	}
+}
+
+func TestBuildSamplesLicenses(t *testing.T) {
+	syncExp := time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC).Unix()
+	inv := &models.Inventory{
+		Cluster: models.ClusterInfo{Name: "ignored", GUID: "GUID-1"},
+		Licenses: []models.License{
+			{Name: "SyncIQ", Status: "Licensed", ExpirationUnix: syncExp},
+			{Name: "SmartQuotas", Status: "Expired", ExpirationUnix: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC).Unix()},
+			{Name: "SnapshotIQ", Status: "Licensed", ExpirationUnix: 0},
+		},
+	}
+	samples := BuildSamples("clu1", inv, nil)
+	find := func(name, feature string) (Sample, bool) {
+		for _, s := range samples {
+			if s.Name != name {
+				continue
+			}
+			for _, l := range s.Labels {
+				if l.Name == "name" && l.Value == feature {
+					return s, true
+				}
+			}
+		}
+		return Sample{}, false
+	}
+	if s, ok := find("powerscale_license_expiration_timestamp_seconds", "SyncIQ"); !ok || s.Value != float64(syncExp) {
+		t.Fatalf("SyncIQ expiration timestamp wrong: %+v ok=%v (want %d)", s, ok, syncExp)
+	}
+	if s, ok := find("powerscale_license_expiration_timestamp_seconds", "SnapshotIQ"); !ok || s.Value != 0 {
+		t.Fatalf("perpetual license (SnapshotIQ) must emit expiration timestamp 0: %+v ok=%v", s, ok)
+	}
+	if s, ok := find("powerscale_license_active", "SmartQuotas"); !ok || s.Value != 0 {
+		t.Fatalf("SmartQuotas (Expired) active should be 0: %+v ok=%v", s, ok)
+	}
+	s, ok := find("powerscale_license_active", "SyncIQ")
+	if !ok || s.Value != 1 {
+		t.Fatalf("SyncIQ (Licensed) active should be 1: %+v ok=%v", s, ok)
+	}
+	hasStatus := false
+	for _, l := range s.Labels {
+		if l.Name == "status" && l.Value == "Licensed" {
+			hasStatus = true
+		}
+	}
+	if !hasStatus {
+		t.Fatalf("active sample missing status label: %+v", s.Labels)
 	}
 }
