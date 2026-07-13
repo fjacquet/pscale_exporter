@@ -68,8 +68,9 @@ func licenseLabels(clusterName, clusterID, name string) []Label {
 	return append(baseLabels(clusterName, clusterID), Label{Name: "name", Value: name})
 }
 
-// licenseInfoLabels appends a licensed-feature name and its OneFS status string.
-func licenseInfoLabels(clusterName, clusterID, name, status string) []Label {
+// licenseActiveLabels appends a licensed-feature name and its OneFS status string,
+// used on the powerscale_license_active gauge.
+func licenseActiveLabels(clusterName, clusterID, name, status string) []Label {
 	return append(baseLabels(clusterName, clusterID),
 		Label{Name: "name", Value: name},
 		Label{Name: "status", Value: status},
