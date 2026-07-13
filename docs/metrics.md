@@ -210,6 +210,37 @@ cardinality (individual remote clients are intentionally not exported). Best-eff
 | `powerscale_client_in_bytes_per_second` | bytes/s | Inbound throughput. |
 | `powerscale_client_out_bytes_per_second` | bytes/s | Outbound throughput. |
 
+## Workloads
+
+Per-workload performance, from `statistics/summary/workload`. Best-effort and covered by
+`ISI_PRIV_STATISTICS` (already required for the other statistics).
+
+!!! note "Requires a configured performance dataset"
+    Workload rows are produced by OneFS **performance datasets** (`isi performance datasets`).
+    Without a configured dataset this endpoint returns few or only aggregate rows, so these
+    metrics may be empty until you define one. The dataset's pinned dimensions also determine
+    which labels are populated — an unpinned dimension is the empty string.
+
+Labels: `node` (`0` = cluster-scoped), `zone`, `protocol`, `username`, `system_name`,
+`job_type`. The high-cardinality dimensions OneFS also reports (`path`, client IP addresses,
+SIDs) are intentionally **not** exported; control cardinality through your dataset definition.
+
+| Metric | Unit | Description |
+|---|---|---|
+| `powerscale_workload_operations_per_second` | ops/s | Operation rate for the workload. |
+| `powerscale_workload_in_bytes_per_second` | bytes/s | Inbound throughput. |
+| `powerscale_workload_out_bytes_per_second` | bytes/s | Outbound throughput. |
+| `powerscale_workload_cpu_microseconds` | µs/s | CPU time consumed per second across all cores (a per-second gauge — `sum`/`avg`, never `rate()`). |
+
+Top 5 workloads by operation rate, per cluster:
+
+```promql
+topk(5, sum by (cluster, zone, username, protocol) (powerscale_workload_operations_per_second))
+```
+
+Per-workload disk/cache detail (`reads`, `writes`, `l2`, `l3`) and **latency** are planned
+follow-ups — latency is held back until a live workload body confirms its unit.
+
 ## Health & metadata
 
 These carry only the `cluster` label.
