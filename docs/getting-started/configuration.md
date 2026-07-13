@@ -41,8 +41,15 @@ opentelemetry:
     insecure: true
     samplingRate: 0.1
 
-# A read-only account (role with read access to ISI_PRIV_STATISTICS,
-# ISI_PRIV_QUOTA and ISI_PRIV_DEVICES) is sufficient.
+# A read-only account is sufficient. Grant its role read access to:
+#   ISI_PRIV_STATISTICS  (CPU, capacity, cache, drive, client & protocol stats)
+#   ISI_PRIV_QUOTA       (quota usage / thresholds)
+#   ISI_PRIV_DEVICES     (node inventory, hardware, node health)
+#   ISI_PRIV_EVENT       (active event groups)
+#   ISI_PRIV_SNAPSHOT    (snapshot count & used space)
+#   ISI_PRIV_SYNCIQ      (SyncIQ replication policy health)
+#   ISI_PRIV_SMB         (SMB share count)
+#   ISI_PRIV_NFS         (NFS export count)
 clusters:
   - name: pscale-cluster1
     endpoint: pscale-clu1.example.com

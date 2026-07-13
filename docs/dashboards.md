@@ -58,13 +58,14 @@ the Overview board.
 
 ### Provisional rows (collapsed by default)
 
-The following rows are collapsed by default. Their panels note that the underlying stat
-keys are provisional — the key names have been verified against the OneFS 9.14.0 API
-specification but have not been confirmed against a live cluster.
+The following rows are collapsed by default because their underlying stat keys or schemas
+were validated against the OneFS 9.14.0 API specification but (except where noted) not yet
+confirmed against a live cluster.
 
-- **Cache Efficiency** — L1/L2/L3 read hit-vs-miss and a computed hit-ratio. These use the
-  *provisional* `cache.*` keys; the panels stay empty if your OneFS release exposes
-  different key strings (see [Metrics Reference](metrics.md#cache-provisional)).
+- **Cache Efficiency** — L1/L2/L3 read hit-vs-miss and a computed hit-ratio, from the
+  node-scoped `node.ifs.cache.*` keys. The key names are confirmed against a live cluster;
+  only the unit semantics (per-second rate vs cumulative counter) remain provisional pending
+  `--trace` validation (see [Metrics Reference](metrics.md#cache)).
 - **Storage Efficiency** — deduplication logical saved / deduplicated bytes *(provisional)*.
 - **Per-Drive** — top drive IOPS and busy % *(provisional)*.
 - **Per-Client** — operations by protocol/class and throughput in/out *(provisional)*.
