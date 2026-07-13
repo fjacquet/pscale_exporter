@@ -34,6 +34,7 @@ func BuildSamples(clusterName string, inv *models.Inventory, st *models.Statisti
 	samples = append(samples, storagePoolSamples(clusterName, clusterID, inv.StoragePools)...)
 	samples = append(samples, driveSamples(clusterName, clusterID, st)...)
 	samples = append(samples, clientSamples(clusterName, clusterID, st)...)
+	samples = append(samples, workloadSamples(clusterName, clusterID, st)...)
 	return samples
 }
 
@@ -272,6 +273,26 @@ func clientSamples(clusterName, clusterID string, st *models.Statistics) []Sampl
 			Sample{Name: "powerscale_client_operations_per_second", Labels: labels, Value: c.OpsPerSec},
 			Sample{Name: "powerscale_client_in_bytes_per_second", Labels: labels, Value: c.InBps},
 			Sample{Name: "powerscale_client_out_bytes_per_second", Labels: labels, Value: c.OutBps},
+		)
+	}
+	return out
+}
+
+// workloadSamples emits per-workload performance (ops, throughput, CPU). Rows come from OneFS
+// performance datasets; the identity dimensions are labels (unpinned ones are ""). All four
+// gauges are per-second rates — aggregate with sum/avg, never rate().
+func workloadSamples(clusterName, clusterID string, st *models.Statistics) []Sample {
+	if st == nil {
+		return nil
+	}
+	var out []Sample
+	for _, w := range st.Workloads {
+		labels := workloadLabels(clusterName, clusterID, strconv.Itoa(w.Node), w.Zone, w.Protocol, w.Username, w.SystemName, w.JobType)
+		out = append(out,
+			Sample{Name: "powerscale_workload_operations_per_second", Labels: labels, Value: w.Ops},
+			Sample{Name: "powerscale_workload_in_bytes_per_second", Labels: labels, Value: w.BytesIn},
+			Sample{Name: "powerscale_workload_out_bytes_per_second", Labels: labels, Value: w.BytesOut},
+			Sample{Name: "powerscale_workload_cpu_microseconds", Labels: labels, Value: w.CPUMicros},
 		)
 	}
 	return out
