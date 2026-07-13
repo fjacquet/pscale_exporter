@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 )
 
 func read(t *testing.T, name string) []byte {
@@ -132,14 +133,15 @@ func TestParseLicenses(t *testing.T) {
 	if err != nil || len(ls) != 4 {
 		t.Fatalf("parse: %d err=%v", len(ls), err)
 	}
-	if ls[0] != (License{Name: "SyncIQ", Status: "Licensed", DaysToExpiry: 214, HasExpiration: true, Expired: false}) {
-		t.Fatalf("license[0]: %+v", ls[0])
+	wantExp := time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC).Unix()
+	if ls[0] != (License{Name: "SyncIQ", Status: "Licensed", ExpirationUnix: wantExp}) {
+		t.Fatalf("license[0]: %+v (want ExpirationUnix=%d)", ls[0], wantExp)
 	}
-	if !ls[1].Expired {
-		t.Fatalf("license[1] should be expired: %+v", ls[1])
+	if ls[1].Status != "Expired" || ls[1].ExpirationUnix == 0 {
+		t.Fatalf("license[1] should be Expired with a parsed expiration: %+v", ls[1])
 	}
-	if ls[2].HasExpiration {
-		t.Fatalf("license[2] (perpetual, no expiration) should have HasExpiration=false: %+v", ls[2])
+	if ls[2].ExpirationUnix != 0 {
+		t.Fatalf("license[2] (perpetual, no expiration) should have ExpirationUnix=0: %+v", ls[2])
 	}
 }
 

@@ -2,6 +2,7 @@ package powerscale
 
 import (
 	"testing"
+	"time"
 
 	"github.com/fjacquet/pscale_exporter/internal/models"
 )
@@ -201,12 +202,13 @@ func TestBuildSamplesNodeIfsCacheKeys(t *testing.T) {
 }
 
 func TestBuildSamplesLicenses(t *testing.T) {
+	syncExp := time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC).Unix()
 	inv := &models.Inventory{
 		Cluster: models.ClusterInfo{Name: "ignored", GUID: "GUID-1"},
 		Licenses: []models.License{
-			{Name: "SyncIQ", Status: "Licensed", DaysToExpiry: 214, HasExpiration: true, Expired: false},
-			{Name: "SmartQuotas", Status: "Expired", DaysToExpiry: 0, HasExpiration: true, Expired: true},
-			{Name: "SnapshotIQ", Status: "Licensed", DaysToExpiry: 0, HasExpiration: false, Expired: false},
+			{Name: "SyncIQ", Status: "Licensed", ExpirationUnix: syncExp},
+			{Name: "SmartQuotas", Status: "Expired", ExpirationUnix: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC).Unix()},
+			{Name: "SnapshotIQ", Status: "Licensed", ExpirationUnix: 0},
 		},
 	}
 	samples := BuildSamples("clu1", inv, nil)
@@ -223,18 +225,18 @@ func TestBuildSamplesLicenses(t *testing.T) {
 		}
 		return Sample{}, false
 	}
-	if s, ok := find("powerscale_license_days_to_expiry", "SyncIQ"); !ok || s.Value != 214 {
-		t.Fatalf("SyncIQ days_to_expiry wrong: %+v ok=%v", s, ok)
+	if s, ok := find("powerscale_license_expiration_timestamp_seconds", "SyncIQ"); !ok || s.Value != float64(syncExp) {
+		t.Fatalf("SyncIQ expiration timestamp wrong: %+v ok=%v (want %d)", s, ok, syncExp)
 	}
-	if _, ok := find("powerscale_license_days_to_expiry", "SnapshotIQ"); ok {
-		t.Fatal("perpetual license (SnapshotIQ) must not emit days_to_expiry")
+	if s, ok := find("powerscale_license_expiration_timestamp_seconds", "SnapshotIQ"); !ok || s.Value != 0 {
+		t.Fatalf("perpetual license (SnapshotIQ) must emit expiration timestamp 0: %+v ok=%v", s, ok)
 	}
-	if s, ok := find("powerscale_license_expired", "SmartQuotas"); !ok || s.Value != 1 {
-		t.Fatalf("SmartQuotas expired should be 1: %+v ok=%v", s, ok)
+	if s, ok := find("powerscale_license_active", "SmartQuotas"); !ok || s.Value != 0 {
+		t.Fatalf("SmartQuotas (Expired) active should be 0: %+v ok=%v", s, ok)
 	}
-	s, ok := find("powerscale_license_info", "SyncIQ")
+	s, ok := find("powerscale_license_active", "SyncIQ")
 	if !ok || s.Value != 1 {
-		t.Fatalf("SyncIQ info missing: %+v ok=%v", s, ok)
+		t.Fatalf("SyncIQ (Licensed) active should be 1: %+v ok=%v", s, ok)
 	}
 	hasStatus := false
 	for _, l := range s.Labels {
@@ -243,6 +245,6 @@ func TestBuildSamplesLicenses(t *testing.T) {
 		}
 	}
 	if !hasStatus {
-		t.Fatalf("info sample missing status label: %+v", s.Labels)
+		t.Fatalf("active sample missing status label: %+v", s.Labels)
 	}
 }
