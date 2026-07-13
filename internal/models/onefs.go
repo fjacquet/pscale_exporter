@@ -151,6 +151,7 @@ type Inventory struct {
 	SyncPolicies []SyncPolicy
 	Events       map[string]int // unresolved event-group count by severity
 	Dedupe       DedupeSummary
+	Licenses     []License
 }
 
 // DriveStat is one per-drive performance row (statistics/summary/drive).
@@ -371,6 +372,44 @@ func ParseSyncPolicies(b []byte) ([]SyncPolicy, error) {
 	out := make([]SyncPolicy, 0, len(raw.Policies))
 	for _, p := range raw.Policies {
 		out = append(out, SyncPolicy{Name: p.Name, Enabled: p.Enabled, LastJobState: p.LastJobState})
+	}
+	return out, nil
+}
+
+// License is one OneFS licensed feature (license/licenses). HasExpiration is false for
+// perpetual licenses (they omit the expiration field), so callers can skip emitting a
+// meaningless days-to-expiry for them.
+type License struct {
+	Name          string
+	Status        string
+	DaysToExpiry  int
+	HasExpiration bool
+	Expired       bool
+}
+
+// ParseLicenses parses the license/licenses response into per-feature license state.
+func ParseLicenses(b []byte) ([]License, error) {
+	var raw struct {
+		Licenses []struct {
+			Name         string `json:"name"`
+			Status       string `json:"status"`
+			Expiration   string `json:"expiration"`
+			DaysToExpiry int    `json:"days_to_expiry"`
+			ExpiredAlert bool   `json:"expired_alert"`
+		} `json:"licenses"`
+	}
+	if err := json.Unmarshal(b, &raw); err != nil {
+		return nil, err
+	}
+	out := make([]License, 0, len(raw.Licenses))
+	for _, l := range raw.Licenses {
+		out = append(out, License{
+			Name:          l.Name,
+			Status:        l.Status,
+			DaysToExpiry:  l.DaysToExpiry,
+			HasExpiration: strings.TrimSpace(l.Expiration) != "",
+			Expired:       l.ExpiredAlert,
+		})
 	}
 	return out, nil
 }

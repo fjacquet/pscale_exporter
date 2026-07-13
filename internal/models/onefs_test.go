@@ -121,6 +121,28 @@ func TestParseSyncPolicies(t *testing.T) {
 	}
 }
 
+func TestParseLicenses(t *testing.T) {
+	data := []byte(`{"licenses":[
+		{"name":"SyncIQ","status":"Licensed","expiration":"2027-01-01","days_to_expiry":214,"expired_alert":false},
+		{"name":"SmartQuotas","status":"Expired","expiration":"2026-01-01","days_to_expiry":0,"expired_alert":true},
+		{"name":"SnapshotIQ","status":"Licensed","days_to_expiry":0,"expired_alert":false},
+		{"name":"CloudPools","status":"Evaluation","expiration":"2026-08-01","days_to_expiry":19,"expired_alert":false}
+	]}`)
+	ls, err := ParseLicenses(data)
+	if err != nil || len(ls) != 4 {
+		t.Fatalf("parse: %d err=%v", len(ls), err)
+	}
+	if ls[0] != (License{Name: "SyncIQ", Status: "Licensed", DaysToExpiry: 214, HasExpiration: true, Expired: false}) {
+		t.Fatalf("license[0]: %+v", ls[0])
+	}
+	if !ls[1].Expired {
+		t.Fatalf("license[1] should be expired: %+v", ls[1])
+	}
+	if ls[2].HasExpiration {
+		t.Fatalf("license[2] (perpetual, no expiration) should have HasExpiration=false: %+v", ls[2])
+	}
+}
+
 func TestParseEventOccurrences(t *testing.T) {
 	ev, err := ParseEventOccurrences(read(t, "events.json"))
 	if err != nil {
