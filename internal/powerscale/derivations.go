@@ -31,6 +31,7 @@ func BuildSamples(clusterName string, inv *models.Inventory, st *models.Statisti
 	samples = append(samples, eventSamples(clusterName, clusterID, inv.Events)...)
 	samples = append(samples, dedupeSamples(clusterName, clusterID, inv.Dedupe)...)
 	samples = append(samples, licenseSamples(clusterName, clusterID, inv.Licenses)...)
+	samples = append(samples, storagePoolSamples(clusterName, clusterID, inv.StoragePools)...)
 	samples = append(samples, driveSamples(clusterName, clusterID, st)...)
 	samples = append(samples, clientSamples(clusterName, clusterID, st)...)
 	return samples
@@ -192,6 +193,30 @@ func licenseSamples(clusterName, clusterID string, licenses []models.License) []
 				Value:  float64(l.DaysToExpiry),
 			})
 		}
+	}
+	return out
+}
+
+// storagePoolSamples emits per-pool/per-tier capacity: the aggregate plus an SSD/HDD media
+// split. The list contains both node pools and tiers (a tier's capacity is the sum of its
+// child node pools), distinguished by the type label — summing across all rows double-counts,
+// so consumers filter type="nodepool" for a non-overlapping cluster total. All 9 gauges are
+// always emitted (an all-HDD pool simply reports ssd=0).
+func storagePoolSamples(clusterName, clusterID string, pools []models.StoragePool) []Sample {
+	var out []Sample
+	for _, p := range pools {
+		labels := storagePoolLabels(clusterName, clusterID, p.Name, p.Type)
+		out = append(out,
+			Sample{Name: "powerscale_storagepool_total_capacity_bytes", Labels: labels, Value: p.TotalBytes},
+			Sample{Name: "powerscale_storagepool_used_capacity_bytes", Labels: labels, Value: p.UsedBytes},
+			Sample{Name: "powerscale_storagepool_available_capacity_bytes", Labels: labels, Value: p.AvailBytes},
+			Sample{Name: "powerscale_storagepool_ssd_total_capacity_bytes", Labels: labels, Value: p.SSDTotalBytes},
+			Sample{Name: "powerscale_storagepool_ssd_used_capacity_bytes", Labels: labels, Value: p.SSDUsedBytes},
+			Sample{Name: "powerscale_storagepool_ssd_available_capacity_bytes", Labels: labels, Value: p.SSDAvailBytes},
+			Sample{Name: "powerscale_storagepool_hdd_total_capacity_bytes", Labels: labels, Value: p.HDDTotalBytes},
+			Sample{Name: "powerscale_storagepool_hdd_used_capacity_bytes", Labels: labels, Value: p.HDDUsedBytes},
+			Sample{Name: "powerscale_storagepool_hdd_available_capacity_bytes", Labels: labels, Value: p.HDDAvailBytes},
+		)
 	}
 	return out
 }

@@ -246,3 +246,52 @@ func TestBuildSamplesLicenses(t *testing.T) {
 		t.Fatalf("info sample missing status label: %+v", s.Labels)
 	}
 }
+
+func TestBuildSamplesStoragePools(t *testing.T) {
+	inv := &models.Inventory{
+		Cluster: models.ClusterInfo{Name: "ignored", GUID: "GUID-1"},
+		StoragePools: []models.StoragePool{
+			{Name: "nodepool1", Type: "nodepool", TotalBytes: 3000, UsedBytes: 1000, AvailBytes: 2000,
+				SSDTotalBytes: 1000, SSDUsedBytes: 400, SSDAvailBytes: 600,
+				HDDTotalBytes: 2000, HDDUsedBytes: 600, HDDAvailBytes: 1400},
+			{Name: "hdd_pool", Type: "nodepool", TotalBytes: 2000, UsedBytes: 600, AvailBytes: 1400,
+				SSDTotalBytes: 0, SSDUsedBytes: 0, SSDAvailBytes: 0,
+				HDDTotalBytes: 2000, HDDUsedBytes: 600, HDDAvailBytes: 1400},
+		},
+	}
+	samples := BuildSamples("clu1", inv, nil)
+	find := func(name, pool string) (Sample, bool) {
+		for _, s := range samples {
+			if s.Name != name {
+				continue
+			}
+			for _, l := range s.Labels {
+				if l.Name == "pool" && l.Value == pool {
+					return s, true
+				}
+			}
+		}
+		return Sample{}, false
+	}
+	if s, ok := find("powerscale_storagepool_total_capacity_bytes", "nodepool1"); !ok || s.Value != 3000 {
+		t.Fatalf("nodepool1 total wrong: %+v ok=%v", s, ok)
+	}
+	if s, ok := find("powerscale_storagepool_ssd_used_capacity_bytes", "nodepool1"); !ok || s.Value != 400 {
+		t.Fatalf("nodepool1 ssd_used wrong: %+v ok=%v", s, ok)
+	}
+	// the all-HDD pool still emits an ssd_total series, valued 0 (always-emit)
+	if s, ok := find("powerscale_storagepool_ssd_total_capacity_bytes", "hdd_pool"); !ok || s.Value != 0 {
+		t.Fatalf("hdd_pool ssd_total should be present and 0: %+v ok=%v", s, ok)
+	}
+	// the type label is present
+	s, ok := find("powerscale_storagepool_total_capacity_bytes", "nodepool1")
+	hasType := false
+	for _, l := range s.Labels {
+		if l.Name == "type" && l.Value == "nodepool" {
+			hasType = true
+		}
+	}
+	if !ok || !hasType {
+		t.Fatalf("nodepool1 missing type label: %+v", s.Labels)
+	}
+}
