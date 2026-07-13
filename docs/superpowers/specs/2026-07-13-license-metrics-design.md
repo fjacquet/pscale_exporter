@@ -20,7 +20,7 @@ Unlike the cache stat keys (runtime values absent from the OpenAPI spec), the li
 Response shape (`{ "licenses": [ … ] }`), per the 9.14 schema — fields consumed:
 
 | field | type | use |
-|---|---|---|
+| --- | --- | --- |
 | `name` | string | feature name → `name` label |
 | `status` | string | current license status → `status` label |
 | `expiration` | string (`YYYY-MM-DD`) | **presence** flag only — omitted when the license is perpetual |
@@ -34,7 +34,7 @@ Response shape (`{ "licenses": [ … ] }`), per the 9.14 schema — fields consu
 All best-effort; an empty/failed fetch emits nothing. Canonical leading labels `cluster`, `cluster_id`.
 
 | Metric | Labels | Value | Emitted for |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `powerscale_license_days_to_expiry` | `cluster, cluster_id, name` | `days_to_expiry` | **only licenses that have an `expiration`** |
 | `powerscale_license_expired` | `cluster, cluster_id, name` | `1` if `expired_alert` else `0` | every license |
 | `powerscale_license_info` | `cluster, cluster_id, name, status` | constant `1` | every license |
@@ -75,10 +75,12 @@ All best-effort; an empty/failed fetch emits nothing. Canonical leading labels `
 ## Docs
 
 - New `### Licenses` section in `docs/metrics.md` documenting the three metrics, the perpetual-license omission of `days_to_expiry`, and the alert example:
+
   ```promql
   # a licensed feature expiring within 30 days
   powerscale_license_days_to_expiry < 30
   ```
+
 - Add `ISI_PRIV_LICENSE` to the documented read-only privilege set (configuration.md / installation.md). Note it is best-effort: without the privilege, license metrics are simply absent.
 
 ## Non-goals

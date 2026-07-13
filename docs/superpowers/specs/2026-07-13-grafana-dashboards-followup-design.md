@@ -13,6 +13,7 @@ Add Grafana panels for the three shipped-but-unvisualized metric families so ope
 ## Placement strategy — hybrid
 
 Decided during brainstorming:
+
 - **license** and **storagepool** fold into the existing boards where operators already look (Overview, Capacity & SLA).
 - **workload** — high-cardinality, dataset-dependent, the odd one out — gets its own dedicated `powerscale-workloads.json`.
 
@@ -21,16 +22,19 @@ Decided during brainstorming:
 Exact metric names + labels (from `internal/powerscale/derivations.go` / `metrics.go`):
 
 **License** (`baseLabels` = `cluster`, `cluster_id`):
+
 - `powerscale_license_info{cluster,cluster_id,name,status}` = `1` (status carried as a label)
 - `powerscale_license_expired{cluster,cluster_id,name}` = `0|1`
 - `powerscale_license_days_to_expiry{cluster,cluster_id,name}` = days — **emitted only for licenses that carry an expiration** (perpetual omit it, so `min(...)` never false-fires a "<30 days" alert).
 
 **Storage pools** (`{cluster,cluster_id,pool,type}`, `type` ∈ `nodepool|tier`), 9 gauges:
+
 - aggregate: `powerscale_storagepool_{total,used,available}_capacity_bytes`
 - media split: `powerscale_storagepool_{ssd,hdd}_{total,used,available}_capacity_bytes`
 - **Double-count caveat:** a tier's capacity is the sum of its child node pools; summing across all rows double-counts. Consumers filter `type="nodepool"` for a non-overlapping cluster total.
 
 **Workload** (`{cluster,cluster_id,node,zone,protocol,username,system_name,job_type}`), 4 per-second gauges:
+
 - `powerscale_workload_operations_per_second`, `…_in_bytes_per_second`, `…_out_bytes_per_second`, `…_cpu_microseconds_per_second`
 - All are per-second gauges (`sum`/`avg`, never `rate()`). Rows exist only when a OneFS **performance dataset** is configured; unpinned dimensions render as `""`.
 
@@ -91,6 +95,7 @@ New **"Storage Pools — Capacity"** row appended at the bottom of the board (ju
 ## Testing / validation
 
 Dashboards are JSON with no Go bindings, so there are no unit tests — and the repo has no existing dashboard CI. Validation:
+
 1. **Valid JSON** — `python3 -m json.tool` (or `jq empty`) on each edited/new file; must parse.
 2. **Metric-name cross-check** — every `powerscale_*` metric referenced in the new/edited JSON must exist in `internal/powerscale/derivations.go` (grep both sides; no typos, no stale names). This is the key correctness gate — a mistyped metric silently yields an empty panel.
 3. **uid uniqueness** — `powerscale-workloads` must not collide with the existing four uids.

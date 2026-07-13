@@ -25,10 +25,12 @@
 ### Task 1: StoragePool model + `ParseStoragePools`
 
 **Files:**
+
 - Modify: `internal/models/onefs.go` (add `StoragePool` type, `ParseStoragePools`, `Inventory.StoragePools` field)
 - Test: `internal/models/onefs_test.go`
 
 **Interfaces:**
+
 - Consumes: `encoding/json`, the existing unexported `flexFloat` type (both already in `onefs.go`).
 - Produces: `type StoragePool struct { Name, Type string; TotalBytes, UsedBytes, AvailBytes, SSDTotalBytes, SSDUsedBytes, SSDAvailBytes, HDDTotalBytes, HDDUsedBytes, HDDAvailBytes float64 }`; `func ParseStoragePools(b []byte) ([]StoragePool, error)`; `Inventory.StoragePools []StoragePool`.
 
@@ -38,20 +40,20 @@ Add to `internal/models/onefs_test.go` (place after `TestParseLicenses`):
 
 ```go
 func TestParseStoragePools(t *testing.T) {
-	data := []byte(`{"storagepools":[
-		{"name":"tier1","type":"tier","usage":{"total_bytes":"3000","used_bytes":"1000","avail_bytes":"2000","total_ssd_bytes":"1000","used_ssd_bytes":"400","avail_ssd_bytes":"600","total_hdd_bytes":"2000","used_hdd_bytes":"600","avail_hdd_bytes":"1400"}},
-		{"name":"h500_nodepool","type":"nodepool","usage":{"total_bytes":"2000","used_bytes":"600","avail_bytes":"1400","total_ssd_bytes":"0","used_ssd_bytes":"0","avail_ssd_bytes":"0","total_hdd_bytes":"2000","used_hdd_bytes":"600","avail_hdd_bytes":"1400"}}
-	]}`)
-	ps, err := ParseStoragePools(data)
-	if err != nil || len(ps) != 2 {
-		t.Fatalf("parse: %d err=%v", len(ps), err)
-	}
-	if ps[0].Name != "tier1" || ps[0].Type != "tier" || ps[0].TotalBytes != 3000 || ps[0].SSDUsedBytes != 400 {
-		t.Fatalf("pool[0] (string bytes must parse): %+v", ps[0])
-	}
-	if ps[1].Type != "nodepool" || ps[1].SSDTotalBytes != 0 || ps[1].HDDTotalBytes != 2000 {
-		t.Fatalf("pool[1] (all-HDD): %+v", ps[1])
-	}
+ data := []byte(`{"storagepools":[
+  {"name":"tier1","type":"tier","usage":{"total_bytes":"3000","used_bytes":"1000","avail_bytes":"2000","total_ssd_bytes":"1000","used_ssd_bytes":"400","avail_ssd_bytes":"600","total_hdd_bytes":"2000","used_hdd_bytes":"600","avail_hdd_bytes":"1400"}},
+  {"name":"h500_nodepool","type":"nodepool","usage":{"total_bytes":"2000","used_bytes":"600","avail_bytes":"1400","total_ssd_bytes":"0","used_ssd_bytes":"0","avail_ssd_bytes":"0","total_hdd_bytes":"2000","used_hdd_bytes":"600","avail_hdd_bytes":"1400"}}
+ ]}`)
+ ps, err := ParseStoragePools(data)
+ if err != nil || len(ps) != 2 {
+  t.Fatalf("parse: %d err=%v", len(ps), err)
+ }
+ if ps[0].Name != "tier1" || ps[0].Type != "tier" || ps[0].TotalBytes != 3000 || ps[0].SSDUsedBytes != 400 {
+  t.Fatalf("pool[0] (string bytes must parse): %+v", ps[0])
+ }
+ if ps[1].Type != "nodepool" || ps[1].SSDTotalBytes != 0 || ps[1].HDDTotalBytes != 2000 {
+  t.Fatalf("pool[1] (all-HDD): %+v", ps[1])
+ }
 }
 ```
 
@@ -65,7 +67,7 @@ Expected: FAIL — `undefined: ParseStoragePools` / `undefined: StoragePool`.
 In `internal/models/onefs.go`, add the field to the `Inventory` struct (after `Licenses []License`):
 
 ```go
-	StoragePools []StoragePool
+ StoragePools []StoragePool
 ```
 
 And add the type + parser (place near `ParseLicenses`):
@@ -76,60 +78,60 @@ And add the type + parser (place near `ParseLicenses`):
 // capacity is the sum of its child node pools. The SSD/HDD fields break the aggregate down
 // by media (an all-HDD pool reports zero SSD bytes).
 type StoragePool struct {
-	Name          string
-	Type          string
-	TotalBytes    float64
-	UsedBytes     float64
-	AvailBytes    float64
-	SSDTotalBytes float64
-	SSDUsedBytes  float64
-	SSDAvailBytes float64
-	HDDTotalBytes float64
-	HDDUsedBytes  float64
-	HDDAvailBytes float64
+ Name          string
+ Type          string
+ TotalBytes    float64
+ UsedBytes     float64
+ AvailBytes    float64
+ SSDTotalBytes float64
+ SSDUsedBytes  float64
+ SSDAvailBytes float64
+ HDDTotalBytes float64
+ HDDUsedBytes  float64
+ HDDAvailBytes float64
 }
 
 // ParseStoragePools parses storagepool/storagepools. The usage byte fields are JSON strings
 // in the OneFS schema, so they decode through flexFloat (quoted or bare number, unparseable
 // → 0).
 func ParseStoragePools(b []byte) ([]StoragePool, error) {
-	var raw struct {
-		StoragePools []struct {
-			Name  string `json:"name"`
-			Type  string `json:"type"`
-			Usage struct {
-				TotalBytes    flexFloat `json:"total_bytes"`
-				UsedBytes     flexFloat `json:"used_bytes"`
-				AvailBytes    flexFloat `json:"avail_bytes"`
-				TotalSSDBytes flexFloat `json:"total_ssd_bytes"`
-				UsedSSDBytes  flexFloat `json:"used_ssd_bytes"`
-				AvailSSDBytes flexFloat `json:"avail_ssd_bytes"`
-				TotalHDDBytes flexFloat `json:"total_hdd_bytes"`
-				UsedHDDBytes  flexFloat `json:"used_hdd_bytes"`
-				AvailHDDBytes flexFloat `json:"avail_hdd_bytes"`
-			} `json:"usage"`
-		} `json:"storagepools"`
-	}
-	if err := json.Unmarshal(b, &raw); err != nil {
-		return nil, err
-	}
-	out := make([]StoragePool, 0, len(raw.StoragePools))
-	for _, p := range raw.StoragePools {
-		out = append(out, StoragePool{
-			Name:          p.Name,
-			Type:          p.Type,
-			TotalBytes:    float64(p.Usage.TotalBytes),
-			UsedBytes:     float64(p.Usage.UsedBytes),
-			AvailBytes:    float64(p.Usage.AvailBytes),
-			SSDTotalBytes: float64(p.Usage.TotalSSDBytes),
-			SSDUsedBytes:  float64(p.Usage.UsedSSDBytes),
-			SSDAvailBytes: float64(p.Usage.AvailSSDBytes),
-			HDDTotalBytes: float64(p.Usage.TotalHDDBytes),
-			HDDUsedBytes:  float64(p.Usage.UsedHDDBytes),
-			HDDAvailBytes: float64(p.Usage.AvailHDDBytes),
-		})
-	}
-	return out, nil
+ var raw struct {
+  StoragePools []struct {
+   Name  string `json:"name"`
+   Type  string `json:"type"`
+   Usage struct {
+    TotalBytes    flexFloat `json:"total_bytes"`
+    UsedBytes     flexFloat `json:"used_bytes"`
+    AvailBytes    flexFloat `json:"avail_bytes"`
+    TotalSSDBytes flexFloat `json:"total_ssd_bytes"`
+    UsedSSDBytes  flexFloat `json:"used_ssd_bytes"`
+    AvailSSDBytes flexFloat `json:"avail_ssd_bytes"`
+    TotalHDDBytes flexFloat `json:"total_hdd_bytes"`
+    UsedHDDBytes  flexFloat `json:"used_hdd_bytes"`
+    AvailHDDBytes flexFloat `json:"avail_hdd_bytes"`
+   } `json:"usage"`
+  } `json:"storagepools"`
+ }
+ if err := json.Unmarshal(b, &raw); err != nil {
+  return nil, err
+ }
+ out := make([]StoragePool, 0, len(raw.StoragePools))
+ for _, p := range raw.StoragePools {
+  out = append(out, StoragePool{
+   Name:          p.Name,
+   Type:          p.Type,
+   TotalBytes:    float64(p.Usage.TotalBytes),
+   UsedBytes:     float64(p.Usage.UsedBytes),
+   AvailBytes:    float64(p.Usage.AvailBytes),
+   SSDTotalBytes: float64(p.Usage.TotalSSDBytes),
+   SSDUsedBytes:  float64(p.Usage.UsedSSDBytes),
+   SSDAvailBytes: float64(p.Usage.AvailSSDBytes),
+   HDDTotalBytes: float64(p.Usage.TotalHDDBytes),
+   HDDUsedBytes:  float64(p.Usage.UsedHDDBytes),
+   HDDAvailBytes: float64(p.Usage.AvailHDDBytes),
+  })
+ }
+ return out, nil
 }
 ```
 
@@ -150,11 +152,13 @@ git commit -m "feat(models): StoragePool type and ParseStoragePools"
 ### Task 2: `storagePoolSamples` builder + label helper
 
 **Files:**
+
 - Modify: `internal/powerscale/metrics.go` (add `storagePoolLabels`)
 - Modify: `internal/powerscale/derivations.go` (add `storagePoolSamples`, wire into `BuildSamples`)
 - Test: `internal/powerscale/derivations_test.go`
 
 **Interfaces:**
+
 - Consumes: `models.StoragePool` (Task 1); `baseLabels`, `Sample`, `Label` (existing).
 - Produces: `storagePoolLabels(clusterName, clusterID, pool, poolType string) []Label`; `storagePoolSamples(clusterName, clusterID string, pools []models.StoragePool) []Sample`; emits the 9 metric names `powerscale_storagepool_{,ssd_,hdd_}{total,used,available}_capacity_bytes`.
 
@@ -164,52 +168,52 @@ Add to `internal/powerscale/derivations_test.go` (place after `TestBuildSamplesL
 
 ```go
 func TestBuildSamplesStoragePools(t *testing.T) {
-	inv := &models.Inventory{
-		Cluster: models.ClusterInfo{Name: "ignored", GUID: "GUID-1"},
-		StoragePools: []models.StoragePool{
-			{Name: "nodepool1", Type: "nodepool", TotalBytes: 3000, UsedBytes: 1000, AvailBytes: 2000,
-				SSDTotalBytes: 1000, SSDUsedBytes: 400, SSDAvailBytes: 600,
-				HDDTotalBytes: 2000, HDDUsedBytes: 600, HDDAvailBytes: 1400},
-			{Name: "hdd_pool", Type: "nodepool", TotalBytes: 2000, UsedBytes: 600, AvailBytes: 1400,
-				SSDTotalBytes: 0, SSDUsedBytes: 0, SSDAvailBytes: 0,
-				HDDTotalBytes: 2000, HDDUsedBytes: 600, HDDAvailBytes: 1400},
-		},
-	}
-	samples := BuildSamples("clu1", inv, nil)
-	find := func(name, pool string) (Sample, bool) {
-		for _, s := range samples {
-			if s.Name != name {
-				continue
-			}
-			for _, l := range s.Labels {
-				if l.Name == "pool" && l.Value == pool {
-					return s, true
-				}
-			}
-		}
-		return Sample{}, false
-	}
-	if s, ok := find("powerscale_storagepool_total_capacity_bytes", "nodepool1"); !ok || s.Value != 3000 {
-		t.Fatalf("nodepool1 total wrong: %+v ok=%v", s, ok)
-	}
-	if s, ok := find("powerscale_storagepool_ssd_used_capacity_bytes", "nodepool1"); !ok || s.Value != 400 {
-		t.Fatalf("nodepool1 ssd_used wrong: %+v ok=%v", s, ok)
-	}
-	// the all-HDD pool still emits an ssd_total series, valued 0 (always-emit)
-	if s, ok := find("powerscale_storagepool_ssd_total_capacity_bytes", "hdd_pool"); !ok || s.Value != 0 {
-		t.Fatalf("hdd_pool ssd_total should be present and 0: %+v ok=%v", s, ok)
-	}
-	// the type label is present
-	s, ok := find("powerscale_storagepool_total_capacity_bytes", "nodepool1")
-	hasType := false
-	for _, l := range s.Labels {
-		if l.Name == "type" && l.Value == "nodepool" {
-			hasType = true
-		}
-	}
-	if !ok || !hasType {
-		t.Fatalf("nodepool1 missing type label: %+v", s.Labels)
-	}
+ inv := &models.Inventory{
+  Cluster: models.ClusterInfo{Name: "ignored", GUID: "GUID-1"},
+  StoragePools: []models.StoragePool{
+   {Name: "nodepool1", Type: "nodepool", TotalBytes: 3000, UsedBytes: 1000, AvailBytes: 2000,
+    SSDTotalBytes: 1000, SSDUsedBytes: 400, SSDAvailBytes: 600,
+    HDDTotalBytes: 2000, HDDUsedBytes: 600, HDDAvailBytes: 1400},
+   {Name: "hdd_pool", Type: "nodepool", TotalBytes: 2000, UsedBytes: 600, AvailBytes: 1400,
+    SSDTotalBytes: 0, SSDUsedBytes: 0, SSDAvailBytes: 0,
+    HDDTotalBytes: 2000, HDDUsedBytes: 600, HDDAvailBytes: 1400},
+  },
+ }
+ samples := BuildSamples("clu1", inv, nil)
+ find := func(name, pool string) (Sample, bool) {
+  for _, s := range samples {
+   if s.Name != name {
+    continue
+   }
+   for _, l := range s.Labels {
+    if l.Name == "pool" && l.Value == pool {
+     return s, true
+    }
+   }
+  }
+  return Sample{}, false
+ }
+ if s, ok := find("powerscale_storagepool_total_capacity_bytes", "nodepool1"); !ok || s.Value != 3000 {
+  t.Fatalf("nodepool1 total wrong: %+v ok=%v", s, ok)
+ }
+ if s, ok := find("powerscale_storagepool_ssd_used_capacity_bytes", "nodepool1"); !ok || s.Value != 400 {
+  t.Fatalf("nodepool1 ssd_used wrong: %+v ok=%v", s, ok)
+ }
+ // the all-HDD pool still emits an ssd_total series, valued 0 (always-emit)
+ if s, ok := find("powerscale_storagepool_ssd_total_capacity_bytes", "hdd_pool"); !ok || s.Value != 0 {
+  t.Fatalf("hdd_pool ssd_total should be present and 0: %+v ok=%v", s, ok)
+ }
+ // the type label is present
+ s, ok := find("powerscale_storagepool_total_capacity_bytes", "nodepool1")
+ hasType := false
+ for _, l := range s.Labels {
+  if l.Name == "type" && l.Value == "nodepool" {
+   hasType = true
+  }
+ }
+ if !ok || !hasType {
+  t.Fatalf("nodepool1 missing type label: %+v", s.Labels)
+ }
 }
 ```
 
@@ -225,10 +229,10 @@ In `internal/powerscale/metrics.go` (after `licenseInfoLabels`):
 ```go
 // storagePoolLabels appends a storage-pool/tier name and its type (nodepool|tier).
 func storagePoolLabels(clusterName, clusterID, pool, poolType string) []Label {
-	return append(baseLabels(clusterName, clusterID),
-		Label{Name: "pool", Value: pool},
-		Label{Name: "type", Value: poolType},
-	)
+ return append(baseLabels(clusterName, clusterID),
+  Label{Name: "pool", Value: pool},
+  Label{Name: "type", Value: poolType},
+ )
 }
 ```
 
@@ -243,29 +247,29 @@ In `internal/powerscale/derivations.go`, add the builder (place after `licenseSa
 // so consumers filter type="nodepool" for a non-overlapping cluster total. All 9 gauges are
 // always emitted (an all-HDD pool simply reports ssd=0).
 func storagePoolSamples(clusterName, clusterID string, pools []models.StoragePool) []Sample {
-	var out []Sample
-	for _, p := range pools {
-		labels := storagePoolLabels(clusterName, clusterID, p.Name, p.Type)
-		out = append(out,
-			Sample{Name: "powerscale_storagepool_total_capacity_bytes", Labels: labels, Value: p.TotalBytes},
-			Sample{Name: "powerscale_storagepool_used_capacity_bytes", Labels: labels, Value: p.UsedBytes},
-			Sample{Name: "powerscale_storagepool_available_capacity_bytes", Labels: labels, Value: p.AvailBytes},
-			Sample{Name: "powerscale_storagepool_ssd_total_capacity_bytes", Labels: labels, Value: p.SSDTotalBytes},
-			Sample{Name: "powerscale_storagepool_ssd_used_capacity_bytes", Labels: labels, Value: p.SSDUsedBytes},
-			Sample{Name: "powerscale_storagepool_ssd_available_capacity_bytes", Labels: labels, Value: p.SSDAvailBytes},
-			Sample{Name: "powerscale_storagepool_hdd_total_capacity_bytes", Labels: labels, Value: p.HDDTotalBytes},
-			Sample{Name: "powerscale_storagepool_hdd_used_capacity_bytes", Labels: labels, Value: p.HDDUsedBytes},
-			Sample{Name: "powerscale_storagepool_hdd_available_capacity_bytes", Labels: labels, Value: p.HDDAvailBytes},
-		)
-	}
-	return out
+ var out []Sample
+ for _, p := range pools {
+  labels := storagePoolLabels(clusterName, clusterID, p.Name, p.Type)
+  out = append(out,
+   Sample{Name: "powerscale_storagepool_total_capacity_bytes", Labels: labels, Value: p.TotalBytes},
+   Sample{Name: "powerscale_storagepool_used_capacity_bytes", Labels: labels, Value: p.UsedBytes},
+   Sample{Name: "powerscale_storagepool_available_capacity_bytes", Labels: labels, Value: p.AvailBytes},
+   Sample{Name: "powerscale_storagepool_ssd_total_capacity_bytes", Labels: labels, Value: p.SSDTotalBytes},
+   Sample{Name: "powerscale_storagepool_ssd_used_capacity_bytes", Labels: labels, Value: p.SSDUsedBytes},
+   Sample{Name: "powerscale_storagepool_ssd_available_capacity_bytes", Labels: labels, Value: p.SSDAvailBytes},
+   Sample{Name: "powerscale_storagepool_hdd_total_capacity_bytes", Labels: labels, Value: p.HDDTotalBytes},
+   Sample{Name: "powerscale_storagepool_hdd_used_capacity_bytes", Labels: labels, Value: p.HDDUsedBytes},
+   Sample{Name: "powerscale_storagepool_hdd_available_capacity_bytes", Labels: labels, Value: p.HDDAvailBytes},
+  )
+ }
+ return out
 }
 ```
 
 Wire it into `BuildSamples` (add immediately after the `licenseSamples(...)` append line):
 
 ```go
-	samples = append(samples, storagePoolSamples(clusterName, clusterID, inv.StoragePools)...)
+ samples = append(samples, storagePoolSamples(clusterName, clusterID, inv.StoragePools)...)
 ```
 
 - [ ] **Step 5: Run test to verify it passes**
@@ -285,6 +289,7 @@ git commit -m "feat(powerscale): storagePoolSamples builder for storage-pool met
 ### Task 3: Best-effort fetch, fixture, schema guard, and e2e coverage
 
 **Files:**
+
 - Modify: `internal/powerscale/client.go` (add `storagePools` helper + `Inventory` literal + debug log)
 - Create: `internal/powerscale/testdata/storagepools.json`
 - Modify: `tools/extract-schemas/main.go` (targets map) — then regenerate via `make schemas`
@@ -292,6 +297,7 @@ git commit -m "feat(powerscale): storagePoolSamples builder for storage-pool met
 - Modify: `internal/powerscale/e2e_test.go` (presence map)
 
 **Interfaces:**
+
 - Consumes: `models.ParseStoragePools`, `Inventory.StoragePools` (Task 1); the emitted metric names (Task 2); `c.getRaw`, `snippet`, `log` (existing).
 - Produces: `func (c *ClusterClient) storagePools(ctx context.Context) []models.StoragePool`; the `storagepools.json` fixture; end-to-end emission of the 9 storage-pool metrics.
 
@@ -300,15 +306,15 @@ git commit -m "feat(powerscale): storagePoolSamples builder for storage-pool met
 In `internal/powerscale/e2e_test.go`, add to the `want := map[string]bool{ … }` block (after the `powerscale_license_info` line):
 
 ```go
-		"powerscale_storagepool_total_capacity_bytes":         false,
-		"powerscale_storagepool_used_capacity_bytes":          false,
-		"powerscale_storagepool_available_capacity_bytes":     false,
-		"powerscale_storagepool_ssd_total_capacity_bytes":     false,
-		"powerscale_storagepool_ssd_used_capacity_bytes":      false,
-		"powerscale_storagepool_ssd_available_capacity_bytes": false,
-		"powerscale_storagepool_hdd_total_capacity_bytes":     false,
-		"powerscale_storagepool_hdd_used_capacity_bytes":      false,
-		"powerscale_storagepool_hdd_available_capacity_bytes": false,
+  "powerscale_storagepool_total_capacity_bytes":         false,
+  "powerscale_storagepool_used_capacity_bytes":          false,
+  "powerscale_storagepool_available_capacity_bytes":     false,
+  "powerscale_storagepool_ssd_total_capacity_bytes":     false,
+  "powerscale_storagepool_ssd_used_capacity_bytes":      false,
+  "powerscale_storagepool_ssd_available_capacity_bytes": false,
+  "powerscale_storagepool_hdd_total_capacity_bytes":     false,
+  "powerscale_storagepool_hdd_used_capacity_bytes":      false,
+  "powerscale_storagepool_hdd_available_capacity_bytes": false,
 ```
 
 Then run `gofmt -w internal/powerscale/e2e_test.go` to fix column alignment.
@@ -335,8 +341,8 @@ Create `internal/powerscale/testdata/storagepools.json`. The three rows form a c
 In `internal/powerscale/mockserver_test.go`, add a case to the path switch (before `default`), mirroring the existing cases:
 
 ```go
-		case strings.HasSuffix(p, "/storagepool/storagepools"):
-			writeBytes(w, fixture(t, "storagepools.json"))
+  case strings.HasSuffix(p, "/storagepool/storagepools"):
+   writeBytes(w, fixture(t, "storagepools.json"))
 ```
 
 - [ ] **Step 5: Add the best-effort fetch + wire into `GetInventory`**
@@ -347,34 +353,34 @@ In `internal/powerscale/client.go`, add the helper (place after `licenses`):
 // storagePools fetches per-pool/per-tier capacity best-effort (a missing ISI_PRIV_SMARTPOOLS
 // privilege or an older release simply yields no storage-pool metrics).
 func (c *ClusterClient) storagePools(ctx context.Context) []models.StoragePool {
-	var b []byte
-	if err := c.getRaw(ctx, "platform/1/storagepool/storagepools", &b); err != nil {
-		log.Debugf("cluster %q: storagepools failed: %v", c.name, err)
-		return nil
-	}
-	p, err := models.ParseStoragePools(b)
-	if err != nil {
-		log.Debugf("cluster %q: parse storagepools failed: %v; payload: %s", c.name, err, snippet(b))
-		return nil
-	}
-	return p
+ var b []byte
+ if err := c.getRaw(ctx, "platform/1/storagepool/storagepools", &b); err != nil {
+  log.Debugf("cluster %q: storagepools failed: %v", c.name, err)
+  return nil
+ }
+ p, err := models.ParseStoragePools(b)
+ if err != nil {
+  log.Debugf("cluster %q: parse storagepools failed: %v; payload: %s", c.name, err, snippet(b))
+  return nil
+ }
+ return p
 }
 ```
 
 Add `StoragePools` to the `Inventory{}` literal in `GetInventory` (after `Licenses: c.licenses(ctx),`):
 
 ```go
-		StoragePools: c.storagePools(ctx),
+  StoragePools: c.storagePools(ctx),
 ```
 
-Extend the debug summary log so its format string ends with ` licenses=%d storage_pools=%d` and its args end with `len(inv.Licenses), len(inv.StoragePools)`. The full statement becomes:
+Extend the debug summary log so its format string ends with `licenses=%d storage_pools=%d` and its args end with `len(inv.Licenses), len(inv.StoragePools)`. The full statement becomes:
 
 ```go
-		log.Debugf("cluster %q: inventory parsed: release=%s nodes=%d (sensor values=%d) quotas=%d "+
-			"nfs_exports=%d smb_shares=%d snapshots=%d sync_policies=%d events=%v licenses=%d storage_pools=%d",
-			c.name, inv.Cluster.Release, len(inv.Nodes), sensors, len(inv.Quotas),
-			inv.Counts.NFSExports, inv.Counts.SMBShares, inv.Counts.Snapshots,
-			len(inv.SyncPolicies), inv.Events, len(inv.Licenses), len(inv.StoragePools))
+  log.Debugf("cluster %q: inventory parsed: release=%s nodes=%d (sensor values=%d) quotas=%d "+
+   "nfs_exports=%d smb_shares=%d snapshots=%d sync_policies=%d events=%v licenses=%d storage_pools=%d",
+   c.name, inv.Cluster.Release, len(inv.Nodes), sensors, len(inv.Quotas),
+   inv.Counts.NFSExports, inv.Counts.SMBShares, inv.Counts.Snapshots,
+   len(inv.SyncPolicies), inv.Events, len(inv.Licenses), len(inv.StoragePools))
 ```
 
 - [ ] **Step 6: Run the e2e test to verify it passes**
@@ -387,7 +393,7 @@ Expected: PASS — the 9 `powerscale_storagepool_*` metrics are present.
 In `tools/extract-schemas/main.go`, add to the `targets` map (after the license entry):
 
 ```go
-	"/platform/1/storagepool/storagepools":      "storagepools.json",
+ "/platform/1/storagepool/storagepools":      "storagepools.json",
 ```
 
 Then run `gofmt -w tools/extract-schemas/main.go` and regenerate:
@@ -414,6 +420,7 @@ git commit -m "feat(powerscale): best-effort storage-pool collector + schema gua
 ### Task 4: Documentation
 
 **Files:**
+
 - Modify: `docs/metrics.md` (new `## Storage pools` section)
 - Modify: `docs/getting-started/configuration.md` (add `ISI_PRIV_SMARTPOOLS`)
 - Modify: `docs/getting-started/installation.md` (add `ISI_PRIV_SMARTPOOLS`)
@@ -454,6 +461,7 @@ Alert on a node pool over 85% full:
 100 * powerscale_storagepool_used_capacity_bytes
   / powerscale_storagepool_total_capacity_bytes > 85
 ```
+
 ```
 
 - [ ] **Step 2: Add `ISI_PRIV_SMARTPOOLS` to `configuration.md`**
@@ -461,7 +469,9 @@ Alert on a node pool over 85% full:
 In `docs/getting-started/configuration.md`, add this line to the privilege list (after the `ISI_PRIV_LICENSE` line). `ISI_PRIV_SMARTPOOLS` is 19 characters, so it takes two spaces before the description to match the column:
 
 ```
-#   ISI_PRIV_SMARTPOOLS  (storage-pool / tier capacity)
+
+# ISI_PRIV_SMARTPOOLS  (storage-pool / tier capacity)
+
 ```
 
 - [ ] **Step 3: Add `ISI_PRIV_SMARTPOOLS` to `installation.md`**
@@ -469,13 +479,17 @@ In `docs/getting-started/configuration.md`, add this line to the privilege list 
 In `docs/getting-started/installation.md`, change the tail of the privilege sentence from:
 
 ```
+
 `ISI_PRIV_SMB`, `ISI_PRIV_NFS`, and `ISI_PRIV_LICENSE`. Create a dedicated monitoring user rather than reusing
+
 ```
 
 to:
 
 ```
+
 `ISI_PRIV_SMB`, `ISI_PRIV_NFS`, `ISI_PRIV_LICENSE`, and `ISI_PRIV_SMARTPOOLS`. Create a dedicated monitoring user rather than reusing
+
 ```
 
 - [ ] **Step 4: Verify the docs build**
@@ -508,6 +522,7 @@ Expected: gofmt clean, `go vet` clean, `golangci-lint` 0 issues, `go test -race`
 ## Self-Review
 
 **Spec coverage:**
+
 - Spec "Source" (`platform/1/storagepool/storagepools`, best-effort, v1) → Task 3 Step 5. ✅
 - Spec "Metrics" (9 gauges; media split in the name; always emitted) → Task 2 (`storagePoolSamples`) + Task 1 (the 9 float64 fields). ✅
 - Spec "string-typed bytes via flexFloat" → Task 1 (parser uses `flexFloat`) + `TestParseStoragePools` asserts string bytes parse. ✅

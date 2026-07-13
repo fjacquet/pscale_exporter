@@ -85,7 +85,7 @@ export PSCALE1_PASSWORD='your-monitor-password'
 Other useful targets:
 
 | Target | What it does |
-|---|---|
+| --- | --- |
 | `make cli` | Build `bin/pscale_exporter`. |
 | `make test` / `make test-race` | Run tests (the latter adds `-race` + coverage). |
 | `make sure` | `fmt` + `vet` + `test` + `build` + `golangci-lint` (local convenience). |

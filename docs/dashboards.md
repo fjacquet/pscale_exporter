@@ -4,7 +4,7 @@ Three ready-made Grafana dashboards ship in the repo under
 `grafana/provisioning/dashboards/json/`:
 
 | Dashboard | uid | Focus |
-|---|---|---|
+| --- | --- | --- |
 | **PowerScale / OneFS Overview** | `powerscale-overview` | Capacity, performance, protocols — day-to-day health. |
 | **PowerScale / OneFS Advanced** | `powerscale-advanced` | Node/drive health, data protection, cache efficiency, quota & CPU detail. |
 | **PowerScale / OneFS Capacity & SLA** | `powerscale-capacity-sla` | Availability/latency SLIs and capacity headroom with a days-to-full forecast. |
@@ -33,7 +33,7 @@ One comprehensive board with these rows (in display order):
 ### Template variables
 
 | Variable | Source |
-|---|---|
+| --- | --- |
 | `datasource` | Any Prometheus datasource — so the board works on import, not just in the bundled stack. |
 | `cluster` | `label_values(powerscale_up, cluster)` — multi-select, includes *All*. |
 | `node` | `label_values(powerscale_node_cpu_idle_percent{cluster=~"$cluster"}, node)` — drives the Per-Node Detail row. |

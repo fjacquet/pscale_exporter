@@ -6,7 +6,7 @@ One process monitors many OneFS clusters.
 ## Command-line flags
 
 | Flag | Purpose |
-|---|---|
+| --- | --- |
 | `--config <path>` | Path to the config file (default `config.yaml`). |
 | `--debug` | Verbose logging. Combined with `--once`, also prints every collected sample (sorted, exposition style). |
 | `--once` | Run a single collection cycle and exit (useful for smoke tests / cron). |
@@ -115,10 +115,10 @@ place quoting matters is **parsing at load time**, and it differs by where you p
 password:
 
 | Source | Rule |
-|---|---|
+| --- | --- |
 | `.env`, single-quoted `'…'` | Fully literal — no `$` expansion, no `\` escapes, no `#` comment. Best default. Cannot contain a literal `'`. |
 | `.env`, double-quoted `"…"` | Expands `$VAR`/`${VAR}` and processes `\` escapes. `$`, `\`, `"` are special — write `\$`, `\\`, `\"`. |
-| `.env`, unquoted | `$VAR` expands; a ` #` (space-hash) starts a comment; a value **starting** with `'`/`"` is treated as quoted. |
+| `.env`, unquoted | `$VAR` expands; a `#` (space-hash) starts a comment; a value **starting** with `'`/`"` is treated as quoted. |
 | `config.yaml` inline | Only the exact `${NAME}` token is interpolated (`os.LookupEnv`), so a literal password containing `${NAME}` is treated as an env ref. Prefer referencing an env var. |
 | `passwordFile` | Read **verbatim** (only surrounding whitespace trimmed) — no interpolation, no escaping. The bulletproof option. |
 
