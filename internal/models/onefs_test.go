@@ -133,7 +133,7 @@ func TestParseEventOccurrences(t *testing.T) {
 
 func TestParseStatCurrent(t *testing.T) {
 	pts, err := ParseStatCurrent(read(t, "stat_current.json"))
-	if err != nil || len(pts) != 4 {
+	if err != nil || len(pts) != 10 {
 		t.Fatalf("stat parse: %d err=%v", len(pts), err)
 	}
 	if pts[0].Key != "ifs.bytes.total" || pts[0].Value != 5000 {
