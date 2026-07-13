@@ -159,6 +159,36 @@ Alert on a feature expiring within 30 days:
 powerscale_license_days_to_expiry < 30
 ```
 
+## Storage pools
+
+Per-pool and per-tier capacity from SmartPools, fetched best-effort from
+`storagepool/storagepools` (requires `ISI_PRIV_SMARTPOOLS`; absent if the account lacks it).
+Labels: `pool` (pool/tier name) and `type` (`nodepool` or `tier`).
+
+The list contains **both node pools and tiers**, and a tier's capacity is the sum of its
+child node pools — so summing a metric across all rows double-counts. Filter
+`type="nodepool"` for a non-overlapping cluster-wide total. Every metric is emitted for every
+pool; an all-HDD pool simply reports `ssd=0`.
+
+| Metric | Description |
+|---|---|
+| `powerscale_storagepool_total_capacity_bytes` | Total capacity of the pool/tier. |
+| `powerscale_storagepool_used_capacity_bytes` | Used capacity. |
+| `powerscale_storagepool_available_capacity_bytes` | Available (user-writable) capacity. |
+| `powerscale_storagepool_ssd_total_capacity_bytes` | SSD-media total capacity. |
+| `powerscale_storagepool_ssd_used_capacity_bytes` | SSD-media used capacity. |
+| `powerscale_storagepool_ssd_available_capacity_bytes` | SSD-media available capacity. |
+| `powerscale_storagepool_hdd_total_capacity_bytes` | HDD-media total capacity. |
+| `powerscale_storagepool_hdd_used_capacity_bytes` | HDD-media used capacity. |
+| `powerscale_storagepool_hdd_available_capacity_bytes` | HDD-media available capacity. |
+
+Alert on a node pool over 85% full:
+
+```promql
+100 * powerscale_storagepool_used_capacity_bytes
+  / powerscale_storagepool_total_capacity_bytes > 85
+```
+
 ## Per-drive
 
 From `statistics/summary/drive`. Best-effort. Labels: `cluster`,

@@ -51,6 +51,7 @@ opentelemetry:
 #   ISI_PRIV_SMB         (SMB share count)
 #   ISI_PRIV_NFS         (NFS export count)
 #   ISI_PRIV_LICENSE     (license status & expiry)
+#   ISI_PRIV_SMARTPOOLS  (storage-pool / tier capacity)
 clusters:
   - name: pscale-cluster1
     endpoint: pscale-clu1.example.com
