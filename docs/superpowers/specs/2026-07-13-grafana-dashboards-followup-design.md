@@ -36,23 +36,25 @@ Exact metric names + labels (from `internal/powerscale/derivations.go` / `metric
 
 Conventions (from the existing three boards): `schemaVersion 39`; `uid` = filename base; template-var trio `datasource` (type `prometheus`) / `cluster` (`label_values(powerscale_up, cluster)`) / `node`; panel types `row/stat/table/timeseries/gauge`; tags start `[powerscale, onefs, dell, …]`; per-second panels never use `rate()`. Provisioning (`dashboards.yml`) globs the whole `json/` folder, so a new board is auto-loaded with **no config edit**.
 
+**Placement mechanism — append at bottom (revised after inspecting the files).** The boards position panels by absolute `gridPos.y` (rows are `h:1` header markers, not containers), and the files do **not** share one formatting style: `powerscale-overview.json`/`advanced.json` are canonical `json.dump(indent=2)` output, while `powerscale-capacity-sla.json` is an inline-compact style. Mid-board insertion would force renumbering every following panel's `y` and either hand-editing coordinates or re-serializing (which reformats the inline file into hundreds of noise-diff lines). So each new row is instead **appended at the end of its board's `panels` array** with `y` past the current max — a purely additive edit (clean `+`-only diff, no existing panel moves). The vertical placements below reflect this: Storage Pools lands just below the Headroom section (≈ as originally intended); the Overview Licensing row and the Capacity&SLA Licensing stats sit at their boards' bottom rather than mid-board.
+
 **Readiness:** per the brainstorming decision, new content ships **expanded / treated-as-ready** — no "provisional, not-yet-live-validated" caveat (a deliberate departure from the Cache/Per-Drive rows' collapsed-provisional convention). The workload prerequisite note below is functional (the board is empty without a dataset), not a provisional marker.
 
 ## 1. License → Overview board + Capacity & SLA board
 
-### 1a. Overview board — new "Licensing" row (expanded), placed immediately after the *SLI Summary* row
+### 1a. Overview board — new "Licensing" row (expanded), appended at the bottom of the board
 
 - **Table · License status** — `powerscale_license_info{cluster=~"$cluster"}`, reduced to the label set; columns `cluster · name · status`. Value-mapping color overrides on `status`: `Licensed`/`Activated` → green, `Evaluation` → yellow, `Expired` → red, else neutral.
 - **Table · Days to expiry** (sorted ascending) — `powerscale_license_days_to_expiry{cluster=~"$cluster"}`; columns `cluster · name · days`; thresholds red `<30`, yellow `<90`, green `≥90`. Only expiring licenses appear.
 
-### 1b. Capacity & SLA board — two stats appended to the existing *SLA — Availability & Error Budget* row
+### 1b. Capacity & SLA board — new "Licensing" row (two stats) appended at the bottom of the board
 
 - **Stat · Min days to license expiry** — `min(powerscale_license_days_to_expiry{cluster=~"$cluster"})`; thresholds red `<30` / yellow `<90` / green `≥90`; *No data* when nothing expires.
 - **Stat · Licenses expired** — `sum(powerscale_license_expired{cluster=~"$cluster"})`; `0` green, `≥1` red.
 
 ## 2. Storage pools → Capacity & SLA board
 
-New **"Storage Pools — Capacity"** row inside the *Capacity — Headroom & Forecast* section (expanded). Row/panel descriptions carry the double-count caveat.
+New **"Storage Pools — Capacity"** row appended at the bottom of the board (just below the *Capacity — Headroom & Forecast* section, expanded). Row/panel descriptions carry the double-count caveat.
 
 - **Table · Pool capacity** — one row per pool/tier, joined instant queries:
   - `used%` = `100 * powerscale_storagepool_used_capacity_bytes{cluster=~"$cluster"} / powerscale_storagepool_total_capacity_bytes{cluster=~"$cluster"}`
