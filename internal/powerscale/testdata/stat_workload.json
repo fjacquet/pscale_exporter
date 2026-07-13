@@ -1,4 +1,4 @@
 {"workload": [
-  {"node": 1, "zone_name": "System", "protocol": "nfs3", "username": "alice", "system_name": null, "job_type": null, "ops": 120.5, "bytes_in": 1048576, "bytes_out": 2097152, "cpu": 50000},
+  {"node": 1, "zone_name": "System", "protocol": "nfs3", "username": "alice", "system_name": "smbd", "job_type": "AVscan[1]", "ops": 120.5, "bytes_in": 1048576, "bytes_out": 2097152, "cpu": 50000},
   {"node": 0, "zone_name": null, "protocol": null, "username": null, "system_name": null, "job_type": null, "ops": 5, "bytes_in": 4096, "bytes_out": 8192, "cpu": 100}
 ]}

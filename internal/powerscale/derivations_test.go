@@ -321,7 +321,7 @@ func TestBuildSamplesWorkloads(t *testing.T) {
 	if s, ok := find("powerscale_workload_operations_per_second", "alice"); !ok || s.Value != 120 {
 		t.Fatalf("alice ops wrong: %+v ok=%v", s, ok)
 	}
-	if s, ok := find("powerscale_workload_cpu_microseconds", "alice"); !ok || s.Value != 50000 {
+	if s, ok := find("powerscale_workload_cpu_microseconds_per_second", "alice"); !ok || s.Value != 50000 {
 		t.Fatalf("alice cpu wrong: %+v ok=%v", s, ok)
 	}
 	// aggregate row: username="" and zone="" but still emits values (empty-label path)

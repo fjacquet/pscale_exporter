@@ -292,7 +292,7 @@ func workloadSamples(clusterName, clusterID string, st *models.Statistics) []Sam
 			Sample{Name: "powerscale_workload_operations_per_second", Labels: labels, Value: w.Ops},
 			Sample{Name: "powerscale_workload_in_bytes_per_second", Labels: labels, Value: w.BytesIn},
 			Sample{Name: "powerscale_workload_out_bytes_per_second", Labels: labels, Value: w.BytesOut},
-			Sample{Name: "powerscale_workload_cpu_microseconds", Labels: labels, Value: w.CPUMicros},
+			Sample{Name: "powerscale_workload_cpu_microseconds_per_second", Labels: labels, Value: w.CPUMicros},
 		)
 	}
 	return out

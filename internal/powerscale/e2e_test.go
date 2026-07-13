@@ -76,7 +76,7 @@ func TestEndToEndCollectionThroughPrometheus(t *testing.T) {
 		"powerscale_workload_operations_per_second":           false,
 		"powerscale_workload_in_bytes_per_second":             false,
 		"powerscale_workload_out_bytes_per_second":            false,
-		"powerscale_workload_cpu_microseconds":                false,
+		"powerscale_workload_cpu_microseconds_per_second":     false,
 	}
 	for _, mf := range mfs {
 		if _, ok := want[mf.GetName()]; ok {

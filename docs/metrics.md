@@ -221,16 +221,19 @@ Per-workload performance, from `statistics/summary/workload`. Best-effort and co
     metrics may be empty until you define one. The dataset's pinned dimensions also determine
     which labels are populated — an unpinned dimension is the empty string.
 
-Labels: `node` (`0` = cluster-scoped), `zone`, `protocol`, `username`, `system_name`,
-`job_type`. The high-cardinality dimensions OneFS also reports (`path`, client IP addresses,
-SIDs) are intentionally **not** exported; control cardinality through your dataset definition.
+Labels: `cluster`, `cluster_id`, `node` (`0` = cluster-scoped), `zone`, `protocol`, `username`,
+`system_name`, `job_type`. The high-cardinality dimensions OneFS also reports (`path`, client IP
+addresses, SIDs) are intentionally **not** exported; control cardinality through your dataset
+definition. A dataset pinned only on an excluded dimension (e.g. `path` alone) will have all its
+rows collapse to a single label tuple, so some rows are silently dropped — pin datasets on at
+least one exported dimension.
 
 | Metric | Unit | Description |
 |---|---|---|
 | `powerscale_workload_operations_per_second` | ops/s | Operation rate for the workload. |
 | `powerscale_workload_in_bytes_per_second` | bytes/s | Inbound throughput. |
 | `powerscale_workload_out_bytes_per_second` | bytes/s | Outbound throughput. |
-| `powerscale_workload_cpu_microseconds` | µs/s | CPU time consumed per second across all cores (a per-second gauge — `sum`/`avg`, never `rate()`). |
+| `powerscale_workload_cpu_microseconds_per_second` | µs/s | CPU time consumed per second across all cores (a per-second gauge — `sum`/`avg`, never `rate()`). |
 
 Top 5 workloads by operation rate, per cluster:
 
