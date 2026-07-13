@@ -815,7 +815,7 @@
     {
       "type": "timeseries",
       "id": 22,
-      "title": "SSD vs HDD Available (per pool)",
+      "title": "SSD vs HDD Available (per node pool)",
       "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 56 },
       "fieldConfig": {
@@ -830,10 +830,10 @@
         "tooltip": { "mode": "multi", "sort": "desc" }
       },
       "targets": [
-        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_storagepool_ssd_available_capacity_bytes{cluster=~\"$cluster\"}", "legendFormat": "{{pool}} SSD", "refId": "A" },
-        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_storagepool_hdd_available_capacity_bytes{cluster=~\"$cluster\"}", "legendFormat": "{{pool}} HDD", "refId": "B" }
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_storagepool_ssd_available_capacity_bytes{cluster=~\"$cluster\", type=\"nodepool\"}", "legendFormat": "{{pool}} SSD", "refId": "A" },
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_storagepool_hdd_available_capacity_bytes{cluster=~\"$cluster\", type=\"nodepool\"}", "legendFormat": "{{pool}} HDD", "refId": "B" }
       ],
-      "description": "Available capacity on SSD vs HDD media per pool — surfaces tiering/cache-media headroom the aggregate figure hides. An all-HDD pool reports SSD=0."
+      "description": "Available capacity on SSD vs HDD media per node pool (type=nodepool only, so tiers don't double-count their child pools — consistent with the used-% trend). Surfaces tiering/cache-media headroom the aggregate figure hides. An all-HDD pool reports SSD=0."
     },
     {
       "type": "row",
