@@ -19,6 +19,9 @@ COPY config.yaml /etc/pscale_exporter/config.yaml
 
 EXPOSE 9444
 
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget --quiet --tries=1 --spider http://127.0.0.1:9444/livez || exit 1
+
 USER pscale
 
 ENTRYPOINT ["/usr/bin/pscale_exporter"]
