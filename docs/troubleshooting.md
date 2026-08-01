@@ -85,7 +85,11 @@ turn it off afterwards.
 
 ## Health endpoint
 
-`/health` returns `200 OK` while at least one cluster scrapes successfully and
-`503 UNHEALTHY` when all clusters are unreachable; before the first cycle completes it
-reports `200 OK (starting)`. A cluster failing collection sets `powerscale_up{cluster=...}`
-to 0 — alert on that rather than on `/health` for per-cluster visibility.
+`/health` always answers `200 OK` with a JSON body reporting every configured cluster's
+cached status from the last collection cycle: `{"clusters": [{"cluster", "ok",
+"last_scrape", "err"}]}`. It never returns a non-200 status, even when every cluster is
+unreachable — a cluster being down is data the exporter reports, not a failure of the
+exporter process. `/livez` and `/readyz` are separate, always-200 probe endpoints with no
+dependency on cluster state; use those for `livenessProbe`/`readinessProbe` wiring. A
+cluster failing collection sets `powerscale_up{cluster=...}` to 0 — alert on that or on
+`/health`'s JSON body, never on any probe's HTTP status.

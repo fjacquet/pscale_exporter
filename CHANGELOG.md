@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `/livez` and `/readyz`: probe endpoints that always answer 200, with no
+  dependency on cluster reachability or the collection cycle. See ADR-0005.
+
+### Changed
+
+- `/health` always answers 200, never 503, and its body is now JSON
+  (`clusters: [{cluster, ok, last_scrape, err}]`) instead of plain text.
+  See ADR-0005. **Breaking**: anything parsing the old plain-text body or
+  gating on the old 503 status needs updating.
+- The chart's default `livenessProbe`/`readinessProbe` now point at
+  `/livez`/`/readyz` instead of `/health`.
+
 ## [0.14.0] - 2026-07-13
 
 ### Added

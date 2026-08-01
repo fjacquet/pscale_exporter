@@ -68,4 +68,5 @@ nav:
       - ADR-0002 Snapshot model: adr/0002-snapshot-model-and-dual-export.md
       - ADR-0003 Stat-key table: adr/0003-stat-key-table-coverage-contract.md
       - ADR-0004 Metric naming: adr/0004-powerscale-metric-prefix.md
+      - ADR-0005 Health always-200: adr/0005-health-always-200-and-static-probes.md
   - Changelog: changelog.md

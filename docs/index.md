@@ -20,8 +20,8 @@ existing CSM Grafana dashboards work without modification.
   `cluster` label.
 - **Operational** — one shared gopowerscale session per cluster, graceful per-cluster
   degradation (an unreachable cluster is marked down without taking the exporter down),
-  hot config reload (SIGHUP + file watch), snapshot-based `/health`, and optional OTLP
-  tracing.
+  hot config reload (SIGHUP + file watch), snapshot-based `/health` JSON plus always-200
+  `/livez`/`/readyz` probes, and optional OTLP tracing.
 - **CSM-compatible naming** — the `powerscale_` prefix matches Dell's
   `csm-metrics-powerscale` so existing dashboards work.
 

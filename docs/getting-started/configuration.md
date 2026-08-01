@@ -69,9 +69,11 @@ clusters:
 
 ### `server`
 
-The HTTP listener. `uri` is the metrics path (`/metrics`); `/health` is always served and
-is snapshot-based. `logName` is the log file path — make sure the runtime user can write
-it (the container image pre-creates `/var/log/pscale_exporter` owned by `uid 10001`).
+The HTTP listener. `uri` is the metrics path (`/metrics`); `/health` (JSON, always `200`,
+snapshot-based) and `/livez`/`/readyz` (always `200`, no cluster state — use these for
+probe wiring) are always served. `logName` is the log file path — make sure the runtime
+user can write it (the container image pre-creates `/var/log/pscale_exporter` owned by
+`uid 10001`).
 
 ### `collection`
 

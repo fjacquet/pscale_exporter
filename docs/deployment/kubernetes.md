@@ -68,10 +68,10 @@ spec:
           envFrom:
             - secretRef: { name: pscale-exporter-secrets }
           livenessProbe:
-            httpGet: { path: /health, port: metrics }
+            httpGet: { path: /livez, port: metrics }
             initialDelaySeconds: 10
           readinessProbe:
-            httpGet: { path: /health, port: metrics }
+            httpGet: { path: /readyz, port: metrics }
           volumeMounts:
             - { name: config, mountPath: /etc/pscale_exporter, readOnly: true }
             - { name: logs, mountPath: /var/log/pscale_exporter }
