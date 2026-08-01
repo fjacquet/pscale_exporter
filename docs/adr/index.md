@@ -11,3 +11,4 @@ accepted; a later decision supersedes an earlier one rather than editing it.
 | [0003](0003-stat-key-table-coverage-contract.md) | Curated stat-key table as the metric-coverage contract | Accepted |
 | [0004](0004-powerscale-metric-prefix.md) | `powerscale_` metric prefix and unit-explicit naming | Accepted |
 | [0005](0005-health-always-200-and-static-probes.md) | `/livez`/`/readyz` static probes; `/health` always answers 200 | Accepted |
+| [0006](0006-alpine-standard.md) | Standardize container base image on Alpine, add `HEALTHCHECK` to the published image | Accepted |
