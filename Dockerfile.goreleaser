@@ -5,7 +5,7 @@
 # dockers_v2 runs ONE multi-platform buildx pass and stages binaries under
 # per-platform subdirs (e.g. linux/amd64/pscale_exporter), so the COPY must
 # select via $TARGETPLATFORM. extra_files land at the context root.
-FROM alpine:latest
+FROM docker.io/library/alpine:latest
 
 ARG TARGETPLATFORM
 
