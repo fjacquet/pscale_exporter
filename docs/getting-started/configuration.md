@@ -62,7 +62,9 @@ clusters:
     # self-signed cert on a trusted network). Accepts a literal bool or a ${VAR} reference:
     #   insecureSkipVerify: true
     #   insecureSkipVerify: "${PSCALE1_SKIP_CERTIFICATE}"
-    insecureSkipVerify: false
+    # The ":-false" fallback keeps startup working when the variable is not exported; a bare
+    # ${PSCALE1_SKIP_CERTIFICATE} would abort instead, as bare references do for secrets.
+    insecureSkipVerify: "${PSCALE1_SKIP_CERTIFICATE:-false}"
 ```
 
 ## Blocks
@@ -109,6 +111,21 @@ Never put plaintext passwords in the file. Two options:
 - **`passwordFile`** — point at a file whose contents are the password (handy with
   Kubernetes/Docker secrets mounted as files).
 
+### Fallback values: `${VAR:-default}`
+
+A bare `${VAR}` **fails at startup** when the variable is unset — misconfiguration should
+be loud rather than authenticate with an empty secret. Where a safe default exists, write
+`${VAR:-default}` instead: the reference then never errors, falling back when the variable
+is unset *or* empty, exactly as in the shell and in `docker-compose.yml`. That is why the
+shipped `config.yaml` can be env-driven and still start out of the box:
+
+```yaml
+insecureSkipVerify: "${PSCALE1_SKIP_CERTIFICATE:-false}"
+```
+
+Use it for settings, not for secrets — a `${PSCALE1_PASSWORD:-}` would silently turn a
+missing password into an empty one.
+
 ### Passwords with special characters
 
 Any character is safe end to end — the credentials are sent to the OneFS session-login
@@ -121,7 +138,7 @@ password:
 | `.env`, single-quoted `'…'` | Fully literal — no `$` expansion, no `\` escapes, no `#` comment. Best default. Cannot contain a literal `'`. |
 | `.env`, double-quoted `"…"` | Expands `$VAR`/`${VAR}` and processes `\` escapes. `$`, `\`, `"` are special — write `\$`, `\\`, `\"`. |
 | `.env`, unquoted | `$VAR` expands; a `#` (space-hash) starts a comment; a value **starting** with `'`/`"` is treated as quoted. |
-| `config.yaml` inline | Only the exact `${NAME}` token is interpolated (`os.LookupEnv`), so a literal password containing `${NAME}` is treated as an env ref. Prefer referencing an env var. |
+| `config.yaml` inline | Only the `${NAME}` and `${NAME:-default}` tokens are interpolated (`os.LookupEnv`), so a literal password containing either form is treated as an env ref. Prefer referencing an env var. |
 | `passwordFile` | Read **verbatim** (only surrounding whitespace trimmed) — no interpolation, no escaping. The bulletproof option. |
 
 For quotes inside the password specifically: use double quotes to include a `'`, single

@@ -1,6 +1,7 @@
 package powerscale
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -13,6 +14,38 @@ func TestStatKeysLoaded(t *testing.T) {
 	}
 	if statKeyByKey["ifs.bytes.total"].Metric != "powerscale_cluster_total_capacity_bytes" {
 		t.Fatalf("mapping wrong: %+v", statKeyByKey["ifs.bytes.total"])
+	}
+}
+
+// TestStatKeyDivisors guards the unit contract of the curated table: a key whose row omits
+// "divisor" must pass its raw value through, and every cpu.*.avg key must divide by ten
+// because OneFS reports those in tenths of a percent (idle+user+sys sums to 1000).
+func TestStatKeyDivisors(t *testing.T) {
+	if got := statKeyByKey["ifs.bytes.total"].scale(5000); got != 5000 {
+		t.Fatalf("omitted divisor must pass the value through, got %v", got)
+	}
+	if got := (StatKeySpec{}).scale(42); got != 42 {
+		t.Fatalf("zero spec must not divide by zero, got %v", got)
+	}
+	cpuKeys := 0
+	for _, s := range statKeySpecs {
+		// A negative or absurd divisor would silently skew a metric.
+		if s.Divisor < 0 {
+			t.Errorf("%s: divisor = %v, must not be negative", s.Key, s.Divisor)
+		}
+		if !strings.HasPrefix(s.Key, "cluster.cpu.") && !strings.HasPrefix(s.Key, "node.cpu.") {
+			continue
+		}
+		cpuKeys++
+		if s.Divisor != 10 {
+			t.Errorf("%s: divisor = %v, want 10 (OneFS reports tenths of a percent)", s.Key, s.Divisor)
+		}
+		if !strings.HasSuffix(s.Metric, "_percent") {
+			t.Errorf("%s: metric %q should carry the _percent suffix", s.Key, s.Metric)
+		}
+	}
+	if cpuKeys != 6 {
+		t.Fatalf("expected 6 cpu keys in the curated table, found %d", cpuKeys)
 	}
 }
 
@@ -53,6 +86,9 @@ func TestBuildSamplesClusterAndNode(t *testing.T) {
 		Current: []models.StatPoint{
 			{Key: "ifs.bytes.total", DevID: 0, Value: 5000},
 			{Key: "node.memory.used", DevID: 2, Value: 42},
+			// OneFS reports cpu.*.avg in tenths of a percent, so these must be scaled.
+			{Key: "cluster.cpu.sys.avg", DevID: 0, Value: 125},
+			{Key: "node.cpu.idle.avg", DevID: 2, Value: 886},
 			{Key: "unmapped.key", DevID: 0, Value: 1}, // ignored
 		},
 		Proto: []models.ProtoStat{
@@ -82,6 +118,14 @@ func TestBuildSamplesClusterAndNode(t *testing.T) {
 	}
 	if s, ok := get("powerscale_node_memory_used_bytes"); !ok || s.Value != 42 || s.Labels[2].Value != "2" {
 		t.Fatalf("node memory sample wrong: %+v ok=%v", s, ok)
+	}
+	// Tenths of a percent must reach the _percent metric as 0-100, at both scopes, and
+	// land exactly so the exposition output stays free of float artifacts.
+	if s, ok := get("powerscale_cluster_cpu_sys_percent"); !ok || s.Value != 12.5 {
+		t.Fatalf("cluster cpu sample not rescaled to percent: %+v ok=%v want 12.5", s, ok)
+	}
+	if s, ok := get("powerscale_node_cpu_idle_percent"); !ok || s.Value != 88.6 {
+		t.Fatalf("node cpu sample not rescaled to percent: %+v ok=%v want 88.6", s, ok)
 	}
 	if s, ok := get("powerscale_quota_usage_bytes"); !ok || s.Value != 100 {
 		t.Fatalf("quota usage sample wrong: %+v ok=%v", s, ok)
@@ -152,6 +196,73 @@ func TestBuildSamplesClusterAndNode(t *testing.T) {
 	}
 	if s, ok := get("powerscale_node_fan_speed_rpm"); !ok || s.Value != 4500 {
 		t.Fatalf("fan sample wrong: %+v ok=%v", s, ok)
+	}
+	// Nodes in this inventory carry no hardware block, so no info metric is invented.
+	if s, ok := get("powerscale_node_hardware_info"); ok {
+		t.Fatalf("hardware info emitted for a node with no hardware identity: %+v", s)
+	}
+}
+
+// TestHardwareInfoSample covers the info metric that lets a dashboard explain empty
+// fan/temperature/power-supply panels.
+func TestHardwareInfoSample(t *testing.T) {
+	// A node with no hardware block is skipped rather than emitting empty labels.
+	if s, ok := hardwareInfoSample("clu1", "GUID-1", "2", models.Node{LNN: 2}); ok {
+		t.Fatalf("hardware info emitted for a node with no hardware identity: %+v", s)
+	}
+	node := models.Node{LNN: 1, Product: "SIMULATOR-1U-Dual-6144MB-1x1GE-100GB",
+		Series: "virtual_series", HWGen: "VMware"}
+	s, ok := hardwareInfoSample("clu1", "GUID-1", "1", node)
+	if !ok {
+		t.Fatalf("no info sample for a node carrying a hardware block")
+	}
+	if s.Name != "powerscale_node_hardware_info" || s.Value != 1 {
+		t.Fatalf("info sample wrong: %+v", s)
+	}
+	want := map[string]string{
+		"cluster": "clu1", "cluster_id": "GUID-1", "node": "1",
+		"product": "SIMULATOR-1U-Dual-6144MB-1x1GE-100GB",
+		"series":  "virtual_series", "hwgen": "VMware",
+	}
+	for _, l := range s.Labels {
+		if want[l.Name] != l.Value {
+			t.Errorf("label %s = %q, want %q", l.Name, l.Value, want[l.Name])
+		}
+		delete(want, l.Name)
+	}
+	if len(want) != 0 {
+		t.Errorf("missing labels: %v", want)
+	}
+}
+
+// TestExplainMissingHardware covers the operator-facing explanation for absent hardware
+// metrics: all-virtual, a physical node with a silent sensor subsystem, and the healthy
+// case where nothing needs explaining. (The function lives in collector.go; the cases sit
+// here beside the hardware sample derivations they explain.)
+func TestExplainMissingHardware(t *testing.T) {
+	virtual := models.Node{LNN: 1, Series: "virtual_series", HWGen: "VMware",
+		Product: "SIMULATOR-1U-Dual-6144MB-1x1GE-100GB"}
+	healthy := models.Node{LNN: 2, PowerSupplies: 2,
+		Temperatures: []models.Sensor{{Name: "CPU0", Value: 35}}}
+
+	msg := explainMissingHardware([]models.Node{virtual, {LNN: 2, Series: "virtual_series", HWGen: "VMware"}})
+	if !strings.Contains(msg, "2/2 nodes report virtual hardware") ||
+		!strings.Contains(msg, "series=virtual_series") ||
+		!strings.Contains(msg, "powerscale_node_fan_speed_rpm") {
+		t.Fatalf("all-virtual message unhelpful: %q", msg)
+	}
+
+	// A physical node reporting nothing is a different story and must not be called virtual.
+	msg = explainMissingHardware([]models.Node{healthy, {LNN: 3, Series: "h_series", HWGen: "Gen6"}})
+	if !strings.Contains(msg, "1/2 nodes report no power supplies") || !strings.Contains(msg, "nodes 3") {
+		t.Fatalf("partial message unhelpful: %q", msg)
+	}
+	if strings.Contains(msg, "virtual") {
+		t.Errorf("physical node described as virtual: %q", msg)
+	}
+
+	if msg := explainMissingHardware([]models.Node{healthy}); msg != "" {
+		t.Errorf("nothing to explain, got %q", msg)
 	}
 }
 

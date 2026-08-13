@@ -40,7 +40,7 @@ A Go exporter for **Dell PowerScale (OneFS)** that exposes metrics via **both** 
 - **`powerscale_` metric prefix** — matches `dell/csm-metrics-powerscale` for dashboard compatibility. Keep it.
 - **`iops` and bandwidth are per-second gauges** — in PromQL aggregate with `sum`/`avg`, never `rate()`.
 - **Unit-explicit names:** metric names carry their unit — `_bytes`, `_bytes_per_second`, `_operations_per_second`, `_microseconds`, `_percent`.
-- **Extending coverage:** add a row to `internal/powerscale/statisticsKeys.json` (`key`, `metric`, `scope` = `cluster` | `node`). No code change is needed for a new curated key. Node-scope keys map `devid` → node LNN.
+- **Extending coverage:** add a row to `internal/powerscale/statisticsKeys.json` (`key`, `metric`, `scope` = `cluster` | `node`, optional `divisor`). No code change is needed for a new curated key. Node-scope keys map `devid` → node LNN. `divisor` rescales a raw OneFS value into the unit the metric name claims — verify the unit against a live cluster, since the API docs don't state it: `cpu.*.avg` arrives in tenths of a percent (`idle`+`user`+`sys` = 1000) and so carries `"divisor": 10`.
 - **Semgrep write-hook blocks on findings and inline `// nosemgrep` is NOT honored** — fix by restructuring, not suppression (e.g. test HTTP handlers write fixtures through a `writeBytes(io.Writer, …)` helper to avoid the "write-to-ResponseWriter" rule). The **Dockerfile must declare a non-root `USER`**.
 - **Two Dockerfiles, different jobs:** the root `Dockerfile` is the from-source build used by `make docker`; `Dockerfile.goreleaser` is runtime-only (GoReleaser stages the prebuilt binary) and used by the release pipeline. Edit the one matching the build path you're changing; keep both non-root.
 

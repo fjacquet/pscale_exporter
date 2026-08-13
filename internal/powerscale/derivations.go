@@ -65,13 +65,13 @@ func statSamples(clusterName, clusterID string, st *models.Statistics, lnnByDevI
 			out = append(out, Sample{
 				Name:   spec.Metric,
 				Labels: nodeLabels(clusterName, clusterID, strconv.Itoa(lnn)),
-				Value:  p.Value,
+				Value:  spec.scale(p.Value),
 			})
 		default: // "cluster"
 			out = append(out, Sample{
 				Name:   spec.Metric,
 				Labels: baseLabels(clusterName, clusterID),
-				Value:  p.Value,
+				Value:  spec.scale(p.Value),
 			})
 		}
 	}
@@ -121,12 +121,16 @@ func nodeHealthSamples(clusterName, clusterID string, nodes []models.Node) []Sam
 	return out
 }
 
-// hardwareSamples emits per-node power-supply health and temperature/fan sensor readings.
-// PSU samples are emitted only when the node reports supplies; sensors only when present.
+// hardwareSamples emits per-node power-supply health, temperature/fan sensor readings and
+// the hardware-identity info gauge. PSU samples are emitted only when the node reports
+// supplies; sensors only when present.
 func hardwareSamples(clusterName, clusterID string, nodes []models.Node) []Sample {
 	var out []Sample
 	for _, n := range nodes {
 		lnn := strconv.Itoa(n.LNN)
+		if s, ok := hardwareInfoSample(clusterName, clusterID, lnn, n); ok {
+			out = append(out, s)
+		}
 		if n.PowerSupplies > 0 {
 			base := nodeLabels(clusterName, clusterID, lnn)
 			out = append(out,
@@ -150,6 +154,22 @@ func hardwareSamples(clusterName, clusterID string, nodes []models.Node) []Sampl
 		}
 	}
 	return out
+}
+
+// hardwareInfoSample builds the info-style gauge carrying a node's hardware identity as
+// labels, with the constant value 1. It is what lets a dashboard explain an empty Fan
+// Speed / Node Temperature / Power-Supply panel: a node whose series is "virtual_series"
+// has no physical sensors to report. Nodes on payloads without a hardware block report
+// false rather than emitting an all-empty label set.
+func hardwareInfoSample(clusterName, clusterID, lnn string, n models.Node) (Sample, bool) {
+	if n.Product == "" && n.Series == "" && n.HWGen == "" {
+		return Sample{}, false
+	}
+	return Sample{
+		Name:   "powerscale_node_hardware_info",
+		Labels: hardwareInfoLabels(clusterName, clusterID, lnn, n.Product, n.Series, n.HWGen),
+		Value:  1,
+	}, true
 }
 
 // snapshotSamples emits aggregate snapshot space usage. The gauge is always emitted —

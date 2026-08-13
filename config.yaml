@@ -46,4 +46,6 @@ clusters:
     # self-signed cert on a trusted network). Accepts a literal bool or a ${VAR} reference:
     #   insecureSkipVerify: true
     #   insecureSkipVerify: "${PSCALE1_SKIP_CERTIFICATE}"
-    insecureSkipVerify: false
+    # The ":-false" fallback keeps startup working when the variable is not exported; a bare
+    # ${PSCALE1_SKIP_CERTIFICATE} would abort instead, as bare references do for secrets.
+    insecureSkipVerify: "${PSCALE1_SKIP_CERTIFICATE:-false}"

@@ -19,7 +19,19 @@
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
   "id": null,
-  "links": [],
+  "links": [
+    {
+      "asDropdown": true,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": ["powerscale"],
+      "targetBlank": false,
+      "title": "PowerScale dashboards",
+      "tooltip": "Switch board, keeping cluster, node and time range",
+      "type": "dashboards"
+    }
+  ],
   "liveNow": false,
   "panels": [
     {
@@ -545,6 +557,12 @@
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 29 },
       "fieldConfig": {
         "defaults": {
+          "links": [
+            {
+              "title": "Inspect node ${__field.labels.node} in OneFS Advanced",
+              "url": "/d/powerscale-advanced?var-cluster=${__field.labels.cluster}&var-node=${__field.labels.node}&${__url_time_range}"
+            }
+          ],
           "custom": {
             "drawStyle": "line",
             "fillOpacity": 10,
@@ -975,7 +993,7 @@
   },
   "time": { "from": "now-7d", "to": "now" },
   "timezone": "",
-  "title": "PowerScale / OneFS Capacity & SLA",
+  "title": "OneFS Capacity & SLA",
   "uid": "powerscale-capacity-sla",
   "version": 1,
   "weekStart": ""

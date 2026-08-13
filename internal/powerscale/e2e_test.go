@@ -55,6 +55,7 @@ func TestEndToEndCollectionThroughPrometheus(t *testing.T) {
 		"powerscale_client_operations_per_second":             false,
 		"powerscale_node_power_supplies_total":                false,
 		"powerscale_node_temperature_celsius":                 false,
+		"powerscale_node_hardware_info":                       false,
 		"powerscale_node_cache_l1_read_hit_bytes_per_second":  false,
 		"powerscale_node_cache_l1_read_miss_bytes_per_second": false,
 		"powerscale_node_cache_l2_read_hit_bytes_per_second":  false,

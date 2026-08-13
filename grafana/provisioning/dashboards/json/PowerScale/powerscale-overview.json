@@ -19,7 +19,19 @@
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
   "id": null,
-  "links": [],
+  "links": [
+    {
+      "asDropdown": true,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": ["powerscale"],
+      "targetBlank": false,
+      "title": "PowerScale dashboards",
+      "tooltip": "Switch board, keeping cluster, node and time range",
+      "type": "dashboards"
+    }
+  ],
   "liveNow": false,
   "refresh": "30s",
   "schemaVersion": 39,
@@ -98,7 +110,7 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "PowerScale / OneFS Overview",
+  "title": "OneFS Overview",
   "uid": "powerscale-overview",
   "version": 1,
   "weekStart": "",
@@ -1219,6 +1231,12 @@
           },
           "fieldConfig": {
             "defaults": {
+              "links": [
+                {
+                  "title": "Inspect node ${__field.labels.node} in OneFS Advanced",
+                  "url": "/d/powerscale-advanced?var-cluster=${__field.labels.cluster}&var-node=${__field.labels.node}&${__url_time_range}"
+                }
+              ],
               "custom": {
                 "drawStyle": "line",
                 "fillOpacity": 10,
@@ -1279,6 +1297,12 @@
           },
           "fieldConfig": {
             "defaults": {
+              "links": [
+                {
+                  "title": "Inspect node ${__field.labels.node} in OneFS Advanced",
+                  "url": "/d/powerscale-advanced?var-cluster=${__field.labels.cluster}&var-node=${__field.labels.node}&${__url_time_range}"
+                }
+              ],
               "custom": {
                 "drawStyle": "line",
                 "fillOpacity": 10,
@@ -1338,6 +1362,12 @@
           },
           "fieldConfig": {
             "defaults": {
+              "links": [
+                {
+                  "title": "Inspect node ${__field.labels.node} in OneFS Advanced",
+                  "url": "/d/powerscale-advanced?var-cluster=${__field.labels.cluster}&var-node=${__field.labels.node}&${__url_time_range}"
+                }
+              ],
               "custom": {
                 "drawStyle": "line",
                 "fillOpacity": 10,
@@ -1395,6 +1425,12 @@
           },
           "fieldConfig": {
             "defaults": {
+              "links": [
+                {
+                  "title": "Inspect node ${__field.labels.node} in OneFS Advanced",
+                  "url": "/d/powerscale-advanced?var-cluster=${__field.labels.cluster}&var-node=${__field.labels.node}&${__url_time_range}"
+                }
+              ],
               "custom": {
                 "drawStyle": "line",
                 "fillOpacity": 10,

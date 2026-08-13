@@ -1,20 +1,58 @@
 # Dashboards
 
 Four ready-made Grafana dashboards ship in the repo under
-`grafana/provisioning/dashboards/json/`:
+`grafana/provisioning/dashboards/json/PowerScale/`, and provision into a **PowerScale**
+folder:
 
 | Dashboard | uid | Focus |
 | --- | --- | --- |
-| **PowerScale / OneFS Overview** | `powerscale-overview` | Capacity, performance, protocols — day-to-day health. |
-| **PowerScale / OneFS Advanced** | `powerscale-advanced` | Node/drive health, data protection, cache efficiency, quota & CPU detail. |
-| **PowerScale / OneFS Capacity & SLA** | `powerscale-capacity-sla` | Availability/latency SLIs and capacity headroom with a days-to-full forecast. |
-| **PowerScale / OneFS Workloads** | `powerscale-workloads` | Per-workload operations, throughput and CPU. Requires a configured OneFS performance dataset. |
+| **OneFS Overview** | `powerscale-overview` | Capacity, performance, protocols — day-to-day health. |
+| **OneFS Advanced** | `powerscale-advanced` | Node/drive health, data protection, cache efficiency, quota & CPU detail. |
+| **OneFS Capacity & SLA** | `powerscale-capacity-sla` | Availability/latency SLIs and capacity headroom with a days-to-full forecast. |
+| **OneFS Workloads** | `powerscale-workloads` | Per-workload operations, throughput and CPU. Requires a configured OneFS performance dataset. |
 
 Because the `powerscale_` prefix matches
 [`dell/csm-metrics-powerscale`](https://github.com/dell/csm-metrics-powerscale), existing
 CSM dashboards also work against this exporter without modification.
 
 Every panel carries a description (hover the ⓘ); provisional panels note that their stat keys are not yet live-validated against OneFS.
+
+## Folders
+
+Each directory under `json/` becomes a Grafana folder
+(`foldersFromFilesStructure: true` in `dashboards.yml`), so boards arrive filed instead of
+piled into General:
+
+```text
+json/
+├── PowerScale/       → folder "PowerScale"     — the four boards below
+└── Infrastructure/   → folder "Infrastructure" — third-party boards (Node Exporter Full)
+```
+
+Adding a board is a copy into the right directory; no config change. A file left directly
+in `json/` lands in General, which is the signal that it needs a home.
+
+## Navigation
+
+The boards are cross-linked, so you move between them without losing context.
+
+**Between boards.** Every PowerScale board carries a **PowerScale dashboards** dropdown in
+its top-right corner, listing the others. It is driven by the `powerscale` tag rather than
+a hardcoded list, so a new tagged board joins every menu automatically. `includeVars` and
+`keepTime` are set, so the selected time range and any template variable the destination
+board also defines (`cluster`, and `node` where present) carry over; a variable the target
+board does not declare is simply dropped.
+
+**Into node detail.** The per-node panels on Overview (CPU Idle, Memory Used, Disk IOPS,
+Used Capacity) and on Capacity & SLA (Per-Node Used Capacity) carry a data link — click a
+series and pick *Inspect node N in OneFS Advanced* to land on the node-detail board scoped
+to that node:
+
+```text
+/d/powerscale-advanced?var-cluster=${__field.labels.cluster}&var-node=${__field.labels.node}&${__url_time_range}
+```
+
+The link targets the **uid only**, with no title slug, so renaming a board never breaks it.
 
 ## Overview dashboard
 
@@ -123,15 +161,20 @@ Grafana, and `grafana/provisioning/dashboards/dashboards.yml` loads every JSON u
 ```bash
 PSCALE1_PASSWORD='your-monitor-password' docker compose up -d --build
 # Grafana: http://localhost:3000  (admin / admin)
-# Dashboards → PowerScale / OneFS Overview
+# Dashboards → PowerScale → OneFS Overview
 ```
 
 ## Manual import (existing Grafana)
 
 1. **Dashboards → New → Import**.
-2. Upload `grafana/provisioning/dashboards/json/powerscale-overview.json` (or paste its
-   contents).
+2. Upload `grafana/provisioning/dashboards/json/PowerScale/powerscale-overview.json` (or
+   paste its contents).
 3. Pick your Prometheus datasource when prompted, then **Import**.
+
+Import all four to keep the cross-board dropdown populated — it lists whichever
+`powerscale`-tagged boards exist in your Grafana, so a partial import yields a partial
+menu. Choose a folder at import time; the folder mapping above applies to provisioning
+only.
 
 ## Customising
 

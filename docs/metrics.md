@@ -91,6 +91,38 @@ release shapes these differently. Temperature/fan series carry a `sensor` label.
 | `powerscale_node_power_supply_failures` | count | Failed power supplies on the node. |
 | `powerscale_node_temperature_celsius` | °C | Temperature sensor reading. |
 | `powerscale_node_fan_speed_rpm` | rpm | Fan speed reading. |
+| `powerscale_node_hardware_info` | — | Always `1`; the node's hardware identity is in the `product`, `series` and `hwgen` labels. |
+
+### Virtual clusters have no hardware metrics
+
+The four sensor metrics above are **absent on a virtual cluster** — a hypervisor exposes no
+physical fans, temperature probes or power supplies, so OneFS returns `powersupplies.count:
+0` and empty sensor groups. This is the expected result, not a broken exporter.
+
+`powerscale_node_hardware_info` is how you tell. A node counts as virtual on *either*
+marker — `series="virtual_series"` or a `hwgen` naming the hypervisor (`VMware`) — since
+OneFS does not guarantee both; the simulator reports both, and additionally a `product`
+starting with `SIMULATOR-`. The exporter also logs the reason once per cluster at startup:
+
+```text
+cluster "pscale-cluster1": 4/4 nodes report virtual hardware (series=virtual_series,
+hwgen=VMware, product=SIMULATOR-1U-Dual-6144MB-1x1GE-100GB) and expose no physical
+sensors, so powerscale_node_temperature_celsius, powerscale_node_fan_speed_rpm,
+powerscale_node_power_supplies_total and powerscale_node_power_supply_failures are
+absent for those nodes
+```
+
+To count virtual nodes in PromQL:
+
+```promql
+count(
+  powerscale_node_hardware_info{series="virtual_series"}
+  or powerscale_node_hardware_info{hwgen=~"(?i).*vmware.*"}
+) by (cluster)
+```
+
+If only *some* nodes go quiet on a physical cluster, the same log line names them and does
+not call them virtual — that case is worth investigating as a real sensor fault.
 
 ## Quota metrics
 
@@ -290,3 +322,8 @@ To add a curated OneFS statistic, add a row to
 `internal/powerscale/statisticsKeys.json` with `key`, `metric`, and `scope`
 (`cluster` | `node`) — **no code change** is needed. Node-scope keys map a `devid` to a
 node LNN automatically. Keep names unit-explicit and prefixed with `powerscale_`.
+
+Add the optional `divisor` when OneFS reports the key in a different unit than the metric
+name claims. Check this against a live cluster: the `cpu.*.avg` keys, for instance, are
+reported in tenths of a percent (`idle` + `user` + `sys` sums to 1000, not 100), so their
+rows carry `"divisor": 10`. Omitting it passes the raw value through.

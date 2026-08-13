@@ -17,16 +17,15 @@
   "graphTooltip": 1,
   "links": [
     {
-      "asDropdown": false,
+      "asDropdown": true,
       "icon": "external link",
       "includeVars": true,
       "keepTime": true,
-      "tags": [],
+      "tags": ["powerscale"],
       "targetBlank": false,
-      "title": "PowerScale / OneFS Overview",
-      "tooltip": "",
-      "type": "link",
-      "url": "/d/powerscale-overview"
+      "title": "PowerScale dashboards",
+      "tooltip": "Switch board, keeping cluster, node and time range",
+      "type": "dashboards"
     }
   ],
   "liveNow": false,
@@ -255,7 +254,7 @@
   },
   "time": { "from": "now-6h", "to": "now" },
   "timezone": "",
-  "title": "PowerScale / OneFS Workloads",
+  "title": "OneFS Workloads",
   "uid": "powerscale-workloads",
   "version": 1,
   "weekStart": ""

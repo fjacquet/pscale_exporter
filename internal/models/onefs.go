@@ -99,6 +99,30 @@ type Node struct {
 	PowerSupplyFailures int // status.powersupplies.failures
 	Temperatures        []Sensor
 	Fans                []Sensor
+
+	// Hardware identity (from the nodes payload's "hardware" block). Empty on payloads
+	// that omit it. Product is the model string (e.g. "SIMULATOR-1U-Dual-6144MB-1x1GE-100GB"
+	// or "H700-4U-Dual-..."), Series the hardware series ("virtual_series" on virtual
+	// nodes), HWGen the hardware generation ("VMware" under a hypervisor).
+	Product string
+	Series  string
+	HWGen   string
+}
+
+// VirtualHardware reports whether the node runs on virtualized hardware rather than a
+// physical PowerScale appliance. Such nodes have no physical sensors to read, so the
+// fan, temperature and power-supply metrics are structurally absent for them — see
+// ReportsHardwareSensors. OneFS marks them two independent ways, either sufficient.
+func (n Node) VirtualHardware() bool {
+	return strings.EqualFold(n.Series, "virtual_series") ||
+		strings.Contains(strings.ToLower(n.HWGen), "vmware")
+}
+
+// ReportsHardwareSensors reports whether the node returned any physical-sensor data at
+// all. False means powerscale_node_{temperature_celsius,fan_speed_rpm} and the
+// power-supply gauges cannot be emitted for this node, whatever the cause.
+func (n Node) ReportsHardwareSensors() bool {
+	return n.PowerSupplies > 0 || len(n.Temperatures) > 0 || len(n.Fans) > 0
 }
 
 // Quota is one directory quota (from platform/1/quota/quotas). Threshold fields are 0
@@ -263,6 +287,11 @@ func ParseNodes(b []byte) ([]Node, error) {
 					Failures int `json:"failures"`
 				} `json:"powersupplies"`
 			} `json:"status"`
+			Hardware struct {
+				Product string `json:"product"`
+				Series  string `json:"series"`
+				HWGen   string `json:"hwgen"`
+			} `json:"hardware"`
 			Sensors sensorGroups `json:"sensors"`
 		} `json:"nodes"`
 	}
@@ -307,6 +336,9 @@ func ParseNodes(b []byte) ([]Node, error) {
 			PowerSupplyFailures: n.Status.Powersupplies.Failures,
 			Temperatures:        temps,
 			Fans:                fans,
+			Product:             n.Hardware.Product,
+			Series:              n.Hardware.Series,
+			HWGen:               n.Hardware.HWGen,
 		})
 	}
 	return nodes, nil

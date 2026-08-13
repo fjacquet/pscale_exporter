@@ -19,6 +19,25 @@ type StatKeySpec struct {
 	Key    string `json:"key"`
 	Metric string `json:"metric"`
 	Scope  string `json:"scope"` // "cluster" or "node"
+	// Divisor divides the raw OneFS value to reach the unit named by Metric; omit it when
+	// the key is already in that unit. The cpu.*.avg keys report tenths of a percent
+	// (idle+user+sys sums to 1000), so they carry 10 to satisfy the _percent suffix.
+	//
+	// It divides rather than multiplies so decimal rescaling stays exact: 41/10 is the
+	// double nearest 4.1, whereas 41*0.1 yields 4.1000000000000005, which would litter
+	// the exposition output. A future key needing multiplication by N takes 1/N.
+	Divisor float64 `json:"divisor,omitempty"`
+}
+
+// scale converts a raw OneFS value into the unit Metric names. An unset Divisor passes the
+// value through, so the zero StatKeySpec is safe rather than a divide-by-zero trap — these
+// keys are ultimately runtime values from /platform/1/statistics/keys, so a spec need not
+// come from the embedded table.
+func (s StatKeySpec) scale(v float64) float64 {
+	if s.Divisor == 0 {
+		return v
+	}
+	return v / s.Divisor
 }
 
 var (

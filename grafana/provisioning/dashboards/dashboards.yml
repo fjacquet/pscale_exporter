@@ -2,6 +2,15 @@ apiVersion: 1
 
 # Auto-provisions bundled dashboards for the local test stack. JSON files live in the
 # json/ subfolder so Grafana never tries to parse this provider config as a dashboard.
+#
+# foldersFromFilesStructure maps each directory under json/ to a Grafana folder, so the
+# boards arrive filed rather than piled into General:
+#
+#   json/PowerScale/     -> "PowerScale"     (the four boards this exporter ships)
+#   json/Infrastructure/ -> "Infrastructure" (third-party boards, e.g. Node Exporter Full)
+#
+# Adding a board is therefore a copy into the right directory — no config change. A file
+# left directly in json/ would land in General, which is the signal it needs a home.
 providers:
   - name: PowerScale
     type: file
@@ -10,4 +19,6 @@ providers:
     updateIntervalSeconds: 30
     options:
       path: /etc/grafana/provisioning/dashboards/json
-      foldersFromFilesStructure: false
+      # Must stay true for the mapping above; it is mutually exclusive with a `folder:`
+      # key, which would flatten everything into one folder again.
+      foldersFromFilesStructure: true
