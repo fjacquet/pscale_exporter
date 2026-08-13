@@ -46,4 +46,4 @@ clusters:
     # self-signed cert on a trusted network). Accepts a literal bool or a ${VAR} reference:
     #   insecureSkipVerify: true
     #   insecureSkipVerify: "${PSCALE1_SKIP_CERTIFICATE}"
-    insecureSkipVerify: false
+    insecureSkipVerify: "${PSCALE1_SKIP_CERTIFICATE}"
