@@ -39,7 +39,9 @@ The boards are cross-linked, so you move between them without losing context.
 **Between boards.** Every PowerScale board carries a **PowerScale dashboards** dropdown in
 its top-right corner, listing the others. It is driven by the `powerscale` tag rather than
 a hardcoded list, so a new tagged board joins every menu automatically. `includeVars` and
-`keepTime` are set: the selected cluster, node and time range follow you across.
+`keepTime` are set, so the selected time range and any template variable the destination
+board also defines (`cluster`, and `node` where present) carry over; a variable the target
+board does not declare is simply dropped.
 
 **Into node detail.** The per-node panels on Overview (CPU Idle, Memory Used, Disk IOPS,
 Used Capacity) and on Capacity & SLA (Per-Node Used Capacity) carry a data link — click a

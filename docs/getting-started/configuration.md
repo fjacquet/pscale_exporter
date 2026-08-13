@@ -138,7 +138,7 @@ password:
 | `.env`, single-quoted `'…'` | Fully literal — no `$` expansion, no `\` escapes, no `#` comment. Best default. Cannot contain a literal `'`. |
 | `.env`, double-quoted `"…"` | Expands `$VAR`/`${VAR}` and processes `\` escapes. `$`, `\`, `"` are special — write `\$`, `\\`, `\"`. |
 | `.env`, unquoted | `$VAR` expands; a `#` (space-hash) starts a comment; a value **starting** with `'`/`"` is treated as quoted. |
-| `config.yaml` inline | Only the exact `${NAME}` token is interpolated (`os.LookupEnv`), so a literal password containing `${NAME}` is treated as an env ref. Prefer referencing an env var. |
+| `config.yaml` inline | Only the `${NAME}` and `${NAME:-default}` tokens are interpolated (`os.LookupEnv`), so a literal password containing either form is treated as an env ref. Prefer referencing an env var. |
 | `passwordFile` | Read **verbatim** (only surrounding whitespace trimmed) — no interpolation, no escaping. The bulletproof option. |
 
 For quotes inside the password specifically: use double quotes to include a `'`, single

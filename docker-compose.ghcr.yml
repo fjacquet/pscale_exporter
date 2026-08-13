@@ -28,6 +28,9 @@ services:
       - PSCALE1_HOSTNAME=${PSCALE1_HOSTNAME:-pscale-clu1.example.com}
       - PSCALE1_USERNAME=${PSCALE1_USERNAME:-pscale-monitor}
       - PSCALE1_PASSWORD=${PSCALE1_PASSWORD:-}
+      # config.yaml reads this as ${PSCALE1_SKIP_CERTIFICATE:-false}; forwarding it here
+      # keeps the shipped default (verify certificates) when it is not set on the host.
+      - PSCALE1_SKIP_CERTIFICATE=${PSCALE1_SKIP_CERTIFICATE:-false}
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:9444/livez"]

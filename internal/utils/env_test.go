@@ -21,8 +21,50 @@ func TestExpandEnvSuccess(t *testing.T) {
 }
 
 func TestExpandEnvMissing(t *testing.T) {
+	unsetForTest(t, "PSCALE_DEFINITELY_UNSET_VAR")
 	if _, err := ExpandEnv("${PSCALE_DEFINITELY_UNSET_VAR}"); err == nil {
 		t.Error("expected error for unset variable")
+	}
+}
+
+// unsetForTest clears name for the duration of the test and restores whatever was there —
+// value and set/unset state alike. Tests that assert on an *unset* variable are otherwise
+// at the mercy of whatever the developer or CI runner happens to export.
+func unsetForTest(t *testing.T, name string) {
+	t.Helper()
+	old, had := os.LookupEnv(name)
+	if err := os.Unsetenv(name); err != nil {
+		t.Fatalf("unset %s: %v", name, err)
+	}
+	t.Cleanup(func() {
+		if had {
+			_ = os.Setenv(name, old)
+			return
+		}
+		_ = os.Unsetenv(name)
+	})
+}
+
+// TestExpandEnvSecretRejectsEmpty pins the credential-only strictness: a plain ExpandEnv
+// lets an exported-but-empty variable through (matching os.Expand), but a credential that
+// was written as a reference and resolves to nothing is a misconfiguration — without this
+// the exporter would authenticate with an empty password and blame the appliance.
+func TestExpandEnvSecretRejectsEmpty(t *testing.T) {
+	t.Setenv("PSCALE_TEST_EMPTY_SECRET", "")
+
+	if _, err := ExpandEnv("${PSCALE_TEST_EMPTY_SECRET}"); err != nil {
+		t.Fatalf("plain ExpandEnv must stay lenient on an exported-empty variable: %v", err)
+	}
+	if _, err := ExpandEnvSecret("password", "${PSCALE_TEST_EMPTY_SECRET}"); err == nil {
+		t.Error("a credential resolving to an empty value must be rejected")
+	}
+	// A literal credential is not a reference and must pass through untouched, as must an
+	// omitted optional one — otherwise passwordFile setups would break.
+	if got, err := ExpandEnvSecret("password", "literal-pw"); err != nil || got != "literal-pw" {
+		t.Errorf("literal credential: got %q err=%v", got, err)
+	}
+	if got, err := ExpandEnvSecret("password", ""); err != nil || got != "" {
+		t.Errorf("omitted credential: got %q err=%v", got, err)
 	}
 }
 
@@ -42,6 +84,7 @@ func TestExpandEnvDefault(t *testing.T) {
 		{"mixed with literal text", "a${PSCALE_DEFINITELY_UNSET_VAR:-b}c", "abc"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
+			unsetForTest(t, "PSCALE_DEFINITELY_UNSET_VAR")
 			t.Setenv("PSCALE_TEST_SKIP", "true")
 			t.Setenv("PSCALE_TEST_EMPTY", "")
 			got, err := ExpandEnv(tc.in)

@@ -99,9 +99,10 @@ The four sensor metrics above are **absent on a virtual cluster** — a hypervis
 physical fans, temperature probes or power supplies, so OneFS returns `powersupplies.count:
 0` and empty sensor groups. This is the expected result, not a broken exporter.
 
-`powerscale_node_hardware_info` is how you tell: a virtual node reports `series="virtual_series"`
-and `hwgen="VMware"`, and the OneFS simulator additionally reports a `product` starting with
-`SIMULATOR-`. The exporter also logs the reason once per cluster at startup:
+`powerscale_node_hardware_info` is how you tell. A node counts as virtual on *either*
+marker — `series="virtual_series"` or a `hwgen` naming the hypervisor (`VMware`) — since
+OneFS does not guarantee both; the simulator reports both, and additionally a `product`
+starting with `SIMULATOR-`. The exporter also logs the reason once per cluster at startup:
 
 ```text
 cluster "pscale-cluster1": 4/4 nodes report virtual hardware (series=virtual_series,
@@ -114,7 +115,10 @@ absent for those nodes
 To count virtual nodes in PromQL:
 
 ```promql
-count(powerscale_node_hardware_info{series="virtual_series"}) by (cluster)
+count(
+  powerscale_node_hardware_info{series="virtual_series"}
+  or powerscale_node_hardware_info{hwgen=~"(?i).*vmware.*"}
+) by (cluster)
 ```
 
 If only *some* nodes go quiet on a physical cluster, the same log line names them and does

@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Grafana dashboards provision into folders instead of one flat General list:
   `json/PowerScale/` → **PowerScale**, `json/Infrastructure/` → **Infrastructure** (the
   third-party Node Exporter board), via `foldersFromFilesStructure: true`. Adding a board
-  is now a copy into the right directory. Titles lose the redundant `PowerScale / ` prefix
+  is now a copy into the right directory. Titles lose the redundant `PowerScale /` prefix
   the folder now supplies — `OneFS Overview`, `OneFS Advanced`, `OneFS Capacity & SLA`,
   `OneFS Workloads`. Every **uid is unchanged**, so existing links and bookmarks resolve.
 - The four boards are cross-linked. Each carries a **PowerScale dashboards** dropdown
@@ -37,8 +37,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `${VAR:-default}` fallbacks in `config.yaml` env references, with shell / docker-compose
   semantics: the variable falls back when unset *or* empty, and such a reference never
-  aborts startup. A bare `${VAR}` still fails loudly, which is what protects secrets from
-  resolving to an empty string. The shipped `config.yaml` now uses
+  aborts startup. A bare `${VAR}` still fails loudly when the variable is *unset*; an
+  exported-but-empty one expands to the empty string, as it always has. Credential fields
+  (`endpoint`, `username`, `password`) are stricter: a field written as an env reference
+  that resolves to nothing is now rejected, so a stray `PSCALE1_PASSWORD=` line fails at
+  startup instead of authenticating with an empty password. The shipped `config.yaml` now uses
   `insecureSkipVerify: "${PSCALE1_SKIP_CERTIFICATE:-false}"`, so the setting is env-driven
   out of the box yet starts on a host that never exported the variable.
 - `statisticsKeys.json` rows accept an optional `divisor` to rescale a raw OneFS value into
@@ -46,8 +49,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `powerscale_node_hardware_info` — an info gauge (always 1) carrying each node's `product`,
   `series` and `hwgen`. It explains the most confusing thing about running against a virtual
   cluster: a hypervisor exposes no physical sensors, so the fan, temperature and power-supply
-  metrics are structurally absent. Virtual nodes report `series="virtual_series"` and
-  `hwgen="VMware"`. The exporter also logs the reason once per cluster, naming the affected
+  metrics are structurally absent. A node counts as virtual on *either* marker —
+  `series="virtual_series"` or a `hwgen` naming the hypervisor (`VMware`); the OneFS
+  simulator reports both. The exporter also logs the reason once per cluster, naming the affected
   metrics; a physical cluster where only some nodes go silent gets a different message that
   does not call them virtual. See `docs/troubleshooting.md`.
 

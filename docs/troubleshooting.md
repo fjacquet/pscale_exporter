@@ -103,7 +103,7 @@ Confirm it from the metrics themselves — a virtual node carries `series="virtu
 
 ```console
 $ curl -s localhost:9444/metrics | grep node_hardware_info
-powerscale_node_hardware_info{cluster="pscale-cluster1",node="1",
+powerscale_node_hardware_info{cluster="pscale-cluster1",cluster_id="000e1e...",node="1",
   product="SIMULATOR-1U-Dual-6144MB-1x1GE-100GB",series="virtual_series",hwgen="VMware"} 1
 ```
 
