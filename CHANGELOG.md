@@ -41,7 +41,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   exported-but-empty one expands to the empty string, as it always has. Credential fields
   (`endpoint`, `username`, `password`) are stricter: a field written as an env reference
   that resolves to nothing is now rejected, so a stray `PSCALE1_PASSWORD=` line fails at
-  startup instead of authenticating with an empty password. The shipped `config.yaml` now uses
+  startup instead of authenticating with an empty password. The error names only the config
+  field: config-load failures are logged, and every part of a credential field — the
+  variable name included — is potentially sensitive. The shipped `config.yaml` now uses
   `insecureSkipVerify: "${PSCALE1_SKIP_CERTIFICATE:-false}"`, so the setting is env-driven
   out of the box yet starts on a host that never exported the variable.
 - `statisticsKeys.json` rows accept an optional `divisor` to rescale a raw OneFS value into
