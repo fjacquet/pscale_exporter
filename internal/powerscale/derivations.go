@@ -65,13 +65,13 @@ func statSamples(clusterName, clusterID string, st *models.Statistics, lnnByDevI
 			out = append(out, Sample{
 				Name:   spec.Metric,
 				Labels: nodeLabels(clusterName, clusterID, strconv.Itoa(lnn)),
-				Value:  p.Value,
+				Value:  p.Value / spec.Divisor,
 			})
 		default: // "cluster"
 			out = append(out, Sample{
 				Name:   spec.Metric,
 				Labels: baseLabels(clusterName, clusterID),
-				Value:  p.Value,
+				Value:  p.Value / spec.Divisor,
 			})
 		}
 	}

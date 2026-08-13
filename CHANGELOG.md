@@ -5,6 +5,24 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- CPU percentages were reported 10× too high. OneFS serves `cluster.cpu.{sys,user,idle}.avg`
+  and `node.cpu.{idle,sys,user}.avg` in tenths of a percent (`idle` + `user` + `sys` sums to
+  1000), and the raw value was passed straight through to metrics named `_percent` — so an
+  idle cluster read `974` instead of `97.4`, pinning the Grafana CPU panels (`unit: percent`,
+  `max: 100`) at full scale. The six keys now carry `"divisor": 10` in
+  `statisticsKeys.json`. Found by validating a live cluster against `docs/metrics.md`; the
+  mock fixture had used a percent-looking `12.5` where a real cluster sends `125`, so the
+  tests agreed with the bug.
+
+### Added
+
+- `statisticsKeys.json` rows accept an optional `divisor` to rescale a raw OneFS value into
+  the unit its metric name claims. Omitted means pass-through.
+
 ## [0.16.0] - 2026-08-01
 
 ### Added

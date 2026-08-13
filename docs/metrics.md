@@ -290,3 +290,8 @@ To add a curated OneFS statistic, add a row to
 `internal/powerscale/statisticsKeys.json` with `key`, `metric`, and `scope`
 (`cluster` | `node`) — **no code change** is needed. Node-scope keys map a `devid` to a
 node LNN automatically. Keep names unit-explicit and prefixed with `powerscale_`.
+
+Add the optional `divisor` when OneFS reports the key in a different unit than the metric
+name claims. Check this against a live cluster: the `cpu.*.avg` keys, for instance, are
+reported in tenths of a percent (`idle` + `user` + `sys` sums to 1000, not 100), so their
+rows carry `"divisor": 10`. Omitting it passes the raw value through.

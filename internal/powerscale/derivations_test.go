@@ -1,6 +1,7 @@
 package powerscale
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -13,6 +14,37 @@ func TestStatKeysLoaded(t *testing.T) {
 	}
 	if statKeyByKey["ifs.bytes.total"].Metric != "powerscale_cluster_total_capacity_bytes" {
 		t.Fatalf("mapping wrong: %+v", statKeyByKey["ifs.bytes.total"])
+	}
+}
+
+// TestStatKeyDivisors guards the unit contract of the curated table: a key whose row omits
+// "divisor" must pass its raw value through, and every cpu.*.avg key must divide by ten
+// because OneFS reports those in tenths of a percent (idle+user+sys sums to 1000).
+func TestStatKeyDivisors(t *testing.T) {
+	if got := statKeyByKey["ifs.bytes.total"].Divisor; got != 1 {
+		t.Fatalf("omitted divisor must normalize to 1, got %v", got)
+	}
+	cpuKeys := 0
+	for _, s := range statKeySpecs {
+		if !strings.HasPrefix(s.Key, "cluster.cpu.") && !strings.HasPrefix(s.Key, "node.cpu.") {
+			continue
+		}
+		cpuKeys++
+		if s.Divisor != 10 {
+			t.Errorf("%s: divisor = %v, want 10 (OneFS reports tenths of a percent)", s.Key, s.Divisor)
+		}
+		if !strings.HasSuffix(s.Metric, "_percent") {
+			t.Errorf("%s: metric %q should carry the _percent suffix", s.Key, s.Metric)
+		}
+	}
+	if cpuKeys != 6 {
+		t.Fatalf("expected 6 cpu keys in the curated table, found %d", cpuKeys)
+	}
+	// No divisor may be negative or absurd; a typo there would silently skew a metric.
+	for _, s := range statKeySpecs {
+		if s.Divisor <= 0 {
+			t.Errorf("%s: divisor = %v, must be positive", s.Key, s.Divisor)
+		}
 	}
 }
 
@@ -53,6 +85,9 @@ func TestBuildSamplesClusterAndNode(t *testing.T) {
 		Current: []models.StatPoint{
 			{Key: "ifs.bytes.total", DevID: 0, Value: 5000},
 			{Key: "node.memory.used", DevID: 2, Value: 42},
+			// OneFS reports cpu.*.avg in tenths of a percent, so these must be scaled.
+			{Key: "cluster.cpu.sys.avg", DevID: 0, Value: 125},
+			{Key: "node.cpu.idle.avg", DevID: 2, Value: 886},
 			{Key: "unmapped.key", DevID: 0, Value: 1}, // ignored
 		},
 		Proto: []models.ProtoStat{
@@ -82,6 +117,14 @@ func TestBuildSamplesClusterAndNode(t *testing.T) {
 	}
 	if s, ok := get("powerscale_node_memory_used_bytes"); !ok || s.Value != 42 || s.Labels[2].Value != "2" {
 		t.Fatalf("node memory sample wrong: %+v ok=%v", s, ok)
+	}
+	// Tenths of a percent must reach the _percent metric as 0-100, at both scopes, and
+	// land exactly so the exposition output stays free of float artifacts.
+	if s, ok := get("powerscale_cluster_cpu_sys_percent"); !ok || s.Value != 12.5 {
+		t.Fatalf("cluster cpu sample not rescaled to percent: %+v ok=%v want 12.5", s, ok)
+	}
+	if s, ok := get("powerscale_node_cpu_idle_percent"); !ok || s.Value != 88.6 {
+		t.Fatalf("node cpu sample not rescaled to percent: %+v ok=%v want 88.6", s, ok)
 	}
 	if s, ok := get("powerscale_quota_usage_bytes"); !ok || s.Value != 100 {
 		t.Fatalf("quota usage sample wrong: %+v ok=%v", s, ok)
