@@ -21,11 +21,18 @@ func TestStatKeysLoaded(t *testing.T) {
 // "divisor" must pass its raw value through, and every cpu.*.avg key must divide by ten
 // because OneFS reports those in tenths of a percent (idle+user+sys sums to 1000).
 func TestStatKeyDivisors(t *testing.T) {
-	if got := statKeyByKey["ifs.bytes.total"].Divisor; got != 1 {
-		t.Fatalf("omitted divisor must normalize to 1, got %v", got)
+	if got := statKeyByKey["ifs.bytes.total"].scale(5000); got != 5000 {
+		t.Fatalf("omitted divisor must pass the value through, got %v", got)
+	}
+	if got := (StatKeySpec{}).scale(42); got != 42 {
+		t.Fatalf("zero spec must not divide by zero, got %v", got)
 	}
 	cpuKeys := 0
 	for _, s := range statKeySpecs {
+		// A negative or absurd divisor would silently skew a metric.
+		if s.Divisor < 0 {
+			t.Errorf("%s: divisor = %v, must not be negative", s.Key, s.Divisor)
+		}
 		if !strings.HasPrefix(s.Key, "cluster.cpu.") && !strings.HasPrefix(s.Key, "node.cpu.") {
 			continue
 		}
@@ -39,12 +46,6 @@ func TestStatKeyDivisors(t *testing.T) {
 	}
 	if cpuKeys != 6 {
 		t.Fatalf("expected 6 cpu keys in the curated table, found %d", cpuKeys)
-	}
-	// No divisor may be negative or absurd; a typo there would silently skew a metric.
-	for _, s := range statKeySpecs {
-		if s.Divisor <= 0 {
-			t.Errorf("%s: divisor = %v, must be positive", s.Key, s.Divisor)
-		}
 	}
 }
 
@@ -202,18 +203,19 @@ func TestBuildSamplesClusterAndNode(t *testing.T) {
 	}
 }
 
-// TestHardwareInfoSamples covers the info metric that lets a dashboard explain empty
+// TestHardwareInfoSample covers the info metric that lets a dashboard explain empty
 // fan/temperature/power-supply panels.
-func TestHardwareInfoSamples(t *testing.T) {
-	nodes := []models.Node{
-		{LNN: 1, Product: "SIMULATOR-1U-Dual-6144MB-1x1GE-100GB", Series: "virtual_series", HWGen: "VMware"},
-		{LNN: 2}, // no hardware block: skipped rather than emitting empty labels
+func TestHardwareInfoSample(t *testing.T) {
+	// A node with no hardware block is skipped rather than emitting empty labels.
+	if s, ok := hardwareInfoSample("clu1", "GUID-1", "2", models.Node{LNN: 2}); ok {
+		t.Fatalf("hardware info emitted for a node with no hardware identity: %+v", s)
 	}
-	got := hardwareInfoSamples("clu1", "GUID-1", nodes)
-	if len(got) != 1 {
-		t.Fatalf("want 1 info sample, got %d: %+v", len(got), got)
+	node := models.Node{LNN: 1, Product: "SIMULATOR-1U-Dual-6144MB-1x1GE-100GB",
+		Series: "virtual_series", HWGen: "VMware"}
+	s, ok := hardwareInfoSample("clu1", "GUID-1", "1", node)
+	if !ok {
+		t.Fatalf("no info sample for a node carrying a hardware block")
 	}
-	s := got[0]
 	if s.Name != "powerscale_node_hardware_info" || s.Value != 1 {
 		t.Fatalf("info sample wrong: %+v", s)
 	}
@@ -235,14 +237,15 @@ func TestHardwareInfoSamples(t *testing.T) {
 
 // TestExplainMissingHardware covers the operator-facing explanation for absent hardware
 // metrics: all-virtual, a physical node with a silent sensor subsystem, and the healthy
-// case where nothing needs explaining.
+// case where nothing needs explaining. (The function lives in collector.go; the cases sit
+// here beside the hardware sample derivations they explain.)
 func TestExplainMissingHardware(t *testing.T) {
 	virtual := models.Node{LNN: 1, Series: "virtual_series", HWGen: "VMware",
 		Product: "SIMULATOR-1U-Dual-6144MB-1x1GE-100GB"}
 	healthy := models.Node{LNN: 2, PowerSupplies: 2,
 		Temperatures: []models.Sensor{{Name: "CPU0", Value: 35}}}
 
-	msg := ExplainMissingHardware([]models.Node{virtual, {LNN: 2, Series: "virtual_series", HWGen: "VMware"}})
+	msg := explainMissingHardware([]models.Node{virtual, {LNN: 2, Series: "virtual_series", HWGen: "VMware"}})
 	if !strings.Contains(msg, "2/2 nodes report virtual hardware") ||
 		!strings.Contains(msg, "series=virtual_series") ||
 		!strings.Contains(msg, "powerscale_node_fan_speed_rpm") {
@@ -250,7 +253,7 @@ func TestExplainMissingHardware(t *testing.T) {
 	}
 
 	// A physical node reporting nothing is a different story and must not be called virtual.
-	msg = ExplainMissingHardware([]models.Node{healthy, {LNN: 3, Series: "h_series", HWGen: "Gen6"}})
+	msg = explainMissingHardware([]models.Node{healthy, {LNN: 3, Series: "h_series", HWGen: "Gen6"}})
 	if !strings.Contains(msg, "1/2 nodes report no power supplies") || !strings.Contains(msg, "nodes 3") {
 		t.Fatalf("partial message unhelpful: %q", msg)
 	}
@@ -258,27 +261,8 @@ func TestExplainMissingHardware(t *testing.T) {
 		t.Errorf("physical node described as virtual: %q", msg)
 	}
 
-	if msg := ExplainMissingHardware([]models.Node{healthy}); msg != "" {
+	if msg := explainMissingHardware([]models.Node{healthy}); msg != "" {
 		t.Errorf("nothing to explain, got %q", msg)
-	}
-}
-
-func TestNodeVirtualHardware(t *testing.T) {
-	for _, tc := range []struct {
-		name string
-		node models.Node
-		want bool
-	}{
-		{"simulator", models.Node{Series: "virtual_series", HWGen: "VMware"}, true},
-		{"series only", models.Node{Series: "virtual_series"}, true},
-		{"hwgen only", models.Node{HWGen: "VMware"}, true},
-		{"case insensitive", models.Node{Series: "Virtual_Series"}, true},
-		{"physical gen6", models.Node{Series: "h_series", HWGen: "Gen6"}, false},
-		{"unknown", models.Node{}, false},
-	} {
-		if got := tc.node.VirtualHardware(); got != tc.want {
-			t.Errorf("%s: VirtualHardware() = %v, want %v", tc.name, got, tc.want)
-		}
 	}
 }
 

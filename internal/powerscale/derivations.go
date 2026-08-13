@@ -1,7 +1,6 @@
 package powerscale
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -28,7 +27,6 @@ func BuildSamples(clusterName string, inv *models.Inventory, st *models.Statisti
 	samples = append(samples, protoSamples(clusterName, clusterID, st)...)
 	samples = append(samples, nodeHealthSamples(clusterName, clusterID, inv.Nodes)...)
 	samples = append(samples, hardwareSamples(clusterName, clusterID, inv.Nodes)...)
-	samples = append(samples, hardwareInfoSamples(clusterName, clusterID, inv.Nodes)...)
 	samples = append(samples, snapshotSamples(clusterName, clusterID, inv.Snapshot)...)
 	samples = append(samples, syncSamples(clusterName, clusterID, inv.SyncPolicies)...)
 	samples = append(samples, eventSamples(clusterName, clusterID, inv.Events)...)
@@ -67,13 +65,13 @@ func statSamples(clusterName, clusterID string, st *models.Statistics, lnnByDevI
 			out = append(out, Sample{
 				Name:   spec.Metric,
 				Labels: nodeLabels(clusterName, clusterID, strconv.Itoa(lnn)),
-				Value:  p.Value / spec.Divisor,
+				Value:  spec.scale(p.Value),
 			})
 		default: // "cluster"
 			out = append(out, Sample{
 				Name:   spec.Metric,
 				Labels: baseLabels(clusterName, clusterID),
-				Value:  p.Value / spec.Divisor,
+				Value:  spec.scale(p.Value),
 			})
 		}
 	}
@@ -123,12 +121,16 @@ func nodeHealthSamples(clusterName, clusterID string, nodes []models.Node) []Sam
 	return out
 }
 
-// hardwareSamples emits per-node power-supply health and temperature/fan sensor readings.
-// PSU samples are emitted only when the node reports supplies; sensors only when present.
+// hardwareSamples emits per-node power-supply health, temperature/fan sensor readings and
+// the hardware-identity info gauge. PSU samples are emitted only when the node reports
+// supplies; sensors only when present.
 func hardwareSamples(clusterName, clusterID string, nodes []models.Node) []Sample {
 	var out []Sample
 	for _, n := range nodes {
 		lnn := strconv.Itoa(n.LNN)
+		if s, ok := hardwareInfoSample(clusterName, clusterID, lnn, n); ok {
+			out = append(out, s)
+		}
 		if n.PowerSupplies > 0 {
 			base := nodeLabels(clusterName, clusterID, lnn)
 			out = append(out,
@@ -154,61 +156,20 @@ func hardwareSamples(clusterName, clusterID string, nodes []models.Node) []Sampl
 	return out
 }
 
-// hardwareInfoSamples emits one info-style gauge per node carrying its hardware identity
-// as labels, with the constant value 1. It is what lets a dashboard explain an empty
-// Fan Speed / Node Temperature / Power-Supply panel: a node whose series is
-// "virtual_series" has no physical sensors to report. Nodes on payloads without a
-// hardware block are skipped rather than emitting an all-empty label set.
-func hardwareInfoSamples(clusterName, clusterID string, nodes []models.Node) []Sample {
-	var out []Sample
-	for _, n := range nodes {
-		if n.Product == "" && n.Series == "" && n.HWGen == "" {
-			continue
-		}
-		out = append(out, Sample{
-			Name: "powerscale_node_hardware_info",
-			Labels: hardwareInfoLabels(clusterName, clusterID, strconv.Itoa(n.LNN),
-				n.Product, n.Series, n.HWGen),
-			Value: 1,
-		})
+// hardwareInfoSample builds the info-style gauge carrying a node's hardware identity as
+// labels, with the constant value 1. It is what lets a dashboard explain an empty Fan
+// Speed / Node Temperature / Power-Supply panel: a node whose series is "virtual_series"
+// has no physical sensors to report. Nodes on payloads without a hardware block report
+// false rather than emitting an all-empty label set.
+func hardwareInfoSample(clusterName, clusterID, lnn string, n models.Node) (Sample, bool) {
+	if n.Product == "" && n.Series == "" && n.HWGen == "" {
+		return Sample{}, false
 	}
-	return out
-}
-
-// ExplainMissingHardware returns an operator-facing sentence naming the metrics a cluster
-// cannot produce and why, or "" when every node reports sensors. The collector logs it
-// once per cluster so an empty hardware panel is self-explanatory instead of looking like
-// a broken exporter. Virtual nodes are the common case (a hypervisor exposes no physical
-// sensors), but a physical node whose sensor subsystem returns nothing is reported too —
-// the trigger is the observed absence, not the platform.
-func ExplainMissingHardware(nodes []models.Node) string {
-	var silent, virtual []string
-	identity := ""
-	for _, n := range nodes {
-		if n.ReportsHardwareSensors() {
-			continue
-		}
-		lnn := strconv.Itoa(n.LNN)
-		silent = append(silent, lnn)
-		if n.VirtualHardware() {
-			virtual = append(virtual, lnn)
-			if identity == "" {
-				identity = fmt.Sprintf("series=%s, hwgen=%s, product=%s", n.Series, n.HWGen, n.Product)
-			}
-		}
-	}
-	if len(silent) == 0 {
-		return ""
-	}
-	const absent = "powerscale_node_temperature_celsius, powerscale_node_fan_speed_rpm, " +
-		"powerscale_node_power_supplies_total and powerscale_node_power_supply_failures " +
-		"are absent for those nodes"
-	if len(virtual) == len(silent) {
-		return fmt.Sprintf("%d/%d nodes report virtual hardware (%s) and expose no physical "+
-			"sensors, so %s", len(virtual), len(nodes), identity, absent)
-	}
-	return fmt.Sprintf("%d/%d nodes report no power supplies and no temperature or fan "+
-		"sensors (nodes %s), so %s", len(silent), len(nodes), strings.Join(silent, ","), absent)
+	return Sample{
+		Name:   "powerscale_node_hardware_info",
+		Labels: hardwareInfoLabels(clusterName, clusterID, lnn, n.Product, n.Series, n.HWGen),
+		Value:  1,
+	}, true
 }
 
 // snapshotSamples emits aggregate snapshot space usage. The gauge is always emitted —

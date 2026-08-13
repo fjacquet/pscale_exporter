@@ -112,8 +112,7 @@ type Node struct {
 // VirtualHardware reports whether the node runs on virtualized hardware rather than a
 // physical PowerScale appliance. Such nodes have no physical sensors to read, so the
 // fan, temperature and power-supply metrics are structurally absent for them — see
-// ReportsHardwareSensors. OneFS marks them two independent ways and either is
-// sufficient: series is "virtual_series" and hwgen names the hypervisor.
+// ReportsHardwareSensors. OneFS marks them two independent ways, either sufficient.
 func (n Node) VirtualHardware() bool {
 	return strings.EqualFold(n.Series, "virtual_series") ||
 		strings.Contains(strings.ToLower(n.HWGen), "vmware")

@@ -2,6 +2,9 @@ package powerscale
 
 import (
 	"context"
+	"fmt"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -20,8 +23,8 @@ type Collector struct {
 	interval time.Duration
 	timeout  time.Duration
 	tracing  *TracerWrapper
-	// hwExplained records the clusters whose missing-hardware explanation has already
-	// been logged, so the message appears once per cluster instead of every interval.
+	// hwExplained records the cluster+message pairs already logged, so each distinct
+	// missing-hardware explanation appears once instead of at every interval.
 	hwExplained sync.Map
 }
 
@@ -102,18 +105,57 @@ func (c *Collector) collectCluster(ctx context.Context, client Client) *ClusterS
 	return cs
 }
 
-// explainHardwareOnce logs, at most once per cluster, why the node hardware metrics are
-// absent. Empty Fan Speed / Node Temperature / Power-Supply panels are the single most
-// confusing thing about running this exporter against a virtual cluster, and the cause is
-// only visible in the nodes payload.
+// explainHardwareOnce logs why the node hardware metrics are absent. Empty Fan Speed /
+// Node Temperature / Power-Supply panels are the single most confusing thing about running
+// this exporter against a virtual cluster, and the cause is only visible in the nodes
+// payload. The dedup key is the cluster plus the message itself rather than the cluster
+// alone: an unguarded Infof would repeat at every interval (~2900 times a day at 30s), but
+// keying on the cluster alone would also silence a cluster whose hardware later changes —
+// a node replaced, sensors going silent, a virtual node joining.
 func (c *Collector) explainHardwareOnce(cluster string, inv *models.Inventory) {
 	if inv == nil || len(inv.Nodes) == 0 {
 		return
 	}
-	if _, seen := c.hwExplained.LoadOrStore(cluster, struct{}{}); seen {
+	msg := explainMissingHardware(inv.Nodes)
+	if msg == "" {
 		return
 	}
-	if msg := ExplainMissingHardware(inv.Nodes); msg != "" {
-		log.Infof("cluster %q: %s", cluster, msg)
+	if _, seen := c.hwExplained.LoadOrStore(cluster+"\x00"+msg, struct{}{}); seen {
+		return
 	}
+	log.Infof("cluster %q: %s", cluster, msg)
+}
+
+// explainMissingHardware returns an operator-facing sentence naming the metrics a cluster
+// cannot produce and why, or "" when every node reports sensors. Virtual nodes are the
+// common case (a hypervisor exposes no physical sensors), but a physical node whose sensor
+// subsystem returns nothing is reported too — the trigger is the observed absence, not the
+// platform.
+func explainMissingHardware(nodes []models.Node) string {
+	var silent []string
+	virtual, identity := 0, ""
+	for _, n := range nodes {
+		if n.ReportsHardwareSensors() {
+			continue
+		}
+		silent = append(silent, strconv.Itoa(n.LNN))
+		if n.VirtualHardware() {
+			virtual++
+			if identity == "" {
+				identity = fmt.Sprintf("series=%s, hwgen=%s, product=%s", n.Series, n.HWGen, n.Product)
+			}
+		}
+	}
+	if len(silent) == 0 {
+		return ""
+	}
+	reason := fmt.Sprintf("report no power supplies and no temperature or fan sensors (nodes %s)",
+		strings.Join(silent, ","))
+	if virtual == len(silent) {
+		reason = fmt.Sprintf("report virtual hardware (%s) and expose no physical sensors", identity)
+	}
+	return fmt.Sprintf("%d/%d nodes %s, so powerscale_node_temperature_celsius, "+
+		"powerscale_node_fan_speed_rpm, powerscale_node_power_supplies_total and "+
+		"powerscale_node_power_supply_failures are absent for those nodes",
+		len(silent), len(nodes), reason)
 }

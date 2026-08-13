@@ -267,9 +267,6 @@ func TestParseClientSummary(t *testing.T) {
 	}
 }
 
-// TestParseNodesLegacySensors covers the older OneFS shape where "sensors" is a bare
-// array (not wrapped in an object). The dual-shape support in sensorGroups must keep
-// parsing it even though 9.14.0 fixtures use the wrapped shape.
 // TestParseNodesVirtualHardware uses the hardware block a live OneFS simulator returns,
 // which is how the exporter explains absent fan/temperature/power-supply metrics.
 func TestParseNodesVirtualHardware(t *testing.T) {
@@ -302,6 +299,28 @@ func TestParseNodesVirtualHardware(t *testing.T) {
 	}
 }
 
+func TestNodeVirtualHardware(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		node Node
+		want bool
+	}{
+		{"simulator", Node{Series: "virtual_series", HWGen: "VMware"}, true},
+		{"series only", Node{Series: "virtual_series"}, true},
+		{"hwgen only", Node{HWGen: "VMware"}, true},
+		{"case insensitive", Node{Series: "Virtual_Series"}, true},
+		{"physical gen6", Node{Series: "h_series", HWGen: "Gen6"}, false},
+		{"unknown", Node{}, false},
+	} {
+		if got := tc.node.VirtualHardware(); got != tc.want {
+			t.Errorf("%s: VirtualHardware() = %v, want %v", tc.name, got, tc.want)
+		}
+	}
+}
+
+// TestParseNodesLegacySensors covers the older OneFS shape where "sensors" is a bare
+// array (not wrapped in an object). The dual-shape support in sensorGroups must keep
+// parsing it even though 9.14.0 fixtures use the wrapped shape.
 func TestParseNodesLegacySensors(t *testing.T) {
 	payload := []byte(`{"nodes":[{"id":1,"lnn":1,
 	  "state":{"readonly":{"enabled":false},"smartfail":{"smartfailed":false}},

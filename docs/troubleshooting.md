@@ -88,10 +88,12 @@ turn it off afterwards.
 Almost always a **virtual cluster**, not a broken exporter. A hypervisor exposes no physical
 sensors, so OneFS reports `powersupplies.count: 0` and empty sensor groups, and the four
 `powerscale_node_{temperature_celsius,fan_speed_rpm,power_supplies_total,power_supply_failures}`
-metrics have nothing to emit. The exporter says so once per cluster at startup:
+metrics have nothing to emit. The exporter says so once per cluster at startup. Logs are
+JSON on stdout (and, when `server.logName` is writable, also appended to that file), so
+pipe through `jq` to read the sentence:
 
 ```console
-$ ./bin/pscale_exporter --config config.yaml --once | grep 'virtual hardware'
+$ ./bin/pscale_exporter --config config.yaml --once | jq -r 'select(.msg | test("virtual hardware")) | .msg'
 cluster "pscale-cluster1": 4/4 nodes report virtual hardware (series=virtual_series,
 hwgen=VMware, product=SIMULATOR-1U-Dual-6144MB-1x1GE-100GB) and expose no physical
 sensors, so ... are absent for those nodes

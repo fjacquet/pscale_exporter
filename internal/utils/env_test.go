@@ -26,6 +26,35 @@ func TestExpandEnvMissing(t *testing.T) {
 	}
 }
 
+// TestExpandEnvDefault covers the ${VAR:-default} form, which is what lets config.yaml
+// ship an env-driven value that still starts on a host where the variable is not exported.
+// A reference without ":-" must keep failing loudly — that is what protects secrets.
+func TestExpandEnvDefault(t *testing.T) {
+	for _, tc := range []struct {
+		name, in, want string
+	}{
+		{"unset falls back", "${PSCALE_DEFINITELY_UNSET_VAR:-false}", "false"},
+		{"set wins over default", "${PSCALE_TEST_SKIP:-false}", "true"},
+		{"empty default allowed", "${PSCALE_DEFINITELY_UNSET_VAR:-}", ""},
+		// ":-" carries its shell / docker-compose meaning: an exported-but-empty variable
+		// falls back too, so an empty .env line cannot silently mean "unset".
+		{"exported empty falls back", "${PSCALE_TEST_EMPTY:-fallback}", "fallback"},
+		{"mixed with literal text", "a${PSCALE_DEFINITELY_UNSET_VAR:-b}c", "abc"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Setenv("PSCALE_TEST_SKIP", "true")
+			t.Setenv("PSCALE_TEST_EMPTY", "")
+			got, err := ExpandEnv(tc.in)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if got != tc.want {
+				t.Errorf("ExpandEnv(%q) = %q, want %q", tc.in, got, tc.want)
+			}
+		})
+	}
+}
+
 func TestResolveSecretsInterpolatesAndLoadsFile(t *testing.T) {
 	t.Setenv("PSCALE_PW1", "envpass")
 

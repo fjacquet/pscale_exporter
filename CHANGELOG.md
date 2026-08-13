@@ -35,6 +35,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `${VAR:-default}` fallbacks in `config.yaml` env references, with shell / docker-compose
+  semantics: the variable falls back when unset *or* empty, and such a reference never
+  aborts startup. A bare `${VAR}` still fails loudly, which is what protects secrets from
+  resolving to an empty string. The shipped `config.yaml` now uses
+  `insecureSkipVerify: "${PSCALE1_SKIP_CERTIFICATE:-false}"`, so the setting is env-driven
+  out of the box yet starts on a host that never exported the variable.
 - `statisticsKeys.json` rows accept an optional `divisor` to rescale a raw OneFS value into
   the unit its metric name claims. Omitted means pass-through.
 - `powerscale_node_hardware_info` — an info gauge (always 1) carrying each node's `product`,

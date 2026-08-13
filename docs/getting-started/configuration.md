@@ -62,7 +62,9 @@ clusters:
     # self-signed cert on a trusted network). Accepts a literal bool or a ${VAR} reference:
     #   insecureSkipVerify: true
     #   insecureSkipVerify: "${PSCALE1_SKIP_CERTIFICATE}"
-    insecureSkipVerify: false
+    # The ":-false" fallback keeps startup working when the variable is not exported; a bare
+    # ${PSCALE1_SKIP_CERTIFICATE} would abort instead, as bare references do for secrets.
+    insecureSkipVerify: "${PSCALE1_SKIP_CERTIFICATE:-false}"
 ```
 
 ## Blocks
@@ -108,6 +110,21 @@ Never put plaintext passwords in the file. Two options:
   The same expansion works for `endpoint` and `username` — all three fields support `${VAR}`.
 - **`passwordFile`** — point at a file whose contents are the password (handy with
   Kubernetes/Docker secrets mounted as files).
+
+### Fallback values: `${VAR:-default}`
+
+A bare `${VAR}` **fails at startup** when the variable is unset — misconfiguration should
+be loud rather than authenticate with an empty secret. Where a safe default exists, write
+`${VAR:-default}` instead: the reference then never errors, falling back when the variable
+is unset *or* empty, exactly as in the shell and in `docker-compose.yml`. That is why the
+shipped `config.yaml` can be env-driven and still start out of the box:
+
+```yaml
+insecureSkipVerify: "${PSCALE1_SKIP_CERTIFICATE:-false}"
+```
+
+Use it for settings, not for secrets — a `${PSCALE1_PASSWORD:-}` would silently turn a
+missing password into an empty one.
 
 ### Passwords with special characters
 
