@@ -18,6 +18,8 @@ Everything CI runs is a Makefile target, so it reproduces locally.
 - Live-cluster validation: `--once --debug` prints every collected sample sorted in exposition style (diff against `docs/metrics.md`); `--trace` logs every OneFS API response body. **Token safety:** trace logs method/URL/status/body only, never headers (OneFS session credentials live in headers); the `/session/1/session` login happens inside gopowerscale and is structurally excluded. Never enable the SDK's own verbose logging (`GOISILON_DEBUG` / `verboseLogging`): it dumps response headers including `Set-Cookie: isisessid=…` unmasked.
 - Docs site (MkDocs Material): `uvx --with mkdocs-material --with pymdown-extensions mkdocs build --strict` (or `serve`).
 - `vendor/` is git-ignored; dependencies are managed with `go mod`.
+- **Merges are merge commits — squash is disabled on the repo.** `gh pr merge <n> --merge`.
+- Helm chart in `charts/pscale-exporter`; design rationale in `docs/adr/` (7 ADRs).
 
 ## Architecture
 
@@ -33,6 +35,8 @@ A Go exporter for **Dell PowerScale (OneFS)** that exposes metrics via **both** 
 
 **Graceful degradation.** If a cluster's session can't be created or a collection fails, that cluster is logged as init-failed / marked down on the snapshot; the exporter and other clusters keep running.
 
+**Virtual clusters expose no physical sensors,** so the fan/temperature/power-supply metrics are structurally absent there — the single most confusing thing about running this against a simulator. `powerscale_node_hardware_info` carries `product`/`series`/`hwgen` per node, and the collector logs the reason once per cluster+message (`explainMissingHardware`, `collector.go`). A node counts as virtual on *either* marker: `series="virtual_series"` or a `hwgen` naming the hypervisor.
+
 **Stat-key mapping (`statkeys.go` + `statisticsKeys.json`, sample derivation `derivations.go`, types `metrics.go`).** A curated JSON table maps OneFS stat keys to metric names and scope; node-scope keys map a `devid` to a node LNN. Samples are `Sample{Name, []Label, Value}` with `cluster`/`cluster_id` as the canonical leading labels.
 
 ## Conventions and non-obvious constraints
@@ -40,6 +44,8 @@ A Go exporter for **Dell PowerScale (OneFS)** that exposes metrics via **both** 
 - **`powerscale_` metric prefix** — matches `dell/csm-metrics-powerscale` for dashboard compatibility. Keep it.
 - **`iops` and bandwidth are per-second gauges** — in PromQL aggregate with `sum`/`avg`, never `rate()`.
 - **Unit-explicit names:** metric names carry their unit — `_bytes`, `_bytes_per_second`, `_operations_per_second`, `_microseconds`, `_percent`.
+- **Config env refs (`internal/utils/env.go`):** a bare `${VAR}` fails at startup when the variable is *unset*; an exported-but-empty one expands to `""`. `${VAR:-default}` falls back when unset *or* empty and never fails — that is what lets the shipped `insecureSkipVerify: "${PSCALE1_SKIP_CERTIFICATE:-false}"` be env-driven and still start. Credential fields (`endpoint`/`username`/`password`) go through `ExpandEnvSecret`, which rejects a reference resolving to empty and names only the field — never the value, which is logged. A `.env` is auto-loaded (cwd, then the config file's dir) before interpolation; already-set env wins.
+- **Dashboards provision by directory:** `grafana/provisioning/dashboards/json/PowerScale/` → the **PowerScale** folder, `json/Infrastructure/` → **Infrastructure**, via `foldersFromFilesStructure: true`. Adding a board is a copy into the right directory. Keep each board's `uid` stable — bookmarks, the per-node data links, and the tag-driven cross-board dropdown all resolve by uid.
 - **Extending coverage:** add a row to `internal/powerscale/statisticsKeys.json` (`key`, `metric`, `scope` = `cluster` | `node`, optional `divisor`). No code change is needed for a new curated key. Node-scope keys map `devid` → node LNN. `divisor` rescales a raw OneFS value into the unit the metric name claims — verify the unit against a live cluster, since the API docs don't state it: `cpu.*.avg` arrives in tenths of a percent (`idle`+`user`+`sys` = 1000) and so carries `"divisor": 10`.
 - **Semgrep write-hook blocks on findings and inline `// nosemgrep` is NOT honored** — fix by restructuring, not suppression (e.g. test HTTP handlers write fixtures through a `writeBytes(io.Writer, …)` helper to avoid the "write-to-ResponseWriter" rule). The **Dockerfile must declare a non-root `USER`**.
 - **Two Dockerfiles, different jobs:** the root `Dockerfile` is the from-source build used by `make docker`; `Dockerfile.goreleaser` is runtime-only (GoReleaser stages the prebuilt binary) and used by the release pipeline. Edit the one matching the build path you're changing; keep both non-root.
