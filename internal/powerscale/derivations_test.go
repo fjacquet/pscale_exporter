@@ -196,6 +196,90 @@ func TestBuildSamplesClusterAndNode(t *testing.T) {
 	if s, ok := get("powerscale_node_fan_speed_rpm"); !ok || s.Value != 4500 {
 		t.Fatalf("fan sample wrong: %+v ok=%v", s, ok)
 	}
+	// Nodes in this inventory carry no hardware block, so no info metric is invented.
+	if s, ok := get("powerscale_node_hardware_info"); ok {
+		t.Fatalf("hardware info emitted for a node with no hardware identity: %+v", s)
+	}
+}
+
+// TestHardwareInfoSamples covers the info metric that lets a dashboard explain empty
+// fan/temperature/power-supply panels.
+func TestHardwareInfoSamples(t *testing.T) {
+	nodes := []models.Node{
+		{LNN: 1, Product: "SIMULATOR-1U-Dual-6144MB-1x1GE-100GB", Series: "virtual_series", HWGen: "VMware"},
+		{LNN: 2}, // no hardware block: skipped rather than emitting empty labels
+	}
+	got := hardwareInfoSamples("clu1", "GUID-1", nodes)
+	if len(got) != 1 {
+		t.Fatalf("want 1 info sample, got %d: %+v", len(got), got)
+	}
+	s := got[0]
+	if s.Name != "powerscale_node_hardware_info" || s.Value != 1 {
+		t.Fatalf("info sample wrong: %+v", s)
+	}
+	want := map[string]string{
+		"cluster": "clu1", "cluster_id": "GUID-1", "node": "1",
+		"product": "SIMULATOR-1U-Dual-6144MB-1x1GE-100GB",
+		"series":  "virtual_series", "hwgen": "VMware",
+	}
+	for _, l := range s.Labels {
+		if want[l.Name] != l.Value {
+			t.Errorf("label %s = %q, want %q", l.Name, l.Value, want[l.Name])
+		}
+		delete(want, l.Name)
+	}
+	if len(want) != 0 {
+		t.Errorf("missing labels: %v", want)
+	}
+}
+
+// TestExplainMissingHardware covers the operator-facing explanation for absent hardware
+// metrics: all-virtual, a physical node with a silent sensor subsystem, and the healthy
+// case where nothing needs explaining.
+func TestExplainMissingHardware(t *testing.T) {
+	virtual := models.Node{LNN: 1, Series: "virtual_series", HWGen: "VMware",
+		Product: "SIMULATOR-1U-Dual-6144MB-1x1GE-100GB"}
+	healthy := models.Node{LNN: 2, PowerSupplies: 2,
+		Temperatures: []models.Sensor{{Name: "CPU0", Value: 35}}}
+
+	msg := ExplainMissingHardware([]models.Node{virtual, {LNN: 2, Series: "virtual_series", HWGen: "VMware"}})
+	if !strings.Contains(msg, "2/2 nodes report virtual hardware") ||
+		!strings.Contains(msg, "series=virtual_series") ||
+		!strings.Contains(msg, "powerscale_node_fan_speed_rpm") {
+		t.Fatalf("all-virtual message unhelpful: %q", msg)
+	}
+
+	// A physical node reporting nothing is a different story and must not be called virtual.
+	msg = ExplainMissingHardware([]models.Node{healthy, {LNN: 3, Series: "h_series", HWGen: "Gen6"}})
+	if !strings.Contains(msg, "1/2 nodes report no power supplies") || !strings.Contains(msg, "nodes 3") {
+		t.Fatalf("partial message unhelpful: %q", msg)
+	}
+	if strings.Contains(msg, "virtual") {
+		t.Errorf("physical node described as virtual: %q", msg)
+	}
+
+	if msg := ExplainMissingHardware([]models.Node{healthy}); msg != "" {
+		t.Errorf("nothing to explain, got %q", msg)
+	}
+}
+
+func TestNodeVirtualHardware(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		node models.Node
+		want bool
+	}{
+		{"simulator", models.Node{Series: "virtual_series", HWGen: "VMware"}, true},
+		{"series only", models.Node{Series: "virtual_series"}, true},
+		{"hwgen only", models.Node{HWGen: "VMware"}, true},
+		{"case insensitive", models.Node{Series: "Virtual_Series"}, true},
+		{"physical gen6", models.Node{Series: "h_series", HWGen: "Gen6"}, false},
+		{"unknown", models.Node{}, false},
+	} {
+		if got := tc.node.VirtualHardware(); got != tc.want {
+			t.Errorf("%s: VirtualHardware() = %v, want %v", tc.name, got, tc.want)
+		}
+	}
 }
 
 func TestBuildSamplesNodeIfsCacheKeys(t *testing.T) {

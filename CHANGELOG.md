@@ -22,6 +22,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `statisticsKeys.json` rows accept an optional `divisor` to rescale a raw OneFS value into
   the unit its metric name claims. Omitted means pass-through.
+- `powerscale_node_hardware_info` — an info gauge (always 1) carrying each node's `product`,
+  `series` and `hwgen`. It explains the most confusing thing about running against a virtual
+  cluster: a hypervisor exposes no physical sensors, so the fan, temperature and power-supply
+  metrics are structurally absent. Virtual nodes report `series="virtual_series"` and
+  `hwgen="VMware"`. The exporter also logs the reason once per cluster, naming the affected
+  metrics; a physical cluster where only some nodes go silent gets a different message that
+  does not call them virtual. See `docs/troubleshooting.md`.
 
 ## [0.16.0] - 2026-08-01
 

@@ -7,6 +7,7 @@
      {"baynum": 3, "present": false, "ui_state": "EMPTY"}
    ],
    "status": {"powersupplies": {"count": 2, "failures": 0, "status": "Power Supplies OK", "supplies": []}},
+   "hardware": {"product": "H700-4U-Dual-192GB-2x25GE-SED-30TB", "series": "h_series", "hwgen": "Gen6", "family_code": "H"},
    "sensors": {"sensors": [
      {"count": 1, "name": "Temps", "values": [{"name": "CPU0", "value": "35.0", "units": "Celsius"}]},
      {"count": 1, "name": "Fans", "values": [{"name": "Fan1", "value": 4500}]}
@@ -15,6 +16,7 @@
    "state": {"readonly": {"enabled": true}, "smartfail": {"dead": false, "down": false, "in_cluster": true, "smartfailed": true}},
    "drives": [{"ui_state": "HEALTHY"}, {"ui_state": "SMARTFAIL"}],
    "status": {"powersupplies": {"count": 2, "failures": 1}},
+   "hardware": {"product": "H700-4U-Dual-192GB-2x25GE-SED-30TB", "series": "h_series", "hwgen": "Gen6", "family_code": "H"},
    "sensors": {"sensors": [
      {"count": 1, "name": "Temperature", "values": [{"name": "CPU1", "value": 36}]}
    ]}}

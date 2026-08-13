@@ -27,6 +27,15 @@ func nodeLabels(clusterName, clusterID, nodeLNN string) []Label {
 	return append(baseLabels(clusterName, clusterID), Label{Name: "node", Value: nodeLNN})
 }
 
+// hardwareInfoLabels appends a node's hardware identity to the node label set.
+func hardwareInfoLabels(clusterName, clusterID, nodeLNN, product, series, hwgen string) []Label {
+	return append(nodeLabels(clusterName, clusterID, nodeLNN),
+		Label{Name: "product", Value: product},
+		Label{Name: "series", Value: series},
+		Label{Name: "hwgen", Value: hwgen},
+	)
+}
+
 // quotaLabels builds the canonical Quota label set.
 func quotaLabels(clusterName, clusterID, quotaID, path, quotaType string) []Label {
 	return append(baseLabels(clusterName, clusterID),

@@ -2,8 +2,10 @@ package powerscale
 
 import (
 	"context"
+	"sync"
 	"time"
 
+	"github.com/fjacquet/pscale_exporter/internal/models"
 	log "github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/errgroup"
@@ -18,6 +20,9 @@ type Collector struct {
 	interval time.Duration
 	timeout  time.Duration
 	tracing  *TracerWrapper
+	// hwExplained records the clusters whose missing-hardware explanation has already
+	// been logged, so the message appears once per cluster instead of every interval.
+	hwExplained sync.Map
 }
 
 // NewCollector creates a collection loop over the given per-cluster clients.
@@ -91,7 +96,24 @@ func (c *Collector) collectCluster(ctx context.Context, client Client) *ClusterS
 		cs.ScrapeError = err.Error()
 		return cs
 	}
+	c.explainHardwareOnce(client.Name(), inv)
 	cs.Samples = BuildSamples(client.Name(), inv, stats)
 	cs.Up = true
 	return cs
+}
+
+// explainHardwareOnce logs, at most once per cluster, why the node hardware metrics are
+// absent. Empty Fan Speed / Node Temperature / Power-Supply panels are the single most
+// confusing thing about running this exporter against a virtual cluster, and the cause is
+// only visible in the nodes payload.
+func (c *Collector) explainHardwareOnce(cluster string, inv *models.Inventory) {
+	if inv == nil || len(inv.Nodes) == 0 {
+		return
+	}
+	if _, seen := c.hwExplained.LoadOrStore(cluster, struct{}{}); seen {
+		return
+	}
+	if msg := ExplainMissingHardware(inv.Nodes); msg != "" {
+		log.Infof("cluster %q: %s", cluster, msg)
+	}
 }

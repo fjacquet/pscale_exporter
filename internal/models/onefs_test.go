@@ -46,6 +46,16 @@ func TestParseNodes(t *testing.T) {
 	if len(nodes[0].Fans) != 1 || nodes[0].Fans[0].Value != 4500 {
 		t.Fatalf("fans (numeric value): %+v", nodes[0].Fans)
 	}
+	if nodes[0].Series != "h_series" || nodes[0].HWGen != "Gen6" ||
+		nodes[0].Product != "H700-4U-Dual-192GB-2x25GE-SED-30TB" {
+		t.Fatalf("hardware identity: %+v", nodes[0])
+	}
+	if nodes[0].VirtualHardware() {
+		t.Errorf("h_series/Gen6 must not be reported as virtual: %+v", nodes[0])
+	}
+	if !nodes[0].ReportsHardwareSensors() {
+		t.Errorf("node with psu+temps+fans must report sensors: %+v", nodes[0])
+	}
 }
 
 // TestParseNodesOneFS913 covers the live OneFS 9.13 nodes payload shape (validated
@@ -260,6 +270,38 @@ func TestParseClientSummary(t *testing.T) {
 // TestParseNodesLegacySensors covers the older OneFS shape where "sensors" is a bare
 // array (not wrapped in an object). The dual-shape support in sensorGroups must keep
 // parsing it even though 9.14.0 fixtures use the wrapped shape.
+// TestParseNodesVirtualHardware uses the hardware block a live OneFS simulator returns,
+// which is how the exporter explains absent fan/temperature/power-supply metrics.
+func TestParseNodesVirtualHardware(t *testing.T) {
+	payload := []byte(`{"nodes": [
+	  {"id": 1, "lnn": 1,
+	   "state": {"readonly": {"enabled": false}, "smartfail": {"smartfailed": false}},
+	   "status": {"powersupplies": {"count": 0, "failures": 0, "status": "Power Supplies OK", "supplies": []}},
+	   "hardware": {"chassis": "VMware (VMware 60-Bay Chassis)", "family_code": "V",
+	                "hwgen": "VMware", "series": "virtual_series",
+	                "product": "SIMULATOR-1U-Dual-6144MB-1x1GE-100GB"},
+	   "sensors": {"sensors": [
+	     {"count": 0, "name": "Fans", "values": []},
+	     {"count": 0, "name": "Temps", "values": []}
+	   ]}}
+	], "total": 1}`)
+	nodes, err := ParseNodes(payload)
+	if err != nil || len(nodes) != 1 {
+		t.Fatalf("parse virtual nodes payload: %+v err=%v", nodes, err)
+	}
+	n := nodes[0]
+	if n.Series != "virtual_series" || n.HWGen != "VMware" ||
+		n.Product != "SIMULATOR-1U-Dual-6144MB-1x1GE-100GB" {
+		t.Fatalf("hardware identity not parsed: %+v", n)
+	}
+	if !n.VirtualHardware() {
+		t.Errorf("virtual_series/VMware must be detected as virtual: %+v", n)
+	}
+	if n.ReportsHardwareSensors() {
+		t.Errorf("node with no psu and empty sensor groups must report none: %+v", n)
+	}
+}
+
 func TestParseNodesLegacySensors(t *testing.T) {
 	payload := []byte(`{"nodes":[{"id":1,"lnn":1,
 	  "state":{"readonly":{"enabled":false},"smartfail":{"smartfailed":false}},

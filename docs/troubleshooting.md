@@ -83,6 +83,45 @@ Without `--once` the exporter keeps running and overwrites each file every colle
 interval — useful to capture a payload that only appears under load, but remember to
 turn it off afterwards.
 
+## Empty fan / temperature / power-supply panels
+
+Almost always a **virtual cluster**, not a broken exporter. A hypervisor exposes no physical
+sensors, so OneFS reports `powersupplies.count: 0` and empty sensor groups, and the four
+`powerscale_node_{temperature_celsius,fan_speed_rpm,power_supplies_total,power_supply_failures}`
+metrics have nothing to emit. The exporter says so once per cluster at startup:
+
+```console
+$ ./bin/pscale_exporter --config config.yaml --once | grep 'virtual hardware'
+cluster "pscale-cluster1": 4/4 nodes report virtual hardware (series=virtual_series,
+hwgen=VMware, product=SIMULATOR-1U-Dual-6144MB-1x1GE-100GB) and expose no physical
+sensors, so ... are absent for those nodes
+```
+
+Confirm it from the metrics themselves — a virtual node carries `series="virtual_series"`:
+
+```console
+$ curl -s localhost:9444/metrics | grep node_hardware_info
+powerscale_node_hardware_info{cluster="pscale-cluster1",node="1",
+  product="SIMULATOR-1U-Dual-6144MB-1x1GE-100GB",series="virtual_series",hwgen="VMware"} 1
+```
+
+Or straight from the API, which is also where to look if the log line says only *some* nodes
+went quiet — on a physical cluster that is a real sensor fault worth chasing:
+
+```console
+$ ./bin/pscale_exporter --config config.yaml --once --dump-dir /tmp/dump
+$ jq '.nodes[0] | {series: .hardware.series, psu: .status.powersupplies.count,
+    sensors: [.sensors.sensors[] | select(.count > 0) | .name]}' \
+    /tmp/dump/<cluster>/platform_3_cluster_nodes.json
+```
+
+The same reasoning covers the other metrics that go missing on an idle or unlicensed
+cluster: `powerscale_synciq_*` needs at least one SyncIQ policy, the
+`powerscale_quota_*_threshold_bytes` series need a quota with that threshold actually set,
+`powerscale_license_expiration_timestamp_seconds` is 0 for licenses with no expiry, and
+`powerscale_protocol_*` / `powerscale_client_*` only appear while OneFS is reporting recent
+protocol activity — on an idle cluster they come and go between collection cycles.
+
 ## Health endpoint
 
 `/health` always answers `200 OK` with a JSON body reporting every configured cluster's
