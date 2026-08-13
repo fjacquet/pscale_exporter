@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Grafana dashboards provision into folders instead of one flat General list:
+  `json/PowerScale/` → **PowerScale**, `json/Infrastructure/` → **Infrastructure** (the
+  third-party Node Exporter board), via `foldersFromFilesStructure: true`. Adding a board
+  is now a copy into the right directory. Titles lose the redundant `PowerScale / ` prefix
+  the folder now supplies — `OneFS Overview`, `OneFS Advanced`, `OneFS Capacity & SLA`,
+  `OneFS Workloads`. Every **uid is unchanged**, so existing links and bookmarks resolve.
+- The four boards are cross-linked. Each carries a **PowerScale dashboards** dropdown
+  driven by the `powerscale` tag — a new tagged board joins every menu automatically —
+  with `includeVars`/`keepTime`, so cluster, node and time range follow you across boards.
+  The per-node panels on Overview and Capacity & SLA gained a data link into OneFS Advanced
+  scoped to the clicked node; it targets the uid with no title slug, so renaming a board
+  cannot break it.
+
 ### Fixed
 
 - CPU percentages were reported 10× too high. OneFS serves `cluster.cpu.{sys,user,idle}.avg`
