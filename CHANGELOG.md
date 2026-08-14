@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-08-14
+
+### Security
+
+- Go toolchain bumped to 1.26.6, fixing three stdlib CVEs flagged by
+  `govulncheck` (`net/url` quadratic-complexity resolvePath, `html/template`
+  JS-context tracking, and a third fixed alongside them). Applies to the
+  `go.mod` `go` directive and the from-source `Dockerfile` build stage.
+
 ### Changed
 
 - Grafana dashboards provision into folders instead of one flat General list:
@@ -56,6 +65,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   simulator reports both. The exporter also logs the reason once per cluster, naming the affected
   metrics; a physical cluster where only some nodes go silent gets a different message that
   does not call them virtual. See `docs/troubleshooting.md`.
+
+### Docs
+
+- Each dashboard section in `docs/dashboards.md` now carries a screenshot.
 
 ## [0.16.0] - 2026-08-01
 
