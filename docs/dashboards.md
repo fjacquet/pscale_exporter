@@ -58,6 +58,8 @@ The link targets the **uid only**, with no title slug, so renaming a board never
 
 One comprehensive board with these rows (in display order):
 
+![SLI Summary row on the Overview dashboard](assets/screenshots/overview-sli-summary.png)
+
 - **SLI Summary** — clusters up, per-cluster up/down status, detected OneFS API version,
   last-scrape age, and NFS export / SMB share / snapshot counts.
 - **Capacity — Utilization & Saturation** — capacity used %, a used/available/free/total
@@ -87,6 +89,8 @@ One comprehensive board with these rows (in display order):
 The Advanced board surfaces the health/state and efficiency metrics, with a link back to
 the Overview board.
 
+![Cluster Health row on the Advanced dashboard](assets/screenshots/advanced-cluster-health.png)
+
 ### Validated rows
 
 - **Cluster Health** — nodes read-only / smartfailing, drives by state, active events by
@@ -114,6 +118,8 @@ confirmed against a live cluster.
 
 ## Capacity & SLA dashboard
 
+![Capacity used, forecast and per-node balance on the Capacity & SLA dashboard](assets/screenshots/capacity-sla.png)
+
 A focused planning board built **only on live-validated metrics** (no provisional keys),
 in two sections:
 
@@ -134,6 +140,8 @@ in two sections:
     (default `now-7d`) so the projection has history to draw from.
 
 ## Workloads dashboard
+
+![Per-workload operations, throughput and CPU on the Workloads dashboard](assets/screenshots/workloads.png)
 
 Per-workload performance from OneFS statistics summaries (`uid` `powerscale-workloads`):
 
