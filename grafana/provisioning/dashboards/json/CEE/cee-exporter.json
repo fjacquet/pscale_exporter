@@ -1,0 +1,256 @@
+{
+  "title": "cee-exporter",
+  "uid": "cee-exporter",
+  "schemaVersion": 39,
+  "editable": true,
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "refresh": "30s",
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Publisher silence (seconds since last request)",
+      "description": "Per CEE server. A CEE server, not a NAS Data Mover: a Data Mover that stops publishing into a healthy CEE server is not visible here.",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "time() - cee_cepa_last_request_unix_seconds",
+          "legendFormat": "{{remote}}",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "cee-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 30
+              },
+              {
+                "color": "red",
+                "value": 60
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cee-prometheus"
+      }
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Registrations per publisher",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "rate(cee_cepa_registrations_total[5m])",
+          "legendFormat": "{{remote}}",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "cee-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cee-prometheus"
+      }
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Event throughput",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 6
+      },
+      "targets": [
+        {
+          "expr": "rate(cee_events_received_total[5m])",
+          "legendFormat": "received",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "cee-prometheus"
+          }
+        },
+        {
+          "expr": "rate(cee_events_written_total[5m])",
+          "legendFormat": "written",
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "cee-prometheus"
+          }
+        },
+        {
+          "expr": "rate(cee_events_dropped_total[5m])",
+          "legendFormat": "dropped",
+          "refId": "C",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "cee-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "eps"
+        },
+        "overrides": []
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cee-prometheus"
+      }
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Queue depth",
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 12,
+        "y": 6
+      },
+      "targets": [
+        {
+          "expr": "cee_queue_depth",
+          "legendFormat": "depth",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "cee-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cee-prometheus"
+      }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Seconds since last fsync",
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 18,
+        "y": 6
+      },
+      "targets": [
+        {
+          "expr": "time() - cee_last_fsync_unix_seconds",
+          "legendFormat": "fsync age",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "cee-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cee-prometheus"
+      }
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Requests dropped (label cap reached)",
+      "description": "Counts requests from publishers not recorded once the 64-publisher cap was hit, not distinct publishers. Non-zero means the labelled series above are incomplete.",
+      "gridPos": {
+        "h": 4,
+        "w": 24,
+        "x": 0,
+        "y": 14
+      },
+      "targets": [
+        {
+          "expr": "cee_cepa_peers_dropped_total",
+          "legendFormat": "dropped",
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "cee-prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "cee-prometheus"
+      }
+    }
+  ],
+  "__inputs": []
+}

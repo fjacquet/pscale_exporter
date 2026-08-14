@@ -9,3 +9,15 @@ datasources:
     url: http://prometheus:9090
     isDefault: true
     editable: true
+
+  # The same Prometheus, registered a second time under the uid the
+  # cee-exporter dashboard's panels hard-code. Registering the extra uid is
+  # what lets that board be dropped in unmodified; the alternative was
+  # rewriting every panel's datasource reference on each upstream update.
+  - name: CEE Prometheus
+    uid: cee-prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: false
+    editable: true

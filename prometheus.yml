@@ -18,3 +18,13 @@ scrape_configs:
     metrics_path: /metrics
     static_configs:
       - targets: ["otel-collector:8889"]
+
+  # cee-exporter, the CEPA audit consumer. It runs in the cee-worker compose
+  # project, so it is on a different Docker network and cannot be reached by
+  # service name from here — hence the host address and published port rather
+  # than "cee-exporter:9228". Connecting the two networks would work too, but
+  # this keeps the two stacks independent.
+  - job_name: cee-exporter
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["10.26.1.221:9228"]
