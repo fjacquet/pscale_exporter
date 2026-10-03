@@ -5,10 +5,10 @@ VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 LDFLAGS = -s -w -X main.version=$(VERSION)
 
 # Pinned tool versions (installed by `make tools`).
-GOLANGCI_LINT_VERSION   ?= v2.12.2
+GOLANGCI_LINT_VERSION   ?= v2.13.2
 CYCLONEDX_GOMOD_VERSION ?= latest
-GOVULNCHECK_VERSION     ?= latest
-GORELEASER_VERSION      ?= v2.16.0
+GOVULNCHECK_VERSION     ?= v1.8.0
+GORELEASER_VERSION      ?= v2.18.0
 
 all: cli test docker
 
