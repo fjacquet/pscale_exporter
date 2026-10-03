@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.3] - 2026-10-03
+
+### Added
+
+- CI: security workflow added, calling the shared `go-security` reusable workflow from `fjacquet/ci`.
+
+### Changed
+
+- Go 1.26.6 -> 1.27.1 (`go` directive in `go.mod`, Dockerfile builder image).
+- Makefile tool pins: golangci-lint v2.12.2 -> v2.13.2, goreleaser v2.16.0 -> v2.18.0, govulncheck `latest` -> v1.8.0.
+- Dependencies refreshed with `go get -u ./...`: `github.com/dell/gopowerscale` 1.22.0 -> 1.23.0,
+  OpenTelemetry 1.46.0 -> 1.47.0, `prometheus/common` 0.71.0 -> 0.72.0.
+- `google.golang.org/grpc` kept at 1.83.2: 1.84.0 is affected by **GO-2026-6443**.
+
 ## [0.19.2] - 2026-09-13
 
 ### Security
@@ -355,7 +369,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Baseline prior to the release-pipeline rework. See the
   [GitHub releases](https://github.com/fjacquet/pscale_exporter/releases) for earlier history.
 
-[Unreleased]: https://github.com/fjacquet/pscale_exporter/compare/v0.13.0...HEAD
+[Unreleased]: https://github.com/fjacquet/pscale_exporter/compare/v0.19.3...HEAD
+[0.19.3]: https://github.com/fjacquet/pscale_exporter/compare/v0.19.2...v0.19.3
 [0.13.0]: https://github.com/fjacquet/pscale_exporter/compare/v0.12.5...v0.13.0
 [0.12.5]: https://github.com/fjacquet/pscale_exporter/compare/v0.12.4...v0.12.5
 [0.12.4]: https://github.com/fjacquet/pscale_exporter/compare/v0.12.3...v0.12.4
