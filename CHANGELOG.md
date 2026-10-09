@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- Go 1.27.1 -> 1.27.2 (`go` directive, Dockerfile builder image), fixing the stdlib vulnerabilities
+  GO-2026-6603, GO-2026-6605, GO-2026-6607, GO-2026-6608, GO-2026-6610, GO-2026-6611, GO-2026-6613 and GO-2026-6617.
+- Dependencies updated with `go get -u ./...`: `golang.org/x/net` 0.59.0 -> 0.60.0, `golang.org/x/sys` 0.48.0 -> 0.49.0,
+  `golang.org/x/sync` 0.23.0 -> 0.24.0, `google.golang.org/grpc` 1.83.2 -> 1.84.0, `prometheus/client_golang` 1.24.1 -> 1.25.0,
+  `grpc-gateway/v2` 2.30.0 -> 2.31.0, `go.opentelemetry.io/proto/otlp` 1.11.0 -> 1.11.1, and related indirect modules.
+- Makefile: golangci-lint v2.13.2 -> v2.14.0, which can type-check against the Go 1.27.2 standard library.
+
 ## [0.19.3] - 2026-10-03
 
 ### Added
