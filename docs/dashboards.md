@@ -115,6 +115,7 @@ confirmed against a live cluster.
 - **Per-Drive** — top drive IOPS and busy % *(provisional)*.
 - **Per-Client** — operations by protocol/class and throughput in/out *(provisional)*.
 - **Hardware** — power-supply failures, node temperature and fan speed *(provisional)*.
+- **OneFS 9.15** — protocol latency by processing stage and top-10 quota data-reduction ratio; panels stay empty on older clusters *(provisional)*.
 
 ## Capacity & SLA dashboard
 

@@ -1732,6 +1732,133 @@
           "description": "Node fan speed readings. Provisional: stat keys not yet live-validated against an OneFS cluster."
         }
       ]
+    },
+    {
+      "type": "row",
+      "id": 31,
+      "title": "OneFS 9.15",
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 46
+      },
+      "fieldConfig": {
+        "defaults": {}
+      },
+      "panels": [
+        {
+          "type": "timeseries",
+          "id": 32,
+          "title": "Protocol Latency by Stage",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 47
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "lineWidth": 1,
+                "showPoints": "never"
+              },
+              "unit": "µs"
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "calcs": [
+                "lastNotNull",
+                "max",
+                "mean"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "avg by (protocol, stage) (powerscale_protocol_latency_stage_microseconds{cluster=~\"$cluster\"})",
+              "legendFormat": "{{protocol}} {{stage}}",
+              "refId": "A"
+            }
+          ],
+          "description": "Average latency per processing stage (auth, export, kernel QoS, FHA, fiber quota, spark dispatch, total). OneFS 9.15+ only. Provisional: not yet live-validated against an OneFS cluster."
+        },
+        {
+          "type": "timeseries",
+          "id": 33,
+          "title": "Quota Data Reduction Ratio (top 10)",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource}"
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 47
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "fillOpacity": 10,
+                "lineWidth": 1,
+                "showPoints": "never"
+              },
+              "unit": "suffix:x"
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom",
+              "calcs": [
+                "lastNotNull",
+                "max",
+                "mean"
+              ]
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${datasource}"
+              },
+              "editorMode": "code",
+              "expr": "topk(10, powerscale_quota_reduction_ratio{cluster=~\"$cluster\"})",
+              "legendFormat": "{{quota_path}}",
+              "refId": "A"
+            }
+          ],
+          "description": "Logical / physical space per quota (compression + dedupe). OneFS 9.15+ only. Provisional: not yet live-validated against an OneFS cluster."
+        }
+      ]
     }
   ]
 }
