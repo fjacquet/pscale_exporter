@@ -89,3 +89,48 @@ func TestEndToEndCollectionThroughPrometheus(t *testing.T) {
 		}
 	}
 }
+
+// A 9.15 cluster (API 26) must reach quota v25 and protocol v26, and the new fields must
+// come out of the Prometheus registry.
+func TestEndToEndOneFS915(t *testing.T) {
+	srv := newMockOneFSAPI(t, 26)
+	u, _ := url.Parse(srv.URL)
+	port, _ := strconv.Atoi(u.Port())
+	cfg := models.ClusterConfig{
+		Name: "clu1", Endpoint: u.Hostname(), Port: port,
+		Username: "u", Password: "p", InsecureSkipVerify: models.NewEnvBool(true),
+	}
+	client, err := NewClusterClient(context.Background(), cfg, "", false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = client.Close() })
+
+	store := NewSnapshotStore()
+	NewCollector([]Client{client}, store, time.Second, 10*time.Second, nil).CollectOnce(context.Background())
+
+	reg := prometheus.NewRegistry()
+	if err := reg.Register(NewPromCollector(store)); err != nil {
+		t.Fatal(err)
+	}
+	mfs, err := reg.Gather()
+	if err != nil {
+		t.Fatal(err)
+	}
+	stages := 0
+	var ratio float64
+	for _, mf := range mfs {
+		switch mf.GetName() {
+		case "powerscale_quota_reduction_ratio":
+			ratio = mf.GetMetric()[0].GetGauge().GetValue()
+		case "powerscale_protocol_latency_stage_microseconds":
+			stages = len(mf.GetMetric())
+		}
+	}
+	if ratio != 2.5 {
+		t.Errorf("quota reduction ratio = %v, want 2.5", ratio)
+	}
+	if stages != len(models.ProtocolStages) {
+		t.Errorf("protocol stage series = %d, want %d", stages, len(models.ProtocolStages))
+	}
+}
