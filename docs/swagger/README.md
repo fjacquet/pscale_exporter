@@ -1,7 +1,7 @@
 # OneFS OpenAPI spec
 
 `make schemas` reads the full OneFS OpenAPI spec from this directory (default
-`11035-9.14.0.json`) to regenerate `internal/powerscale/testdata/onefs_schemas.json`,
+`19079-9.15.0-0.json`) to regenerate `internal/powerscale/testdata/onefs_schemas.json`,
 which the schema-drift guard (`internal/powerscale/schema_guard_test.go`) checks fixtures
 against.
 

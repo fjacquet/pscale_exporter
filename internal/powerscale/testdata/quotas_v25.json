@@ -1,0 +1,6 @@
+{"quotas": [
+  {"id": "Aq1", "path": "/ifs/data/proj", "type": "directory",
+   "usage": {"fslogical": 100, "fsphysical": 120},
+   "reduction_ratio": 2.5,
+   "thresholds": {"hard": 1000, "soft": 800, "advisory": 600}}
+], "resume": null}

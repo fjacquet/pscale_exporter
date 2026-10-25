@@ -86,6 +86,9 @@ func quotaSamples(clusterName, clusterID string, quotas []models.Quota) []Sample
 		if q.PhysicalBytes > 0 {
 			out = append(out, Sample{Name: "powerscale_quota_physical_usage_bytes", Labels: labels, Value: q.PhysicalBytes})
 		}
+		if q.ReductionRatio > 0 {
+			out = append(out, Sample{Name: "powerscale_quota_reduction_ratio", Labels: labels, Value: q.ReductionRatio})
+		}
 		if q.HardBytes > 0 {
 			out = append(out, Sample{Name: "powerscale_quota_hard_threshold_bytes", Labels: labels, Value: q.HardBytes})
 		}
@@ -345,6 +348,15 @@ func protoSamples(clusterName, clusterID string, st *models.Statistics) []Sample
 			Sample{Name: "powerscale_protocol_operations_per_second", Labels: labels, Value: p.OperationRate},
 			Sample{Name: "powerscale_protocol_latency_microseconds", Labels: labels, Value: p.LatencyAvg},
 		)
+		for _, stage := range models.ProtocolStages {
+			if v, ok := p.StageAvg[stage]; ok {
+				out = append(out, Sample{
+					Name:   "powerscale_protocol_latency_stage_microseconds",
+					Labels: append(append([]Label(nil), labels...), Label{Name: "stage", Value: stage}),
+					Value:  v,
+				})
+			}
+		}
 	}
 	return out
 }

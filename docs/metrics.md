@@ -130,6 +130,7 @@ not call them virtual — that case is worth investigating as a real sensor faul
 | --- | --- | --- |
 | `powerscale_quota_usage_bytes` | bytes | Logical usage for the quota. |
 | `powerscale_quota_physical_usage_bytes` | bytes | Physical usage (post data-reduction). Emitted when > 0. |
+| `powerscale_quota_reduction_ratio` | ratio | Logical ÷ physical space (compression + dedupe). OneFS 9.15+ only (quota API v25); emitted when non-null. Not yet validated on a live cluster. |
 | `powerscale_quota_hard_threshold_bytes` | bytes | Hard limit. Emitted only when set (> 0). |
 | `powerscale_quota_soft_threshold_bytes` | bytes | Soft limit. Emitted only when set (> 0). |
 | `powerscale_quota_advisory_threshold_bytes` | bytes | Advisory limit. Emitted only when set (> 0). |
@@ -142,6 +143,7 @@ Per-node, per-protocol, per-operation, from the OneFS protocol summary.
 | --- | --- | --- |
 | `powerscale_protocol_operations_per_second` | ops/s | Operation rate for `protocol`/`op`. |
 | `powerscale_protocol_latency_microseconds` | µs | Average latency for `protocol`/`op`. |
+| `powerscale_protocol_latency_stage_microseconds` | µs | Average latency per processing `stage` (`auth`, `export`, `fha_blocking`, `fiber_block_quota`, `kernel` = QoS blocking, `spark_dispatch`, `total_elapsed`). OneFS 9.15+ only (protocol API v26); stages the cluster omits are not emitted. Not yet validated on a live cluster. |
 
 ## Inventory counts
 

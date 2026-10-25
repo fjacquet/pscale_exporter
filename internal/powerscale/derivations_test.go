@@ -452,3 +452,51 @@ func TestBuildSamplesWorkloads(t *testing.T) {
 		t.Fatalf("aggregate row should carry an empty zone label: %+v", s.Labels)
 	}
 }
+
+func TestQuotaReductionRatioAndProtocolStages(t *testing.T) {
+	quotas, err := models.ParseQuotas(fixture(t, "quotas_v25.json"))
+	if err != nil || len(quotas) != 1 || quotas[0].ReductionRatio != 2.5 {
+		t.Fatalf("v25 quotas: %+v err=%v", quotas, err)
+	}
+	proto, err := models.ParseProtocolSummary(fixture(t, "stat_protocol_v26.json"))
+	if err != nil || len(proto) != 1 || proto[0].StageAvg["kernel"] != 50 {
+		t.Fatalf("v26 protocol: %+v err=%v", proto, err)
+	}
+	samples := append(quotaSamples("clu1", "G", quotas),
+		protoSamples("clu1", "G", &models.Statistics{Proto: proto})...)
+	stages := map[string]float64{}
+	var ratio float64
+	for _, s := range samples {
+		switch s.Name {
+		case "powerscale_quota_reduction_ratio":
+			ratio = s.Value
+		case "powerscale_protocol_latency_stage_microseconds":
+			stages[s.Labels[len(s.Labels)-1].Value] = s.Value
+		}
+	}
+	if ratio != 2.5 || len(stages) != len(models.ProtocolStages) || stages["total_elapsed"] != 810 {
+		t.Fatalf("ratio=%v stages=%v", ratio, stages)
+	}
+}
+
+// Older clusters (quota v8, protocol v3) omit the new fields: no extra samples, no error.
+func TestOldPayloadsEmitNoNewSamples(t *testing.T) {
+	quotas, _ := models.ParseQuotas(fixture(t, "quotas.json"))
+	proto, _ := models.ParseProtocolSummary(fixture(t, "stat_protocol.json"))
+	for _, s := range append(quotaSamples("c", "G", quotas), protoSamples("c", "G", &models.Statistics{Proto: proto})...) {
+		if s.Name == "powerscale_quota_reduction_ratio" || s.Name == "powerscale_protocol_latency_stage_microseconds" {
+			t.Fatalf("unexpected sample on old payload: %+v", s)
+		}
+	}
+}
+
+// The mock reports API 16: new endpoint versions must stay gated off.
+func TestPickVersion(t *testing.T) {
+	c := newTestClient(t)
+	if got := c.pickVersion(25, 8); got != 8 {
+		t.Fatalf("API 16 must keep quota v8, got v%d", got)
+	}
+	if got := c.pickVersion(16, 3); got != 16 {
+		t.Fatalf("API 16 must reach v16, got v%d", got)
+	}
+}
