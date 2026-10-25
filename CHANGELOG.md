@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.1] - 2026-10-25
+
+### Changed
+
+- No code change. CHANGELOG realigned with the tags: the Go 1.27.2 security bump is now
+  recorded under 0.20.0 (which shipped it), and the missing 0.19.0 / 0.19.1 entries are
+  backfilled.
+
+## [0.20.0] - 2026-10-25
+
+### Added
+
+- OneFS 9.15 support, gated on the cluster's negotiated API version so older clusters keep
+  quota v8 / protocol v3: `powerscale_quota_reduction_ratio` (quota API v25) and
+  `powerscale_protocol_latency_stage_microseconds{stage}` (protocol API v26; stages `auth`,
+  `export`, `fha_blocking`, `fiber_block_quota`, `kernel`, `spark_dispatch`, `total_elapsed`).
+  Both are derived from the 9.15 OpenAPI spec, not yet validated on a live 9.15 cluster.
+- OneFS Advanced dashboard: collapsed **OneFS 9.15** row (protocol latency by stage, top-10
+  quota reduction ratio).
+
+### Changed
+
+- Schema-drift guard and `make schemas` now use the OneFS 9.15 spec (all existing endpoint
+  schemas are identical to 9.14) and also cover the quota v25 / protocol v26 schemas.
+
 ### Security
 
 - Go 1.27.1 -> 1.27.2 (`go` directive, Dockerfile builder image), fixing the stdlib vulnerabilities
@@ -36,6 +61,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `google.golang.org/grpc` 1.83.0 -> 1.83.2, fixing **GHSA-vp52-pcj8-j9qc** and
   **GHSA-2v4p-qf9q-27wj** (HIGH), pulled in with an `otel` 1.45.0 -> 1.46.0 refresh.
+
+## [0.19.1] - 2026-08-19
+
+### Security
+
+- Go dependencies refreshed with `go get -u` for security fixes: `logrus` 1.9.4 -> 1.10.0,
+  `grpc-gateway/v2` 2.29.0 -> 2.30.0, `golang.org/x/net` 0.57.0 -> 0.58.0,
+  `golang.org/x/text` 0.40.0 -> 0.41.0, `google.golang.org/protobuf` 1.36.11 -> 1.36.12.
+
+## [0.19.0] - 2026-08-14
+
+### Added
+
+- Prometheus scrapes cee-exporter and its dashboard is provisioned alongside the PowerScale
+  boards (local test stack).
 
 ## [0.18.0] - 2026-08-14
 
@@ -378,8 +418,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Baseline prior to the release-pipeline rework. See the
   [GitHub releases](https://github.com/fjacquet/pscale_exporter/releases) for earlier history.
 
-[Unreleased]: https://github.com/fjacquet/pscale_exporter/compare/v0.19.3...HEAD
+[Unreleased]: https://github.com/fjacquet/pscale_exporter/compare/v0.20.1...HEAD
+[0.20.1]: https://github.com/fjacquet/pscale_exporter/compare/v0.20.0...v0.20.1
+[0.20.0]: https://github.com/fjacquet/pscale_exporter/compare/v0.19.3...v0.20.0
 [0.19.3]: https://github.com/fjacquet/pscale_exporter/compare/v0.19.2...v0.19.3
+[0.19.1]: https://github.com/fjacquet/pscale_exporter/compare/v0.19.0...v0.19.1
+[0.19.0]: https://github.com/fjacquet/pscale_exporter/compare/v0.18.0...v0.19.0
 [0.13.0]: https://github.com/fjacquet/pscale_exporter/compare/v0.12.5...v0.13.0
 [0.12.5]: https://github.com/fjacquet/pscale_exporter/compare/v0.12.4...v0.12.5
 [0.12.4]: https://github.com/fjacquet/pscale_exporter/compare/v0.12.3...v0.12.4
