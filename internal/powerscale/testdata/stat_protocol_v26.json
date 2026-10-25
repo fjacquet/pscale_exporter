@@ -1,0 +1,5 @@
+{"protocol": [
+  {"node": 1, "protocol": "nfs3", "operation": "read", "operation_rate": 12.0, "time_avg": 800.0,
+   "auth_avg": 10.0, "export_avg": 20.0, "fha_blocking_avg": 30.0, "fiber_block_quota_avg": 40.0,
+   "kernel_avg": 50.0, "spark_dispatch_avg": 60.0, "total_elapsed_avg": 810.0}
+]}

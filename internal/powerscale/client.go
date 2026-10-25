@@ -177,6 +177,14 @@ func (c *ClusterClient) APIVersion(_ context.Context) (int, error) {
 	return int(c.cli.APIVersion()), nil
 }
 
+// pickVersion returns newV when the cluster's negotiated API version reaches it, else oldV.
+func (c *ClusterClient) pickVersion(newV, oldV int) int {
+	if int(c.cli.APIVersion()) >= newV {
+		return newV
+	}
+	return oldV
+}
+
 // GetInventory fetches cluster config, nodes, quotas, and best-effort resource counts.
 func (c *ClusterClient) GetInventory(ctx context.Context) (*models.Inventory, error) {
 	var cfgBytes, nodesBytes, quotaBytes []byte
@@ -196,7 +204,8 @@ func (c *ClusterClient) GetInventory(ctx context.Context) (*models.Inventory, er
 		log.Debugf("cluster %q: nodes payload: %s", c.name, snippet(nodesBytes))
 		return nil, fmt.Errorf("cluster %q: parse nodes: %w", c.name, err)
 	}
-	if err := c.getRaw(ctx, "platform/8/quota/quotas", &quotaBytes); err != nil {
+	// v25 (OneFS 9.15) adds reduction_ratio; older clusters keep v8.
+	if err := c.getRaw(ctx, fmt.Sprintf("platform/%d/quota/quotas", c.pickVersion(25, 8)), &quotaBytes); err != nil {
 		return nil, err
 	}
 	quotas, err := models.ParseQuotas(quotaBytes)
@@ -367,7 +376,8 @@ func (c *ClusterClient) GetStatistics(ctx context.Context) (*models.Statistics, 
 	st := &models.Statistics{Current: current}
 
 	var protoBytes []byte
-	if err := c.getRaw(ctx, "platform/3/statistics/summary/protocol", &protoBytes); err != nil {
+	// v26 (OneFS 9.15) adds the per-stage latency breakdown; older clusters keep v3.
+	if err := c.getRaw(ctx, fmt.Sprintf("platform/%d/statistics/summary/protocol", c.pickVersion(26, 3)), &protoBytes); err != nil {
 		log.Debugf("cluster %q: protocol summary failed: %v", c.name, err)
 	} else if proto, perr := models.ParseProtocolSummary(protoBytes); perr == nil {
 		st.Proto = proto

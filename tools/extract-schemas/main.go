@@ -19,11 +19,13 @@ var targets = map[string]string{
 	"/platform/3/cluster/config":               "cluster_config.json",
 	"/platform/3/cluster/nodes":                "nodes.json",
 	"/platform/8/quota/quotas":                 "quotas.json",
+	"/platform/25/quota/quotas":                "quotas_v25.json",
 	"/platform/1/snapshot/snapshots-summary":   "snapshots_summary.json",
 	"/platform/1/dedupe/dedupe-summary":        "dedupe_summary.json",
 	"/platform/3/event/eventgroup-occurrences": "events.json",
 	"/platform/1/statistics/current":           "stat_current.json",
 	"/platform/3/statistics/summary/protocol":  "stat_protocol.json",
+	"/platform/26/statistics/summary/protocol": "stat_protocol_v26.json",
 	"/platform/3/statistics/summary/drive":     "stat_drive.json",
 	"/platform/3/statistics/summary/client":    "stat_client.json",
 	"/platform/7/sync/policies":                "sync_policies.json",
@@ -34,7 +36,7 @@ var targets = map[string]string{
 
 const (
 	// defaultSpec must be updated when adopting a new OneFS spec (see docs/swagger/README.md).
-	defaultSpec = "docs/swagger/11035-9.14.0.json"
+	defaultSpec = "docs/swagger/19079-9.15.0-0.json"
 	outPath     = "internal/powerscale/testdata/onefs_schemas.json"
 	maxDepth    = 8
 )

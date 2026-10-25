@@ -133,9 +133,12 @@ type Quota struct {
 	Type          string
 	UsageBytes    float64 // logical usage (usage.fslogical)
 	PhysicalBytes float64 // physical usage (usage.fsphysical)
-	HardBytes     float64
-	SoftBytes     float64
-	AdvisoryBytes float64
+	// ReductionRatio is logical/physical space (compression + dedupe). 0 when absent: the
+	// field only exists from quota API v25 (OneFS 9.15) and is null while a QuotaScan runs.
+	ReductionRatio float64
+	HardBytes      float64
+	SoftBytes      float64
+	AdvisoryBytes  float64
 }
 
 // Counts holds simple inventory counts.
@@ -232,6 +235,15 @@ type ProtoStat struct {
 	Operation     string
 	OperationRate float64 // ops/sec
 	LatencyAvg    float64 // microseconds
+	// StageAvg is the average latency per processing stage in microseconds, keyed by
+	// ProtocolStages. Only populated from protocol summary API v26 (OneFS 9.15).
+	StageAvg map[string]float64
+}
+
+// ProtocolStages are the per-stage latency breakdowns of platform/26 statistics/summary/protocol,
+// each read from the row's "<stage>_avg" field. Order is the emission order.
+var ProtocolStages = []string{
+	"auth", "export", "fha_blocking", "fiber_block_quota", "kernel", "spark_dispatch", "total_elapsed",
 }
 
 // Statistics holds the raw statistics fetched for one cluster.
@@ -355,7 +367,8 @@ func ParseQuotas(b []byte) ([]Quota, error) {
 				FSLogical  float64 `json:"fslogical"`
 				FSPhysical float64 `json:"fsphysical"`
 			} `json:"usage"`
-			Thresholds struct {
+			ReductionRatio *float64 `json:"reduction_ratio"`
+			Thresholds     struct {
 				Hard     *float64 `json:"hard"`
 				Soft     *float64 `json:"soft"`
 				Advisory *float64 `json:"advisory"`
@@ -375,11 +388,12 @@ func ParseQuotas(b []byte) ([]Quota, error) {
 	for _, q := range raw.Quotas {
 		quotas = append(quotas, Quota{
 			ID: q.ID, Path: q.Path, Type: q.Type,
-			UsageBytes:    q.Usage.FSLogical,
-			PhysicalBytes: q.Usage.FSPhysical,
-			HardBytes:     deref(q.Thresholds.Hard),
-			SoftBytes:     deref(q.Thresholds.Soft),
-			AdvisoryBytes: deref(q.Thresholds.Advisory),
+			UsageBytes:     q.Usage.FSLogical,
+			PhysicalBytes:  q.Usage.FSPhysical,
+			ReductionRatio: deref(q.ReductionRatio),
+			HardBytes:      deref(q.Thresholds.Hard),
+			SoftBytes:      deref(q.Thresholds.Soft),
+			AdvisoryBytes:  deref(q.Thresholds.Advisory),
 		})
 	}
 	return quotas, nil
@@ -585,23 +599,34 @@ func ParseStatCurrent(b []byte) ([]StatPoint, error) {
 // ParseProtocolSummary parses platform/N/statistics/summary/protocol.
 func ParseProtocolSummary(b []byte) ([]ProtoStat, error) {
 	var raw struct {
-		Protocol []struct {
-			Node          int     `json:"node"`
-			Protocol      string  `json:"protocol"`
-			Operation     string  `json:"operation"`
-			OperationRate float64 `json:"operation_rate"`
-			TimeAvg       float64 `json:"time_avg"`
-		} `json:"protocol"`
+		Protocol []map[string]any `json:"protocol"`
 	}
 	if err := json.Unmarshal(b, &raw); err != nil {
 		return nil, err
 	}
+	num := func(row map[string]any, key string) (float64, bool) {
+		v, ok := row[key].(float64)
+		return v, ok
+	}
 	out := make([]ProtoStat, 0, len(raw.Protocol))
-	for _, p := range raw.Protocol {
-		out = append(out, ProtoStat{
-			Node: p.Node, Protocol: p.Protocol, Operation: p.Operation,
-			OperationRate: p.OperationRate, LatencyAvg: p.TimeAvg,
-		})
+	for _, row := range raw.Protocol {
+		p := ProtoStat{}
+		if v, ok := num(row, "node"); ok {
+			p.Node = int(v)
+		}
+		p.Protocol, _ = row["protocol"].(string)
+		p.Operation, _ = row["operation"].(string)
+		p.OperationRate, _ = num(row, "operation_rate")
+		p.LatencyAvg, _ = num(row, "time_avg")
+		for _, stage := range ProtocolStages {
+			if v, ok := num(row, stage+"_avg"); ok {
+				if p.StageAvg == nil {
+					p.StageAvg = make(map[string]float64, len(ProtocolStages))
+				}
+				p.StageAvg[stage] = v
+			}
+		}
+		out = append(out, p)
 	}
 	return out, nil
 }
