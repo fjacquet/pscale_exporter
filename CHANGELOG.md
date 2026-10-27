@@ -26,6 +26,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Documentation for public use: `SECURITY.md`, `CONTRIBUTING.md`, a README security note,
+  and the v1 stability policy ([ADR-0007](docs/adr/0007-v1-stability-policy.md)). Metrics
+  not yet seen on a live cluster are marked **Provisional** in `docs/metrics.md`.
+
+## [0.21.0] - 2026-10-27
+
+### Added
+
 - `powerscale_quota_application_usage_bytes` from `usage.applogical` (#54). Always emitted,
   as 0 when the quota API version does not return the field. `powerscale_quota_usage_bytes`
   is unchanged.
