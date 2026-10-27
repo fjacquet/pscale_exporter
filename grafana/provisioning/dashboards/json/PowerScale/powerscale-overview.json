@@ -1193,7 +1193,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "avg by (protocol, op) (powerscale_protocol_latency_microseconds{cluster=~\"$cluster\"})",
+          "expr": "avg by (protocol, op) (powerscale_protocol_latency_seconds{cluster=~\"$cluster\"})",
           "legendFormat": "{{protocol}} {{op}}",
           "refId": "A"
         }

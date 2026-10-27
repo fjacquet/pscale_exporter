@@ -97,13 +97,13 @@
     {
       "type": "timeseries",
       "id": 5,
-      "title": "CPU µs/sec per workload",
+      "title": "CPU seconds/sec per workload",
       "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "gridPos": { "h": 8, "w": 24, "x": 0, "y": 12 },
       "fieldConfig": {
         "defaults": {
           "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 1, "showPoints": "never", "stacking": { "mode": "none" } },
-          "unit": "µs"
+          "unit": "none"
         },
         "overrides": []
       },
@@ -112,9 +112,9 @@
         "tooltip": { "mode": "multi", "sort": "desc" }
       },
       "targets": [
-        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_workload_cpu_microseconds_per_second{cluster=~\"$cluster\", zone=~\"$zone\", protocol=~\"$protocol\", username=~\"$username\"}", "legendFormat": "{{zone}}/{{protocol}}/{{username}}/{{job_type}} node{{node}}", "refId": "A" }
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_workload_cpu_seconds_per_second{cluster=~\"$cluster\", zone=~\"$zone\", protocol=~\"$protocol\", username=~\"$username\"}", "legendFormat": "{{zone}}/{{protocol}}/{{username}}/{{job_type}} node{{node}}", "refId": "A" }
       ],
-      "description": "Per-workload CPU consumed, in microseconds of CPU per second across all cores. A per-second busy-ness rate, not a cumulative counter — aggregate with sum/avg, never rate()."
+      "description": "Per-workload CPU consumed, in seconds of CPU per second across all cores (about the number of cores kept busy). A per-second busy-ness rate, not a cumulative counter — aggregate with sum/avg, never rate()."
     },
     {
       "type": "table",
@@ -127,7 +127,7 @@
         "overrides": [
           { "matcher": { "id": "byName", "options": "in B/s" }, "properties": [ { "id": "unit", "value": "Bps" } ] },
           { "matcher": { "id": "byName", "options": "out B/s" }, "properties": [ { "id": "unit", "value": "Bps" } ] },
-          { "matcher": { "id": "byName", "options": "cpu µs/s" }, "properties": [ { "id": "unit", "value": "µs" } ] }
+          { "matcher": { "id": "byName", "options": "cpu s/s" }, "properties": [ { "id": "unit", "value": "none" } ] }
         ]
       },
       "options": {
@@ -139,7 +139,7 @@
         { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_workload_operations_per_second{cluster=~\"$cluster\", zone=~\"$zone\", protocol=~\"$protocol\", username=~\"$username\"}", "format": "table", "instant": true, "legendFormat": "__auto", "refId": "A" },
         { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_workload_in_bytes_per_second{cluster=~\"$cluster\", zone=~\"$zone\", protocol=~\"$protocol\", username=~\"$username\"}", "format": "table", "instant": true, "legendFormat": "__auto", "refId": "B" },
         { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_workload_out_bytes_per_second{cluster=~\"$cluster\", zone=~\"$zone\", protocol=~\"$protocol\", username=~\"$username\"}", "format": "table", "instant": true, "legendFormat": "__auto", "refId": "C" },
-        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_workload_cpu_microseconds_per_second{cluster=~\"$cluster\", zone=~\"$zone\", protocol=~\"$protocol\", username=~\"$username\"}", "format": "table", "instant": true, "legendFormat": "__auto", "refId": "D" }
+        { "datasource": { "type": "prometheus", "uid": "${datasource}" }, "editorMode": "code", "expr": "powerscale_workload_cpu_seconds_per_second{cluster=~\"$cluster\", zone=~\"$zone\", protocol=~\"$protocol\", username=~\"$username\"}", "format": "table", "instant": true, "legendFormat": "__auto", "refId": "D" }
       ],
       "transformations": [
         { "id": "merge", "options": {} },
@@ -152,7 +152,7 @@
               "Value #A": "ops/s",
               "Value #B": "in B/s",
               "Value #C": "out B/s",
-              "Value #D": "cpu µs/s",
+              "Value #D": "cpu s/s",
               "cluster": "cluster",
               "node": "node",
               "zone": "zone",

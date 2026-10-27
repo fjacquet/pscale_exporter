@@ -122,7 +122,7 @@ grep 'API trace' validate.out              # raw OneFS payloads for anything mis
 - IOPS and bandwidth are already per-second gauges — aggregate with `sum`/`avg` in
   PromQL, never `rate()`.
 - Metric names are unit-explicit: `_bytes`, `_bytes_per_second`,
-  `_operations_per_second`, `_microseconds`, `_percent`.
+  `_operations_per_second`, `_seconds`, `_percent`.
 - The `powerscale_` prefix matches Dell's `csm-metrics-powerscale` for dashboard reuse.
 
 ## Security

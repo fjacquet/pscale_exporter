@@ -36,7 +36,7 @@ Names, label names and units are a public interface: read the
 [stability policy](docs/adr/0007-v1-stability-policy.md) first.
 
 - Keep the `powerscale_` prefix and a unit-explicit name (`_bytes`, `_bytes_per_second`,
-  `_operations_per_second`, `_microseconds`, `_percent`). Do not use `_total` for gauges.
+  `_operations_per_second`, `_seconds`, `_percent`). Do not use `_total` for gauges, and give durations in seconds.
 - `iops` and bandwidth are per-second gauges; document that users must not `rate()` them.
 - For a new curated OneFS stat key, add a row to `internal/powerscale/statisticsKeys.json`
   (`key`, `metric`, `scope`, optional `divisor`); no code change is needed. Verify the unit

@@ -1770,7 +1770,7 @@
                 "lineWidth": 1,
                 "showPoints": "never"
               },
-              "unit": "µs"
+              "unit": "s"
             },
             "overrides": []
           },
@@ -1796,7 +1796,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "avg by (protocol, stage) (powerscale_protocol_latency_stage_microseconds{cluster=~\"$cluster\"})",
+              "expr": "avg by (protocol, stage) (powerscale_protocol_latency_stage_seconds{cluster=~\"$cluster\"})",
               "legendFormat": "{{protocol}} {{stage}}",
               "refId": "A"
             }
