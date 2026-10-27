@@ -12,6 +12,9 @@ Dell PowerScale clusters and build dashboards, alerts and recording rules on. Ve
 project does not control: the exporter only reads what OneFS returns, through Dell's
 `gopowerscale` SDK, and a few metrics have never been seen on a real cluster.
 
+The policy applies in full from 1.0.0. v0.90.0 is the release before it, with the same
+surface; the Provisional tier below is what separates the two.
+
 ## Decision
 
 ### Promised in v1
