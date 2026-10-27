@@ -125,6 +125,24 @@ grep 'API trace' validate.out              # raw OneFS payloads for anything mis
   `_operations_per_second`, `_microseconds`, `_percent`.
 - The `powerscale_` prefix matches Dell's `csm-metrics-powerscale` for dashboard reuse.
 
+## Security
+
+`/metrics`, `/health`, `/livez` and `/readyz` have **no authentication or TLS and bind
+`0.0.0.0` by default**, and the metrics expose cluster, node, quota path and share names.
+Run the exporter on a trusted network, set `server.host` to a specific interface, or put it
+behind a reverse proxy. TLS verification of the OneFS API is on by default
+(`insecureSkipVerify` is an opt-in). Use a read-only OneFS account. To report a
+vulnerability, see [SECURITY.md](SECURITY.md).
+
+## Stability and contributing
+
+From 1.0, metric names, labels and units, CLI flags, config keys and the default port are
+stable across 1.x; metrics not yet seen on a live cluster are marked **Provisional** in the
+[metrics reference](https://fjacquet.github.io/pscale_exporter/metrics/). Whether a metric
+appears depends on your OneFS version. The full policy is
+[ADR-0007](docs/adr/0007-v1-stability-policy.md). Contributions are welcome:
+see [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## License
 
 Apache License 2.0 — see [LICENSE](LICENSE).

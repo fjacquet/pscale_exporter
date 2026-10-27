@@ -12,3 +12,4 @@ accepted; a later decision supersedes an earlier one rather than editing it.
 | [0004](0004-powerscale-metric-prefix.md) | `powerscale_` metric prefix and unit-explicit naming | Accepted |
 | [0005](0005-health-always-200-and-static-probes.md) | `/livez`/`/readyz` static probes; `/health` always answers 200 | Accepted |
 | [0006](0006-alpine-standard.md) | Standardize container base image on Alpine, add `HEALTHCHECK` to the published image | Accepted |
+| [0007](0007-v1-stability-policy.md) | v1.0 stability policy: what is promised, what depends on Dell, the provisional tier | Accepted |

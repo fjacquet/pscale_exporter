@@ -12,6 +12,11 @@ All series use the **`powerscale_`** prefix — matching
     power supplies) are also gauges (current counts), not cumulative counters; they carry
     no `_total` suffix, which Prometheus reserves for counters.
 
+!!! info "Stability"
+    Names, labels and units of stable metrics are frozen across 1.x; see
+    [ADR-0007](adr/0007-v1-stability-policy.md). Rows marked **Provisional** are outside that
+    guarantee. Whether a metric appears, and its value, also depends on the OneFS version.
+
 ## Labels
 
 Every metric carries the canonical leading labels `cluster` and `cluster_id`, with
@@ -88,11 +93,11 @@ release shapes these differently. Temperature/fan series carry a `sensor` label.
 
 | Metric | Unit | Description |
 | --- | --- | --- |
-| `powerscale_node_power_supplies` | count | Power supplies present on the node. |
-| `powerscale_node_power_supply_failures` | count | Failed power supplies on the node. |
-| `powerscale_node_temperature_celsius` | °C | Temperature sensor reading. |
-| `powerscale_node_fan_speed_rpm` | rpm | Fan speed reading. |
-| `powerscale_node_hardware_info` | — | Always `1`; the node's hardware identity is in the `product`, `series` and `hwgen` labels. |
+| `powerscale_node_power_supplies` | count | **Provisional.** Power supplies present on the node. |
+| `powerscale_node_power_supply_failures` | count | **Provisional.** Failed power supplies on the node. |
+| `powerscale_node_temperature_celsius` | °C | **Provisional.** Temperature sensor reading. |
+| `powerscale_node_fan_speed_rpm` | rpm | **Provisional.** Fan speed reading. |
+| `powerscale_node_hardware_info` | — | **Provisional.** Always `1`; the node's hardware identity is in the `product`, `series` and `hwgen` labels. |
 
 ### Virtual clusters have no hardware metrics
 
@@ -130,9 +135,9 @@ not call them virtual — that case is worth investigating as a real sensor faul
 | Metric | Unit | Description |
 | --- | --- | --- |
 | `powerscale_quota_usage_bytes` | bytes | Logical usage for the quota. |
-| `powerscale_quota_application_usage_bytes` | bytes | Application logical usage (`usage.applogical`), the size as users see it. Always emitted; 0 when the API version lacks the field. |
+| `powerscale_quota_application_usage_bytes` | bytes | **Provisional.** Application logical usage (`usage.applogical`), the size as users see it. Always emitted; 0 when the API version lacks the field. |
 | `powerscale_quota_physical_usage_bytes` | bytes | Physical usage (post data-reduction). Emitted when > 0. |
-| `powerscale_quota_reduction_ratio` | ratio | Logical ÷ physical space (compression + dedupe). OneFS 9.15+ only (quota API v25); emitted when non-null. Not yet validated on a live cluster. |
+| `powerscale_quota_reduction_ratio` | ratio | **Provisional.** Logical ÷ physical space (compression + dedupe). OneFS 9.15+ only (quota API v25); emitted when non-null. Not yet validated on a live cluster. |
 | `powerscale_quota_hard_threshold_bytes` | bytes | Hard limit. Emitted only when set (> 0). |
 | `powerscale_quota_soft_threshold_bytes` | bytes | Soft limit. Emitted only when set (> 0). |
 | `powerscale_quota_advisory_threshold_bytes` | bytes | Advisory limit. Emitted only when set (> 0). |
@@ -145,7 +150,7 @@ Per-node, per-protocol, per-operation, from the OneFS protocol summary.
 | --- | --- | --- |
 | `powerscale_protocol_operations_per_second` | ops/s | Operation rate for `protocol`/`op`. |
 | `powerscale_protocol_latency_microseconds` | µs | Average latency for `protocol`/`op`. |
-| `powerscale_protocol_latency_stage_microseconds` | µs | Average latency per processing `stage` (`auth`, `export`, `fha_blocking`, `fiber_block_quota`, `kernel` = QoS blocking, `spark_dispatch`, `total_elapsed`). OneFS 9.15+ only (protocol API v26); stages the cluster omits are not emitted. Not yet validated on a live cluster. |
+| `powerscale_protocol_latency_stage_microseconds` | µs | **Provisional.** Average latency per processing `stage` (`auth`, `export`, `fha_blocking`, `fiber_block_quota`, `kernel` = QoS blocking, `spark_dispatch`, `total_elapsed`). OneFS 9.15+ only (protocol API v26); stages the cluster omits are not emitted. Not yet validated on a live cluster. |
 
 ## Inventory counts
 

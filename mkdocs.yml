@@ -69,4 +69,6 @@ nav:
       - ADR-0003 Stat-key table: adr/0003-stat-key-table-coverage-contract.md
       - ADR-0004 Metric naming: adr/0004-powerscale-metric-prefix.md
       - ADR-0005 Health always-200: adr/0005-health-always-200-and-static-probes.md
+      - ADR-0006 Alpine standard: adr/0006-alpine-standard.md
+      - ADR-0007 v1 stability policy: adr/0007-v1-stability-policy.md
   - Changelog: changelog.md
