@@ -128,11 +128,12 @@ func (n Node) ReportsHardwareSensors() bool {
 // Quota is one directory quota (from platform/1/quota/quotas). Threshold fields are 0
 // when the corresponding threshold is unset (null).
 type Quota struct {
-	ID            string
-	Path          string
-	Type          string
-	UsageBytes    float64 // logical usage (usage.fslogical)
-	PhysicalBytes float64 // physical usage (usage.fsphysical)
+	ID              string
+	Path            string
+	Type            string
+	UsageBytes      float64 // logical usage (usage.fslogical)
+	PhysicalBytes   float64 // physical usage (usage.fsphysical)
+	AppLogicalBytes float64 // application logical usage (usage.applogical)
 	// ReductionRatio is logical/physical space (compression + dedupe). 0 when absent: the
 	// field only exists from quota API v25 (OneFS 9.15) and is null while a QuotaScan runs.
 	ReductionRatio float64
@@ -366,6 +367,7 @@ func ParseQuotas(b []byte) ([]Quota, error) {
 			Usage struct {
 				FSLogical  float64 `json:"fslogical"`
 				FSPhysical float64 `json:"fsphysical"`
+				AppLogical float64 `json:"applogical"`
 			} `json:"usage"`
 			ReductionRatio *float64 `json:"reduction_ratio"`
 			Thresholds     struct {
@@ -388,12 +390,13 @@ func ParseQuotas(b []byte) ([]Quota, error) {
 	for _, q := range raw.Quotas {
 		quotas = append(quotas, Quota{
 			ID: q.ID, Path: q.Path, Type: q.Type,
-			UsageBytes:     q.Usage.FSLogical,
-			PhysicalBytes:  q.Usage.FSPhysical,
-			ReductionRatio: deref(q.ReductionRatio),
-			HardBytes:      deref(q.Thresholds.Hard),
-			SoftBytes:      deref(q.Thresholds.Soft),
-			AdvisoryBytes:  deref(q.Thresholds.Advisory),
+			UsageBytes:      q.Usage.FSLogical,
+			PhysicalBytes:   q.Usage.FSPhysical,
+			AppLogicalBytes: q.Usage.AppLogical,
+			ReductionRatio:  deref(q.ReductionRatio),
+			HardBytes:       deref(q.Thresholds.Hard),
+			SoftBytes:       deref(q.Thresholds.Soft),
+			AdvisoryBytes:   deref(q.Thresholds.Advisory),
 		})
 	}
 	return quotas, nil

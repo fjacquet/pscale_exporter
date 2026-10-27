@@ -74,7 +74,7 @@ func TestBuildSamplesClusterAndNode(t *testing.T) {
 				PowerSupplies: 2, PowerSupplyFailures: 1},
 		},
 		Quotas: []models.Quota{
-			{ID: "q1", Path: "/ifs/data/a", Type: "directory", UsageBytes: 100, HardBytes: 1000, SoftBytes: 800, AdvisoryBytes: 600, PhysicalBytes: 120},
+			{ID: "q1", Path: "/ifs/data/a", Type: "directory", UsageBytes: 100, HardBytes: 1000, SoftBytes: 800, AdvisoryBytes: 600, PhysicalBytes: 120, AppLogicalBytes: 90},
 		},
 		Counts:       models.Counts{NFSExports: 5, SMBShares: 3, Snapshots: 7},
 		Snapshot:     models.SnapshotSummary{UsedBytes: 10240},
@@ -154,6 +154,9 @@ func TestBuildSamplesClusterAndNode(t *testing.T) {
 	}
 	if s, ok := get("powerscale_quota_physical_usage_bytes"); !ok || s.Value != 120 {
 		t.Fatalf("quota physical sample wrong: %+v ok=%v", s, ok)
+	}
+	if s, ok := get("powerscale_quota_application_usage_bytes"); !ok || s.Value != 90 {
+		t.Fatalf("quota application sample wrong: %+v ok=%v", s, ok)
 	}
 	if s, ok := get("powerscale_node_readonly"); !ok {
 		t.Fatalf("node readonly sample missing: %+v", s)
@@ -466,8 +469,11 @@ func TestQuotaReductionRatioAndProtocolStages(t *testing.T) {
 		protoSamples("clu1", "G", &models.Statistics{Proto: proto})...)
 	stages := map[string]float64{}
 	var ratio float64
+	appUsage := -1.0
 	for _, s := range samples {
 		switch s.Name {
+		case "powerscale_quota_application_usage_bytes":
+			appUsage = s.Value
 		case "powerscale_quota_reduction_ratio":
 			ratio = s.Value
 		case "powerscale_protocol_latency_stage_microseconds":
@@ -476,6 +482,10 @@ func TestQuotaReductionRatioAndProtocolStages(t *testing.T) {
 	}
 	if ratio != 2.5 || len(stages) != len(models.ProtocolStages) || stages["total_elapsed"] != 810 {
 		t.Fatalf("ratio=%v stages=%v", ratio, stages)
+	}
+	// quotas_v25.json has no usage.applogical: the metric is still emitted, as 0.
+	if quotas[0].AppLogicalBytes != 0 || appUsage != 0 {
+		t.Fatalf("app logical fallback: parsed=%v sample=%v, want 0 and 0", quotas[0].AppLogicalBytes, appUsage)
 	}
 }
 

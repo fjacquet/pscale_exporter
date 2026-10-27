@@ -83,6 +83,7 @@ func quotaSamples(clusterName, clusterID string, quotas []models.Quota) []Sample
 	for _, q := range quotas {
 		labels := quotaLabels(clusterName, clusterID, q.ID, q.Path, q.Type)
 		out = append(out, Sample{Name: "powerscale_quota_usage_bytes", Labels: labels, Value: q.UsageBytes})
+		out = append(out, Sample{Name: "powerscale_quota_application_usage_bytes", Labels: labels, Value: q.AppLogicalBytes})
 		if q.PhysicalBytes > 0 {
 			out = append(out, Sample{Name: "powerscale_quota_physical_usage_bytes", Labels: labels, Value: q.PhysicalBytes})
 		}

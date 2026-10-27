@@ -43,6 +43,7 @@ func TestEndToEndCollectionThroughPrometheus(t *testing.T) {
 		"powerscale_cluster_total_capacity_bytes":             false,
 		"powerscale_node_memory_used_bytes":                   false,
 		"powerscale_quota_usage_bytes":                        false,
+		"powerscale_quota_application_usage_bytes":            false,
 		"powerscale_quota_soft_threshold_bytes":               false,
 		"powerscale_protocol_operations_per_second":           false,
 		"powerscale_node_readonly":                            false,
@@ -119,8 +120,11 @@ func TestEndToEndOneFS915(t *testing.T) {
 	}
 	stages := 0
 	var ratio float64
+	appUsage := -1.0
 	for _, mf := range mfs {
 		switch mf.GetName() {
+		case "powerscale_quota_application_usage_bytes":
+			appUsage = mf.GetMetric()[0].GetGauge().GetValue()
 		case "powerscale_quota_reduction_ratio":
 			ratio = mf.GetMetric()[0].GetGauge().GetValue()
 		case "powerscale_protocol_latency_stage_microseconds":
@@ -129,6 +133,9 @@ func TestEndToEndOneFS915(t *testing.T) {
 	}
 	if ratio != 2.5 {
 		t.Errorf("quota reduction ratio = %v, want 2.5", ratio)
+	}
+	if appUsage != 0 {
+		t.Errorf("quota application usage = %v, want 0 (v25 fixture omits applogical)", appUsage)
 	}
 	if stages != len(models.ProtocolStages) {
 		t.Errorf("protocol stage series = %d, want %d", stages, len(models.ProtocolStages))

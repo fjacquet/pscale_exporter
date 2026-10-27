@@ -129,6 +129,7 @@ not call them virtual — that case is worth investigating as a real sensor faul
 | Metric | Unit | Description |
 | --- | --- | --- |
 | `powerscale_quota_usage_bytes` | bytes | Logical usage for the quota. |
+| `powerscale_quota_application_usage_bytes` | bytes | Application logical usage (`usage.applogical`), the size as users see it. Always emitted; 0 when the API version lacks the field. |
 | `powerscale_quota_physical_usage_bytes` | bytes | Physical usage (post data-reduction). Emitted when > 0. |
 | `powerscale_quota_reduction_ratio` | ratio | Logical ÷ physical space (compression + dedupe). OneFS 9.15+ only (quota API v25); emitted when non-null. Not yet validated on a live cluster. |
 | `powerscale_quota_hard_threshold_bytes` | bytes | Hard limit. Emitted only when set (> 0). |
