@@ -74,6 +74,21 @@ func get(t *testing.T, url string) (int, string) {
 	return resp.StatusCode, string(b)
 }
 
+// waitForServer blocks until the HTTP server started by Server.Start answers.
+func waitForServer(t *testing.T, base string) {
+	t.Helper()
+	deadline := time.Now().Add(5 * time.Second)
+	for {
+		if code, _ := get(t, base+"/livez"); code == http.StatusOK {
+			return
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("server did not start listening")
+		}
+		time.Sleep(25 * time.Millisecond)
+	}
+}
+
 func TestValidateConfig(t *testing.T) {
 	dir := t.TempDir()
 
@@ -107,16 +122,7 @@ func TestServerServesEndpointsAndShutsDown(t *testing.T) {
 	}
 	base := "http://127.0.0.1:" + port
 
-	deadline := time.Now().Add(5 * time.Second)
-	for {
-		if code, _ := get(t, base+"/livez"); code == http.StatusOK {
-			break
-		}
-		if time.Now().After(deadline) {
-			t.Fatal("server did not start listening")
-		}
-		time.Sleep(25 * time.Millisecond)
-	}
+	waitForServer(t, base)
 
 	for _, path := range []string{"/livez", "/readyz", "/health"} {
 		if code, _ := get(t, base+path); code != http.StatusOK {
@@ -224,7 +230,9 @@ func TestUnreachableClusterIsReportedDown(t *testing.T) {
 	}
 	t.Cleanup(func() { _ = srv.Shutdown() })
 
-	_, body := get(t, "http://127.0.0.1:"+port+"/metrics")
+	base := "http://127.0.0.1:" + port
+	waitForServer(t, base)
+	_, body := get(t, base+"/metrics")
 	if !strings.Contains(body, `powerscale_up{cluster="c1"} 0`) {
 		t.Errorf("an unreachable cluster should be reported as powerscale_up 0, got:\n%s", body)
 	}
