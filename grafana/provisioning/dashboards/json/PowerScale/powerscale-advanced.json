@@ -417,7 +417,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "sum by (cluster, node, state) (powerscale_node_drives_total{cluster=~\"$cluster\", node=~\"$node\"})",
+          "expr": "sum by (cluster, node, state) (powerscale_node_drives{cluster=~\"$cluster\", node=~\"$node\"})",
           "format": "table",
           "instant": true,
           "refId": "A"
@@ -1614,7 +1614,7 @@
                 "uid": "${datasource}"
               },
               "editorMode": "code",
-              "expr": "sum by (cluster, node) (powerscale_node_power_supplies_total{cluster=~\"$cluster\", node=~\"$node\"})",
+              "expr": "sum by (cluster, node) (powerscale_node_power_supplies{cluster=~\"$cluster\", node=~\"$node\"})",
               "legendFormat": "n{{node}} total",
               "refId": "B"
             }

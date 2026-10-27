@@ -8,8 +8,9 @@ All series use the **`powerscale_`** prefix — matching
 !!! warning "Per-second gauges — do not `rate()`"
     `_operations_per_second` and `_bytes_per_second` metrics are already per-second
     gauges sampled from OneFS. Aggregate them with `sum`/`avg` in PromQL — **never**
-    `rate()` or `irate()`. The `_total`-suffixed inventory counts are also gauges (current
-    counts), not cumulative counters.
+    `rate()` or `irate()`. The inventory counts (NFS exports, SMB shares, snapshots, drives,
+    power supplies) are also gauges (current counts), not cumulative counters; they carry
+    no `_total` suffix, which Prometheus reserves for counters.
 
 ## Labels
 
@@ -77,7 +78,7 @@ window), so aggregate with `sum`/`avg` — never `rate()`.
 | --- | --- | --- |
 | `powerscale_node_readonly` | bool | `1` if the node is mounted read-only. |
 | `powerscale_node_smartfail` | bool | `1` if the node is smartfailing / smartfailed. |
-| `powerscale_node_drives_total` | count | Drive count per node, labelled by `state` (e.g. `HEALTHY`, `SMARTFAIL`, `DEAD`). |
+| `powerscale_node_drives` | count | Drive count per node, labelled by `state` (e.g. `HEALTHY`, `SMARTFAIL`, `DEAD`). |
 
 ### Hardware (provisional)
 
@@ -87,7 +88,7 @@ release shapes these differently. Temperature/fan series carry a `sensor` label.
 
 | Metric | Unit | Description |
 | --- | --- | --- |
-| `powerscale_node_power_supplies_total` | count | Power supplies present on the node. |
+| `powerscale_node_power_supplies` | count | Power supplies present on the node. |
 | `powerscale_node_power_supply_failures` | count | Failed power supplies on the node. |
 | `powerscale_node_temperature_celsius` | °C | Temperature sensor reading. |
 | `powerscale_node_fan_speed_rpm` | rpm | Fan speed reading. |
@@ -108,7 +109,7 @@ starting with `SIMULATOR-`. The exporter also logs the reason once per cluster a
 cluster "pscale-cluster1": 4/4 nodes report virtual hardware (series=virtual_series,
 hwgen=VMware, product=SIMULATOR-1U-Dual-6144MB-1x1GE-100GB) and expose no physical
 sensors, so powerscale_node_temperature_celsius, powerscale_node_fan_speed_rpm,
-powerscale_node_power_supplies_total and powerscale_node_power_supply_failures are
+powerscale_node_power_supplies and powerscale_node_power_supply_failures are
 absent for those nodes
 ```
 
@@ -150,9 +151,9 @@ Per-node, per-protocol, per-operation, from the OneFS protocol summary.
 
 | Metric | Unit | Description |
 | --- | --- | --- |
-| `powerscale_nfs_exports_total` | count | Number of NFS exports. |
-| `powerscale_smb_shares_total` | count | Number of SMB shares. |
-| `powerscale_snapshots_total` | count | Number of snapshots. |
+| `powerscale_nfs_exports` | count | Number of NFS exports. |
+| `powerscale_smb_shares` | count | Number of SMB shares. |
+| `powerscale_snapshots` | count | Number of snapshots. |
 
 ## Data protection
 

@@ -155,7 +155,7 @@ func explainMissingHardware(nodes []models.Node) string {
 		reason = fmt.Sprintf("report virtual hardware (%s) and expose no physical sensors", identity)
 	}
 	return fmt.Sprintf("%d/%d nodes %s, so powerscale_node_temperature_celsius, "+
-		"powerscale_node_fan_speed_rpm, powerscale_node_power_supplies_total and "+
+		"powerscale_node_fan_speed_rpm, powerscale_node_power_supplies and "+
 		"powerscale_node_power_supply_failures are absent for those nodes",
 		len(silent), len(nodes), reason)
 }

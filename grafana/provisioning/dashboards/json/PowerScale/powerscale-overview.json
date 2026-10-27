@@ -440,7 +440,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "powerscale_nfs_exports_total{cluster=~\"$cluster\"}",
+          "expr": "powerscale_nfs_exports{cluster=~\"$cluster\"}",
           "legendFormat": "{{cluster}}",
           "refId": "A"
         }
@@ -498,7 +498,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "powerscale_smb_shares_total{cluster=~\"$cluster\"}",
+          "expr": "powerscale_smb_shares{cluster=~\"$cluster\"}",
           "legendFormat": "{{cluster}}",
           "refId": "A"
         }
@@ -556,7 +556,7 @@
             "uid": "${datasource}"
           },
           "editorMode": "code",
-          "expr": "powerscale_snapshots_total{cluster=~\"$cluster\"}",
+          "expr": "powerscale_snapshots{cluster=~\"$cluster\"}",
           "legendFormat": "{{cluster}}",
           "refId": "A"
         }
