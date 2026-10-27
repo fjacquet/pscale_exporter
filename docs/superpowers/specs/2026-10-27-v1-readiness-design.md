@@ -25,7 +25,8 @@ for the few metrics never seen on a real cluster.
 
 ## Non-goals
 
-- No new metrics, no renames, no behaviour change in collection.
+- No new metrics and no behaviour change in collection. Renames happen only in the
+  naming audit below, only the ones the maintainer approves one by one.
 - No authentication or TLS on `/metrics`. It stays an open Prometheus endpoint; the
   README states how to protect it (reverse proxy or trusted network).
 - No restructuring of `planning/` or other historical files.
@@ -133,21 +134,52 @@ Production code is not changed to add behaviour. If `main.go` (whose logic sits 
 with no behaviour change is allowed, in its own commit, and flagged in the PR. A real bug
 found by a test is also fixed in its own commit. *(My call.)*
 
+## Naming audit (decided: do it before 1.0.0)
+
+The maintainer chose to audit metric and label names and units before freezing them,
+because after 1.0.0 any rename is a major bump. This runs first. The audit is a report;
+no rename is made until the maintainer approves it, item by item.
+
+Scope: every `powerscale_*` name and label in `docs/metrics.md`, `internal/powerscale`,
+`statisticsKeys.json`, the Grafana dashboards, the Helm chart and the docs. Check against
+the Prometheus naming conventions (`promtool check metrics` on a real scrape) and the
+rules in ADR-0004.
+
+For each approved rename the same PR must: update code, fixtures, dashboards (keeping every
+board `uid` stable), docs and the Helm chart; keep a CHANGELOG **BREAKING** entry with the
+old and new name; and state the migration in the ADR. Whether to emit the old name for one
+release as an alias is decided per rename when it is approved (default: no alias).
+
+Findings so far (read from the code and `docs/metrics.md` only; `promtool` and the dashboards
+are not yet checked):
+
+1. **Gauges named `_total`.** Prometheus reserves `_total` for counters. Five count gauges
+   carry it: `powerscale_nfs_exports_total`, `powerscale_smb_shares_total`,
+   `powerscale_snapshots_total`, `powerscale_node_drives_total`,
+   `powerscale_node_power_supplies_total`. A linter flags them. Candidate renames drop
+   the suffix (`powerscale_nfs_exports`, ...). Recommended.
+2. **Singular and plural.** `powerscale_snapshot_used_bytes` next to `powerscale_snapshots_total`.
+   Resolved by item 1 if `snapshots_total` becomes `powerscale_snapshots`. Cosmetic.
+3. **Quota labels** are `quota_id`, `quota_path`, `quota_type`, while other families use
+   plain `type`, `name`, `pool`. The prefix keeps them distinct when quota series are
+   joined with others. Recommended: keep.
+4. **Overloaded `type`** (storage pool type, drive type) and `node` (always the node LNN).
+   Understandable in context. Recommended: keep.
+5. `free` and `available` capacity both exist at cluster level. They are different
+   OneFS quantities, so not a duplication. To be confirmed against the docs.
+
 ## Delivery
 
-Three PRs, in this order: (a) packaging + stability ADR + changelog fix, (b) tests,
-(c) validation results and provisional promotions, when the capture exists. Then 1.0.0
-is tagged after (a) and (b) are merged, with (c) either included or left as the
-provisional tier. Each PR must pass `make ci`.
+Four PRs, in this order. (0) Naming audit report, then the approved renames, if any.
+(a) Packaging + stability ADR + changelog fix. (b) Tests. (c) Validation results and
+provisional promotions, when the capture exists; it is **not awaited**. 1.0.0 is tagged
+once (0), (a) and (b) are merged, with the provisional tier as written; (c) ships later
+as a minor release. Each PR must pass `make ci`.
 
-## Open decisions (maintainer)
+## Decisions taken by the maintainer
 
-1. Before freezing, audit label names and units across code, docs and dashboards, and
-   rename what is inconsistent (breaking, so before 1.0.0)? Default if unanswered: no audit,
-   freeze today's labels.
-2. Does the 1.0.0 tag wait for the live capture (PR c), or is it tagged after (a) and (b)
-   with the provisional tier, and (c) shipped later as a minor release? Default if
-   unanswered: tag without waiting.
+1. Audit names, labels and units before freezing, and rename what is inconsistent.
+2. Tag 1.0.0 without waiting for the live capture.
 
 ## Left to the builder
 
