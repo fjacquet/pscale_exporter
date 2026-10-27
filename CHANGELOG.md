@@ -16,6 +16,12 @@ yet seen on a live cluster are marked **Provisional**. See
 
 ### Changed
 
+- Helm chart: pod hardening is now on by default instead of commented out
+  (`runAsNonRoot`, `runAsUser`/`runAsGroup` 10001, `seccompProfile: RuntimeDefault`,
+  `allowPrivilegeEscalation: false`, `readOnlyRootFilesystem: true`, all capabilities
+  dropped), and the default config logs to stdout only (`logName: ""`) because the root
+  filesystem is read-only. Override `podSecurityContext` / `securityContext` if you mount
+  a writable volume for `--dump-dir` or a log file.
 - **BREAKING:** five inventory gauges lose the `_total` suffix, which Prometheus reserves
   for counters. Update dashboards, alerts and recording rules that reference them:
 

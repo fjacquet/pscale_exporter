@@ -20,16 +20,21 @@ serviceAccount:
 
 podLabels: {}
 
-podSecurityContext: {}
-  # fsGroup: 2000
+# The image runs as the non-root user `pscale` (uid 10001). Kubernetes can only verify
+# runAsNonRoot against a numeric uid, so the uid is set explicitly.
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+  seccompProfile:
+    type: RuntimeDefault
 
-securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
 
 service:
   type: ClusterIP
@@ -90,7 +95,7 @@ config: |
     host: "0.0.0.0"
     port: "9444"
     uri: "/metrics"
-    logName: "/var/log/pscale_exporter/pscale-exporter.log"
+    logName: ""  # stdout only: the root filesystem is read-only
 
   collection:
     interval: "30s"
