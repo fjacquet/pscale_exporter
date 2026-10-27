@@ -469,8 +469,11 @@ func TestQuotaReductionRatioAndProtocolStages(t *testing.T) {
 		protoSamples("clu1", "G", &models.Statistics{Proto: proto})...)
 	stages := map[string]float64{}
 	var ratio float64
+	appUsage := -1.0
 	for _, s := range samples {
 		switch s.Name {
+		case "powerscale_quota_application_usage_bytes":
+			appUsage = s.Value
 		case "powerscale_quota_reduction_ratio":
 			ratio = s.Value
 		case "powerscale_protocol_latency_stage_microseconds":
@@ -479,6 +482,10 @@ func TestQuotaReductionRatioAndProtocolStages(t *testing.T) {
 	}
 	if ratio != 2.5 || len(stages) != len(models.ProtocolStages) || stages["total_elapsed"] != 810 {
 		t.Fatalf("ratio=%v stages=%v", ratio, stages)
+	}
+	// quotas_v25.json has no usage.applogical: the metric is still emitted, as 0.
+	if quotas[0].AppLogicalBytes != 0 || appUsage != 0 {
+		t.Fatalf("app logical fallback: parsed=%v sample=%v, want 0 and 0", quotas[0].AppLogicalBytes, appUsage)
 	}
 }
 
