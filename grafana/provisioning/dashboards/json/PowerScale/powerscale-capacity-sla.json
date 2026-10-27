@@ -301,7 +301,7 @@
             "showPoints": "never",
             "stacking": { "mode": "none" }
           },
-          "unit": "µs"
+          "unit": "s"
         },
         "overrides": []
       },
@@ -317,7 +317,7 @@
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
           "editorMode": "code",
-          "expr": "avg by (protocol, op) (powerscale_protocol_latency_microseconds{cluster=~\"$cluster\"})",
+          "expr": "avg by (protocol, op) (powerscale_protocol_latency_seconds{cluster=~\"$cluster\"})",
           "legendFormat": "{{protocol}} {{op}}",
           "refId": "A"
         }

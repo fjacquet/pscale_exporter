@@ -78,6 +78,10 @@ func statSamples(clusterName, clusterID string, st *models.Statistics, lnnByDevI
 	return out
 }
 
+// microsPerSecond converts the microsecond values OneFS reports to the seconds Prometheus
+// expects as the base unit for durations.
+const microsPerSecond = 1e6
+
 func quotaSamples(clusterName, clusterID string, quotas []models.Quota) []Sample {
 	var out []Sample
 	for _, q := range quotas {
@@ -323,7 +327,7 @@ func workloadSamples(clusterName, clusterID string, st *models.Statistics) []Sam
 			Sample{Name: "powerscale_workload_operations_per_second", Labels: labels, Value: w.Ops},
 			Sample{Name: "powerscale_workload_in_bytes_per_second", Labels: labels, Value: w.BytesIn},
 			Sample{Name: "powerscale_workload_out_bytes_per_second", Labels: labels, Value: w.BytesOut},
-			Sample{Name: "powerscale_workload_cpu_microseconds_per_second", Labels: labels, Value: w.CPUMicros},
+			Sample{Name: "powerscale_workload_cpu_seconds_per_second", Labels: labels, Value: w.CPUMicros / microsPerSecond},
 		)
 	}
 	return out
@@ -347,14 +351,14 @@ func protoSamples(clusterName, clusterID string, st *models.Statistics) []Sample
 		labels := protocolLabels(clusterName, clusterID, strconv.Itoa(p.Node), p.Protocol, p.Operation)
 		out = append(out,
 			Sample{Name: "powerscale_protocol_operations_per_second", Labels: labels, Value: p.OperationRate},
-			Sample{Name: "powerscale_protocol_latency_microseconds", Labels: labels, Value: p.LatencyAvg},
+			Sample{Name: "powerscale_protocol_latency_seconds", Labels: labels, Value: p.LatencyAvg / microsPerSecond},
 		)
 		for _, stage := range models.ProtocolStages {
 			if v, ok := p.StageAvg[stage]; ok {
 				out = append(out, Sample{
-					Name:   "powerscale_protocol_latency_stage_microseconds",
+					Name:   "powerscale_protocol_latency_stage_seconds",
 					Labels: append(append([]Label(nil), labels...), Label{Name: "stage", Value: stage}),
-					Value:  v,
+					Value:  v / microsPerSecond,
 				})
 			}
 		}

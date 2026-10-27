@@ -27,9 +27,22 @@ yet seen on a live cluster are marked **Provisional**. See
   | `powerscale_node_drives_total` | `powerscale_node_drives` |
   | `powerscale_node_power_supplies_total` | `powerscale_node_power_supplies` |
 
-  Values, labels and units are unchanged. The shipped Grafana boards
-  (`powerscale-overview`, `powerscale-advanced`) and `deploy/prometheus/pscale.rules.yml`
-  are updated; board `uid`s are unchanged. No alias is emitted for the old names.
+  Values, labels and units are unchanged. No alias is emitted for the old names.
+
+- **BREAKING:** three duration metrics move from microseconds to seconds, the Prometheus
+  base unit. The **values are divided by 10^6**, so a dashboard that kept the old unit shows
+  numbers a million times too large:
+
+  | Old name | New name |
+  | --- | --- |
+  | `powerscale_protocol_latency_microseconds` | `powerscale_protocol_latency_seconds` |
+  | `powerscale_protocol_latency_stage_microseconds` | `powerscale_protocol_latency_stage_seconds` |
+  | `powerscale_workload_cpu_microseconds_per_second` | `powerscale_workload_cpu_seconds_per_second` |
+
+  Labels are unchanged. The shipped Grafana boards (`powerscale-overview`,
+  `powerscale-advanced`, `powerscale-capacity-sla`, `powerscale-workloads`; `uid`s unchanged)
+  and `deploy/prometheus/pscale.rules.yml` are updated. A test now runs the Prometheus
+  naming linter over every metric the mock cluster emits.
 
 ### Fixed
 

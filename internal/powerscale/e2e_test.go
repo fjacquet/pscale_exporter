@@ -77,7 +77,7 @@ func TestEndToEndCollectionThroughPrometheus(t *testing.T) {
 		"powerscale_workload_operations_per_second":           false,
 		"powerscale_workload_in_bytes_per_second":             false,
 		"powerscale_workload_out_bytes_per_second":            false,
-		"powerscale_workload_cpu_microseconds_per_second":     false,
+		"powerscale_workload_cpu_seconds_per_second":          false,
 	}
 	for _, mf := range mfs {
 		if _, ok := want[mf.GetName()]; ok {
@@ -127,7 +127,7 @@ func TestEndToEndOneFS915(t *testing.T) {
 			appUsage = mf.GetMetric()[0].GetGauge().GetValue()
 		case "powerscale_quota_reduction_ratio":
 			ratio = mf.GetMetric()[0].GetGauge().GetValue()
-		case "powerscale_protocol_latency_stage_microseconds":
+		case "powerscale_protocol_latency_stage_seconds":
 			stages = len(mf.GetMetric())
 		}
 	}

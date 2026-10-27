@@ -146,7 +146,7 @@ in two sections:
 
 Per-workload performance from OneFS statistics summaries (`uid` `powerscale-workloads`):
 
-- **Operations/sec, Throughput (in/out), and CPU µs/sec** timeseries, one series per workload, plus a **Workload Snapshot** table (instant, sorted by ops/sec).
+- **Operations/sec, Throughput (in/out), and CPU seconds/sec** timeseries, one series per workload, plus a **Workload Snapshot** table (instant, sorted by ops/sec).
 - Template variables **cluster / zone / protocol / username** slice the view — use them to bound the series count on a broad dataset.
 
 !!! warning "Requires a performance dataset"

@@ -3,7 +3,7 @@
 All series use the **`powerscale_`** prefix — matching
 [`dell/csm-metrics-powerscale`](https://github.com/dell/csm-metrics-powerscale) — and are
 **gauges**. Metric names are unit-explicit: `_bytes`, `_bytes_per_second`,
-`_operations_per_second`, `_microseconds`, `_percent`, `_seconds`.
+`_operations_per_second`, `_percent`, `_seconds`. Durations are in seconds, the Prometheus base unit.
 
 !!! warning "Per-second gauges — do not `rate()`"
     `_operations_per_second` and `_bytes_per_second` metrics are already per-second
@@ -149,8 +149,8 @@ Per-node, per-protocol, per-operation, from the OneFS protocol summary.
 | Metric | Unit | Description |
 | --- | --- | --- |
 | `powerscale_protocol_operations_per_second` | ops/s | Operation rate for `protocol`/`op`. |
-| `powerscale_protocol_latency_microseconds` | µs | Average latency for `protocol`/`op`. |
-| `powerscale_protocol_latency_stage_microseconds` | µs | **Provisional.** Average latency per processing `stage` (`auth`, `export`, `fha_blocking`, `fiber_block_quota`, `kernel` = QoS blocking, `spark_dispatch`, `total_elapsed`). OneFS 9.15+ only (protocol API v26); stages the cluster omits are not emitted. Not yet validated on a live cluster. |
+| `powerscale_protocol_latency_seconds` | s | Average latency for `protocol`/`op`. |
+| `powerscale_protocol_latency_stage_seconds` | s | **Provisional.** Average latency per processing `stage` (`auth`, `export`, `fha_blocking`, `fiber_block_quota`, `kernel` = QoS blocking, `spark_dispatch`, `total_elapsed`). OneFS 9.15+ only (protocol API v26); stages the cluster omits are not emitted. Not yet validated on a live cluster. |
 
 ## Inventory counts
 
@@ -276,7 +276,7 @@ least one exported dimension.
 | `powerscale_workload_operations_per_second` | ops/s | Operation rate for the workload. |
 | `powerscale_workload_in_bytes_per_second` | bytes/s | Inbound throughput. |
 | `powerscale_workload_out_bytes_per_second` | bytes/s | Outbound throughput. |
-| `powerscale_workload_cpu_microseconds_per_second` | µs/s | CPU time consumed per second across all cores (a per-second gauge — `sum`/`avg`, never `rate()`). |
+| `powerscale_workload_cpu_seconds_per_second` | s/s | CPU seconds consumed per second across all cores (about the number of cores kept busy) (a per-second gauge — `sum`/`avg`, never `rate()`). |
 
 Top 5 workloads by operation rate, per cluster:
 

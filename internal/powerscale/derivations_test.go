@@ -1,6 +1,7 @@
 package powerscale
 
 import (
+	"math"
 	"strings"
 	"testing"
 	"time"
@@ -139,7 +140,7 @@ func TestBuildSamplesClusterAndNode(t *testing.T) {
 	if s, ok := get("powerscale_protocol_operations_per_second"); !ok || s.Value != 12 {
 		t.Fatalf("protocol rate sample wrong: %+v ok=%v", s, ok)
 	}
-	if s, ok := get("powerscale_protocol_latency_microseconds"); !ok || s.Value != 800 {
+	if s, ok := get("powerscale_protocol_latency_seconds"); !ok || !approx(s.Value, 0.0008) {
 		t.Fatalf("protocol latency sample wrong: %+v ok=%v", s, ok)
 	}
 	if _, ok := get("powerscale_cluster_unmapped_key"); ok {
@@ -437,7 +438,7 @@ func TestBuildSamplesWorkloads(t *testing.T) {
 	if s, ok := find("powerscale_workload_operations_per_second", "alice"); !ok || s.Value != 120 {
 		t.Fatalf("alice ops wrong: %+v ok=%v", s, ok)
 	}
-	if s, ok := find("powerscale_workload_cpu_microseconds_per_second", "alice"); !ok || s.Value != 50000 {
+	if s, ok := find("powerscale_workload_cpu_seconds_per_second", "alice"); !ok || !approx(s.Value, 0.05) {
 		t.Fatalf("alice cpu wrong: %+v ok=%v", s, ok)
 	}
 	// aggregate row: username="" and zone="" but still emits values (empty-label path)
@@ -476,11 +477,11 @@ func TestQuotaReductionRatioAndProtocolStages(t *testing.T) {
 			appUsage = s.Value
 		case "powerscale_quota_reduction_ratio":
 			ratio = s.Value
-		case "powerscale_protocol_latency_stage_microseconds":
+		case "powerscale_protocol_latency_stage_seconds":
 			stages[s.Labels[len(s.Labels)-1].Value] = s.Value
 		}
 	}
-	if ratio != 2.5 || len(stages) != len(models.ProtocolStages) || stages["total_elapsed"] != 810 {
+	if ratio != 2.5 || len(stages) != len(models.ProtocolStages) || !approx(stages["total_elapsed"], 0.00081) {
 		t.Fatalf("ratio=%v stages=%v", ratio, stages)
 	}
 	// quotas_v25.json has no usage.applogical: the metric is still emitted, as 0.
@@ -494,7 +495,7 @@ func TestOldPayloadsEmitNoNewSamples(t *testing.T) {
 	quotas, _ := models.ParseQuotas(fixture(t, "quotas.json"))
 	proto, _ := models.ParseProtocolSummary(fixture(t, "stat_protocol.json"))
 	for _, s := range append(quotaSamples("c", "G", quotas), protoSamples("c", "G", &models.Statistics{Proto: proto})...) {
-		if s.Name == "powerscale_quota_reduction_ratio" || s.Name == "powerscale_protocol_latency_stage_microseconds" {
+		if s.Name == "powerscale_quota_reduction_ratio" || s.Name == "powerscale_protocol_latency_stage_seconds" {
 			t.Fatalf("unexpected sample on old payload: %+v", s)
 		}
 	}
@@ -510,3 +511,6 @@ func TestPickVersion(t *testing.T) {
 		t.Fatalf("API 16 must reach v16, got v%d", got)
 	}
 }
+
+// approx compares floats that went through a unit conversion.
+func approx(got, want float64) bool { return math.Abs(got-want) < 1e-12 }

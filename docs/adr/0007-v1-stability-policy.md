@@ -45,7 +45,7 @@ Not breaking: a new metric, a new label *value*, a new optional config key or fl
 Each is flagged **Provisional** in `docs/metrics.md`:
 
 - `powerscale_quota_reduction_ratio`: OneFS 9.15, derived from the spec, never seen live.
-- `powerscale_protocol_latency_stage_microseconds`: OneFS 9.15, same.
+- `powerscale_protocol_latency_stage_seconds`: OneFS 9.15, same.
 - `powerscale_quota_application_usage_bytes`: `usage.applogical`, fixtures only.
 - The node hardware block, as a unit: `powerscale_node_power_supplies`,
   `powerscale_node_power_supply_failures`, `powerscale_node_temperature_celsius`,
@@ -59,7 +59,9 @@ null behaviour; that promotion is a minor release.
 
 Metric and label names were audited before this policy took effect. Five count gauges
 carried a `_total` suffix, which Prometheus reserves for counters, and were renamed (see the
-CHANGELOG, **BREAKING**). Label names were reviewed (by reading the code and `docs/metrics.md`; `promtool check metrics` was not run) and kept as they are: the `quota_`
+CHANGELOG, **BREAKING**). The Prometheus linter (the one behind `promtool check metrics`, run in the test suite) also
+flagged three duration metrics in microseconds; they now use the base unit, seconds. This
+amends the unit list in ADR-0004, which named `_microseconds`. Label names were reviewed (by reading the code and `docs/metrics.md`; `promtool check metrics` was not run) and kept as they are: the `quota_`
 prefix on quota labels keeps them distinct when series are joined, and `type` and `node`
 are unambiguous within their metric family.
 
