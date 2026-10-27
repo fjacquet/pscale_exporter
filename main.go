@@ -210,7 +210,14 @@ func buildClients(ctx context.Context, cfg *models.Config) []powerscale.Client {
 	for _, cl := range cfg.Clusters {
 		client, err := powerscale.NewClusterClient(ctx, cl, dumpDir, traceAPI)
 		if err != nil {
-			log.Warnf("cluster %q: client init failed, will be marked down: %v", cl.Name, err)
+			log.Warnf("cluster %q: client init failed, reported down and retried every cycle: %v", cl.Name, err)
+			clients = append(clients, powerscale.NewLazyClient(cl.Name, func(ctx context.Context) (powerscale.Client, error) {
+				c, err := powerscale.NewClusterClient(ctx, cl, dumpDir, traceAPI)
+				if err != nil {
+					return nil, err
+				}
+				return c, nil
+			}))
 			continue
 		}
 		clients = append(clients, client)
