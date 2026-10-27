@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-27
+
+First stable release. From here, metric names, labels and units, CLI flags, `config.yaml`
+keys, the default port and the `/health` top-level keys are stable across 1.x; metrics not
+yet seen on a live cluster are marked **Provisional**. See
+[ADR-0007](docs/adr/0007-v1-stability-policy.md).
+
 ### Changed
 
 - **BREAKING:** five inventory gauges lose the `_total` suffix, which Prometheus reserves
@@ -37,6 +44,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Documentation for public use: `SECURITY.md`, `CONTRIBUTING.md`, a README security note,
   and the v1 stability policy ([ADR-0007](docs/adr/0007-v1-stability-policy.md)). Metrics
   not yet seen on a live cluster are marked **Provisional** in `docs/metrics.md`.
+- Tests for the config watcher, the SIGHUP handler, the telemetry manager and the server
+  lifecycle (`main` coverage 4% to 47%).
 
 ## [0.21.0] - 2026-10-27
 
@@ -457,7 +466,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Baseline prior to the release-pipeline rework. See the
   [GitHub releases](https://github.com/fjacquet/pscale_exporter/releases) for earlier history.
 
-[Unreleased]: https://github.com/fjacquet/pscale_exporter/compare/v0.20.1...HEAD
+[Unreleased]: https://github.com/fjacquet/pscale_exporter/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/fjacquet/pscale_exporter/compare/v0.21.0...v1.0.0
+[0.21.0]: https://github.com/fjacquet/pscale_exporter/compare/v0.20.1...v0.21.0
 [0.20.1]: https://github.com/fjacquet/pscale_exporter/compare/v0.20.0...v0.20.1
 [0.20.0]: https://github.com/fjacquet/pscale_exporter/compare/v0.19.3...v0.20.0
 [0.19.3]: https://github.com/fjacquet/pscale_exporter/compare/v0.19.2...v0.19.3
