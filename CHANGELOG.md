@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `powerscale_quota_application_usage_bytes` from `usage.applogical` (#54). Always emitted,
+  as 0 when the quota API version does not return the field. `powerscale_quota_usage_bytes`
+  is unchanged.
+
 ## [0.20.1] - 2026-10-25
 
 ### Changed

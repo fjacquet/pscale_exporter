@@ -107,7 +107,7 @@ func TestParseQuotas(t *testing.T) {
 	if qs[0].UsageBytes != 100 || qs[0].HardBytes != 1000 || qs[0].Path != "/ifs/data/proj" {
 		t.Fatalf("quota fields: %+v", qs[0])
 	}
-	if qs[0].PhysicalBytes != 120 || qs[0].SoftBytes != 800 || qs[0].AdvisoryBytes != 600 {
+	if qs[0].PhysicalBytes != 120 || qs[0].AppLogicalBytes != 90 || qs[0].SoftBytes != 800 || qs[0].AdvisoryBytes != 600 {
 		t.Fatalf("quota threshold fields: %+v", qs[0])
 	}
 }

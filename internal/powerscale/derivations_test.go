@@ -74,7 +74,7 @@ func TestBuildSamplesClusterAndNode(t *testing.T) {
 				PowerSupplies: 2, PowerSupplyFailures: 1},
 		},
 		Quotas: []models.Quota{
-			{ID: "q1", Path: "/ifs/data/a", Type: "directory", UsageBytes: 100, HardBytes: 1000, SoftBytes: 800, AdvisoryBytes: 600, PhysicalBytes: 120},
+			{ID: "q1", Path: "/ifs/data/a", Type: "directory", UsageBytes: 100, HardBytes: 1000, SoftBytes: 800, AdvisoryBytes: 600, PhysicalBytes: 120, AppLogicalBytes: 90},
 		},
 		Counts:       models.Counts{NFSExports: 5, SMBShares: 3, Snapshots: 7},
 		Snapshot:     models.SnapshotSummary{UsedBytes: 10240},
@@ -154,6 +154,9 @@ func TestBuildSamplesClusterAndNode(t *testing.T) {
 	}
 	if s, ok := get("powerscale_quota_physical_usage_bytes"); !ok || s.Value != 120 {
 		t.Fatalf("quota physical sample wrong: %+v ok=%v", s, ok)
+	}
+	if s, ok := get("powerscale_quota_application_usage_bytes"); !ok || s.Value != 90 {
+		t.Fatalf("quota application sample wrong: %+v ok=%v", s, ok)
 	}
 	if s, ok := get("powerscale_node_readonly"); !ok {
 		t.Fatalf("node readonly sample missing: %+v", s)

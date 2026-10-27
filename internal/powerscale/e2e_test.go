@@ -43,6 +43,7 @@ func TestEndToEndCollectionThroughPrometheus(t *testing.T) {
 		"powerscale_cluster_total_capacity_bytes":             false,
 		"powerscale_node_memory_used_bytes":                   false,
 		"powerscale_quota_usage_bytes":                        false,
+		"powerscale_quota_application_usage_bytes":            false,
 		"powerscale_quota_soft_threshold_bytes":               false,
 		"powerscale_protocol_operations_per_second":           false,
 		"powerscale_node_readonly":                            false,
