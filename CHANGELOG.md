@@ -24,6 +24,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`powerscale-overview`, `powerscale-advanced`) and `deploy/prometheus/pscale.rules.yml`
   are updated; board `uid`s are unchanged. No alias is emitted for the old names.
 
+### Fixed
+
+- A cluster that could not be reached at startup (unreachable, bad credentials, TLS) used
+  to be dropped for good: it never appeared in `/metrics` or `/health`, `powerscale_up{cluster}`
+  was never emitted as 0 so `PowerScaleClusterDown` could not fire, and it was not retried
+  until a reload or restart. It is now reported down (`powerscale_up 0`, with the error in
+  `/health`) and its session is retried every collection cycle until it succeeds.
+
 ### Added
 
 - Documentation for public use: `SECURITY.md`, `CONTRIBUTING.md`, a README security note,
