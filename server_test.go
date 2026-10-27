@@ -213,14 +213,10 @@ func TestOnceRunsASingleCycleWithoutALoop(t *testing.T) {
 	}
 }
 
-// Known gap, found while writing these tests: buildClients drops a cluster whose client
-// cannot be created at startup (unreachable, bad credentials), so the cluster never
-// appears in the snapshot, `powerscale_up{cluster}` is never emitted as 0 and the
-// PowerScaleClusterDown alert (`powerscale_up == 0`) cannot fire. The client pool is also
-// built once, so the cluster is not retried until a reload or restart.
+// A cluster whose client cannot be created at startup is reported down (LazyClient), not
+// dropped: otherwise powerscale_up{cluster} 0 never appears and PowerScaleClusterDown
+// cannot fire.
 func TestUnreachableClusterIsReportedDown(t *testing.T) {
-	t.Skip("known gap: a cluster that fails client init is absent from the snapshot instead of up=0")
-
 	port := freePort(t)
 	srv := newTestServer(t, writeConfig(t, t.TempDir(), port, "1h", "c1"))
 	if err := srv.Start(); err != nil {
