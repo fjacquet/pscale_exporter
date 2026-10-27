@@ -116,7 +116,7 @@ func nodeHealthSamples(clusterName, clusterID string, nodes []models.Node) []Sam
 		)
 		for state, count := range n.DrivesByState {
 			out = append(out, Sample{
-				Name:   "powerscale_node_drives_total",
+				Name:   "powerscale_node_drives",
 				Labels: driveLabels(clusterName, clusterID, lnn, state),
 				Value:  float64(count),
 			})
@@ -138,7 +138,7 @@ func hardwareSamples(clusterName, clusterID string, nodes []models.Node) []Sampl
 		if n.PowerSupplies > 0 {
 			base := nodeLabels(clusterName, clusterID, lnn)
 			out = append(out,
-				Sample{Name: "powerscale_node_power_supplies_total", Labels: base, Value: float64(n.PowerSupplies)},
+				Sample{Name: "powerscale_node_power_supplies", Labels: base, Value: float64(n.PowerSupplies)},
 				Sample{Name: "powerscale_node_power_supply_failures", Labels: base, Value: float64(n.PowerSupplyFailures)},
 			)
 		}
@@ -332,9 +332,9 @@ func workloadSamples(clusterName, clusterID string, st *models.Statistics) []Sam
 func countSamples(clusterName, clusterID string, c models.Counts) []Sample {
 	base := baseLabels(clusterName, clusterID)
 	return []Sample{
-		{Name: "powerscale_nfs_exports_total", Labels: base, Value: float64(c.NFSExports)},
-		{Name: "powerscale_smb_shares_total", Labels: base, Value: float64(c.SMBShares)},
-		{Name: "powerscale_snapshots_total", Labels: base, Value: float64(c.Snapshots)},
+		{Name: "powerscale_nfs_exports", Labels: base, Value: float64(c.NFSExports)},
+		{Name: "powerscale_smb_shares", Labels: base, Value: float64(c.SMBShares)},
+		{Name: "powerscale_snapshots", Labels: base, Value: float64(c.Snapshots)},
 	}
 }
 

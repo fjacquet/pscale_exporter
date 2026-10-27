@@ -133,7 +133,7 @@ func TestBuildSamplesClusterAndNode(t *testing.T) {
 	if s, ok := get("powerscale_quota_hard_threshold_bytes"); !ok || s.Value != 1000 {
 		t.Fatalf("quota hard sample wrong: %+v ok=%v", s, ok)
 	}
-	if s, ok := get("powerscale_nfs_exports_total"); !ok || s.Value != 5 {
+	if s, ok := get("powerscale_nfs_exports"); !ok || s.Value != 5 {
 		t.Fatalf("nfs count sample wrong: %+v ok=%v", s, ok)
 	}
 	if s, ok := get("powerscale_protocol_operations_per_second"); !ok || s.Value != 12 {
@@ -161,7 +161,7 @@ func TestBuildSamplesClusterAndNode(t *testing.T) {
 	if s, ok := get("powerscale_node_readonly"); !ok {
 		t.Fatalf("node readonly sample missing: %+v", s)
 	}
-	if s, ok := get("powerscale_node_drives_total"); !ok || s.Value == 0 {
+	if s, ok := get("powerscale_node_drives"); !ok || s.Value == 0 {
 		t.Fatalf("node drives sample wrong: %+v ok=%v", s, ok)
 	}
 	if s, ok := get("powerscale_snapshot_used_bytes"); !ok || s.Value != 10240 {
@@ -191,7 +191,7 @@ func TestBuildSamplesClusterAndNode(t *testing.T) {
 	if s, ok := get("powerscale_client_in_bytes_per_second"); !ok || s.Value != 1024 {
 		t.Fatalf("client in sample wrong: %+v ok=%v", s, ok)
 	}
-	if s, ok := get("powerscale_node_power_supplies_total"); !ok || s.Value != 2 {
+	if s, ok := get("powerscale_node_power_supplies"); !ok || s.Value != 2 {
 		t.Fatalf("psu total sample wrong: %+v ok=%v", s, ok)
 	}
 	if s, ok := get("powerscale_node_temperature_celsius"); !ok || s.Value != 35 {

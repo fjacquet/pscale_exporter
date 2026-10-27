@@ -69,7 +69,7 @@ groups:
       - alert: PowerScaleDriveUnhealthy
         expr: |
           sum by (cluster, node) (
-            powerscale_node_drives_total{state=~"SMARTFAIL|DEAD|STALLED|ERASE|GONE"}
+            powerscale_node_drives{state=~"SMARTFAIL|DEAD|STALLED|ERASE|GONE"}
           ) > 0
         for: 5m
         labels:

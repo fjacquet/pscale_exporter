@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **BREAKING:** five inventory gauges lose the `_total` suffix, which Prometheus reserves
+  for counters. Update dashboards, alerts and recording rules that reference them:
+
+  | Old name | New name |
+  | --- | --- |
+  | `powerscale_nfs_exports_total` | `powerscale_nfs_exports` |
+  | `powerscale_smb_shares_total` | `powerscale_smb_shares` |
+  | `powerscale_snapshots_total` | `powerscale_snapshots` |
+  | `powerscale_node_drives_total` | `powerscale_node_drives` |
+  | `powerscale_node_power_supplies_total` | `powerscale_node_power_supplies` |
+
+  Values, labels and units are unchanged. The shipped Grafana boards
+  (`powerscale-overview`, `powerscale-advanced`) and `deploy/prometheus/pscale.rules.yml`
+  are updated; board `uid`s are unchanged. No alias is emitted for the old names.
+
 ### Added
 
 - `powerscale_quota_application_usage_bytes` from `usage.applogical` (#54). Always emitted,
