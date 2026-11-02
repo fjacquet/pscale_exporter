@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 The release before 1.0. Metric names, labels and units, CLI flags, `config.yaml` keys, the
 default port and the `/health` top-level keys are meant to be stable from 1.0 on
-([ADR-0007](docs/adr/0007-v1-stability-policy.md)); no further breaking change is planned,
+([ADR-0007](https://github.com/fjacquet/pscale_exporter/blob/main/docs/adr/0007-v1-stability-policy.md)); no further breaking change is planned,
 but 0.x still allows one. 1.0.0 follows once metrics not yet seen on a live cluster (marked
 **Provisional**) have been checked against a real one.
 
@@ -62,7 +62,7 @@ but 0.x still allows one. 1.0.0 follows once metrics not yet seen on a live clus
 ### Added
 
 - Documentation for public use: `SECURITY.md`, `CONTRIBUTING.md`, a README security note,
-  and the v1 stability policy ([ADR-0007](docs/adr/0007-v1-stability-policy.md)). Metrics
+  and the v1 stability policy ([ADR-0007](https://github.com/fjacquet/pscale_exporter/blob/main/docs/adr/0007-v1-stability-policy.md)). Metrics
   not yet seen on a live cluster are marked **Provisional** in `docs/metrics.md`.
 - Tests for the config watcher, the SIGHUP handler, the telemetry manager and the server
   lifecycle (`main` coverage 4% to 47%).
