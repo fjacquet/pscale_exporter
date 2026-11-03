@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.90.1] - 2026-11-03
+
+### Security
+
+- Build with Go 1.27.3 (fixes GO-2026-6809 in `crypto/x509`) and refresh modules, notably
+  `golang.org/x/net` v0.62.0 (fixes GO-2026-6860, reachable via `api.New` -> `html.Parse`).
+  `govulncheck` is clean.
+
+### Fixed
+
+- Docs: the ADR-0007 link in the changelog now uses an absolute URL, so the strict MkDocs
+  build passes again.
+
 ## [0.90.0] - 2026-10-27
 
 The release before 1.0. Metric names, labels and units, CLI flags, `config.yaml` keys, the
@@ -486,7 +499,8 @@ but 0.x still allows one. 1.0.0 follows once metrics not yet seen on a live clus
 - Baseline prior to the release-pipeline rework. See the
   [GitHub releases](https://github.com/fjacquet/pscale_exporter/releases) for earlier history.
 
-[Unreleased]: https://github.com/fjacquet/pscale_exporter/compare/v0.90.0...HEAD
+[Unreleased]: https://github.com/fjacquet/pscale_exporter/compare/v0.90.1...HEAD
+[0.90.1]: https://github.com/fjacquet/pscale_exporter/compare/v0.90.0...v0.90.1
 [0.90.0]: https://github.com/fjacquet/pscale_exporter/compare/v0.21.0...v0.90.0
 [0.21.0]: https://github.com/fjacquet/pscale_exporter/compare/v0.20.1...v0.21.0
 [0.20.1]: https://github.com/fjacquet/pscale_exporter/compare/v0.20.0...v0.20.1
